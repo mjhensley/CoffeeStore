@@ -138,8 +138,9 @@ exports.handler = async (event, context) => {
     const itemsHtml = items.map(item => {
       const safeName = escapeHtml(item.name);
       const safeImage = sanitizeImageUrl(item.image);
-      const quantity = parseInt(item.quantity, 10) || 1;
-      const price = parseFloat(item.price) || 0;
+      // Bounds checking for quantity (1-999) and price ($0-$10000)
+      const quantity = Math.max(1, Math.min(parseInt(item.quantity, 10) || 1, 999));
+      const price = Math.max(0, Math.min(parseFloat(item.price) || 0, 10000));
       
       return `
       <tr>
