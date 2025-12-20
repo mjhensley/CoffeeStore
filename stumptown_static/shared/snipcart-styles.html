@@ -1,0 +1,120 @@
+<!-- Snipcart Checkout Customizations - Standardized across all pages -->
+<style>
+    /* ===== FORCE PRODUCT IMAGES IN ALL SNIPCART VIEWS ===== */
+    
+    /* Cart sidebar items */
+    .snipcart-item-line {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    }
+    
+    .snipcart-item-line__image,
+    .snipcart-item-line__media {
+        display: block !important;
+        width: 80px !important;
+        height: 80px !important;
+        min-width: 80px !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        background: #f8f6f3 !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .snipcart-item-line__image img,
+    .snipcart-item-line__media img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        display: block !important;
+    }
+    
+    /* Checkout order summary - right side panel */
+    .snipcart-order-summary .snipcart-cart-summary-item,
+    .snipcart-cart-summary .snipcart-cart-summary-item,
+    .snipcart-cart-summary-side .snipcart-cart-summary-item,
+    [class*="order-summary"] [class*="summary-item"],
+    [class*="cart-summary"] [class*="item"] {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 14px !important;
+        padding: 14px 0 !important;
+        border-bottom: 1px solid #eee !important;
+    }
+    
+    .snipcart-order-summary .snipcart-cart-summary-item:last-child,
+    .snipcart-cart-summary .snipcart-cart-summary-item:last-child,
+    .snipcart-cart-summary-side .snipcart-cart-summary-item:last-child {
+        border-bottom: none !important;
+    }
+    
+    /* Force image visibility in order summary */
+    .snipcart-cart-summary-item__image,
+    .snipcart-order-summary [class*="image"],
+    .snipcart-cart-summary [class*="item__image"],
+    [class*="summary-item"] [class*="image"] {
+        display: block !important;
+        width: 64px !important;
+        height: 64px !important;
+        min-width: 64px !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        background: #f8f6f3 !important;
+        flex-shrink: 0 !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+    }
+    
+    .snipcart-cart-summary-item__image img,
+    .snipcart-order-summary [class*="image"] img,
+    .snipcart-cart-summary [class*="item__image"] img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        display: block !important;
+    }
+    
+    /* Product details in summary */
+    .snipcart-cart-summary-item__name {
+        font-weight: 600 !important;
+        color: #333 !important;
+        font-size: 15px !important;
+        line-height: 1.3 !important;
+        margin-bottom: 4px !important;
+    }
+    
+    .snipcart-cart-summary-item__quantity {
+        color: #666 !important;
+        font-size: 14px !important;
+    }
+    
+    .snipcart-cart-summary-item__price {
+        font-weight: 600 !important;
+        color: #333 !important;
+        font-size: 15px !important;
+    }
+    
+    /* Order summary spacing */
+    #snipcart .snipcart-cart-summary-fees__notice,
+    #snipcart [class*="fees__notice"],
+    .snipcart-modal [class*="fees__notice"],
+    .snipcart-checkout [class*="fees__notice"] {
+        margin-bottom: 24px !important;
+    }
+    
+    #snipcart .snipcart-cart-summary__total,
+    #snipcart [class*="summary__total"],
+    .snipcart-modal [class*="summary__total"],
+    .snipcart-checkout [class*="summary__total"] {
+        margin-top: 16px !important;
+        padding-top: 16px !important;
+    }
+    
+    /* Edit link styling */
+    .snipcart-cart-summary__edit,
+    [class*="summary__edit"] {
+        color: #1a73e8 !important;
+        text-decoration: underline !important;
+        font-size: 14px !important;
+    }
+</style>
+

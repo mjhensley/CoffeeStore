@@ -1,0 +1,528 @@
+// Custom Cart Implementation - No External Service Required
+(function() {
+    'use strict';
+
+    // Cart state
+    let cart = [];
+    let isCartOpen = false;
+
+    // Initialize cart from localStorage
+    function initCart() {
+        const savedCart = localStorage.getItem('grainhouse_cart');
+        if (savedCart) {
+            try {
+                cart = JSON.parse(savedCart);
+            } catch (e) {
+                cart = [];
+            }
+        }
+        updateCartBadge();
+        createCartUI();
+        bindEvents();
+    }
+
+    // Save cart to localStorage
+    function saveCart() {
+        localStorage.setItem('grainhouse_cart', JSON.stringify(cart));
+        updateCartBadge();
+    }
+
+    // Update cart count badge
+    function updateCartBadge() {
+        const badges = document.querySelectorAll('.cart-count-badge, .snipcart-items-count');
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        badges.forEach(badge => {
+            badge.textContent = totalItems || '';
+            badge.classList.toggle('hidden', totalItems === 0);
+        });
+    }
+
+    // Create cart sidebar UI
+    function createCartUI() {
+        // Cart overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'cart-overlay';
+        overlay.className = 'cart-overlay';
+        document.body.appendChild(overlay);
+
+        // Cart sidebar
+        const sidebar = document.createElement('div');
+        sidebar.id = 'cart-sidebar';
+        sidebar.className = 'cart-sidebar';
+        sidebar.innerHTML = `
+            <div class="cart-header">
+                <h2>Your Cart</h2>
+                <button class="cart-close" aria-label="Close cart">&times;</button>
+            </div>
+            <div class="cart-items" id="cart-items">
+                <!-- Cart items will be rendered here -->
+            </div>
+            <div class="cart-footer" id="cart-footer">
+                <div class="cart-total">
+                    <span>Subtotal</span>
+                    <span id="cart-subtotal">$0.00</span>
+                </div>
+                <p class="cart-shipping-note">Shipping calculated at checkout</p>
+                <button class="cart-checkout-btn" id="cart-checkout-btn">Checkout</button>
+            </div>
+        `;
+        document.body.appendChild(sidebar);
+
+        // Add styles
+        addCartStyles();
+    }
+
+    // Add cart styles
+    function addCartStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .cart-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s, visibility 0.3s;
+                z-index: 9998;
+            }
+            .cart-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+            .cart-sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                width: 400px;
+                max-width: 100%;
+                height: 100%;
+                background: #fff;
+                box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+            }
+            .cart-sidebar.active {
+                transform: translateX(0);
+            }
+            .cart-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 20px 24px;
+                border-bottom: 1px solid #e5e5e5;
+            }
+            .cart-header h2 {
+                margin: 0;
+                font-family: 'Playfair Display', Georgia, serif;
+                font-size: 24px;
+                font-weight: 500;
+                color: #2c2c2c;
+            }
+            .cart-close {
+                background: none;
+                border: none;
+                font-size: 32px;
+                cursor: pointer;
+                color: #666;
+                padding: 0;
+                line-height: 1;
+                transition: color 0.2s;
+            }
+            .cart-close:hover {
+                color: #000;
+            }
+            .cart-items {
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px 24px;
+            }
+            .cart-empty {
+                text-align: center;
+                padding: 60px 20px;
+                color: #666;
+            }
+            .cart-empty-icon {
+                font-size: 64px;
+                margin-bottom: 16px;
+                opacity: 0.3;
+            }
+            .cart-empty p {
+                margin: 0 0 20px;
+                font-size: 16px;
+            }
+            .cart-empty a {
+                color: #c9a96e;
+                text-decoration: none;
+                font-weight: 500;
+            }
+            .cart-empty a:hover {
+                text-decoration: underline;
+            }
+            .cart-item {
+                display: flex;
+                gap: 16px;
+                padding: 16px 0;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .cart-item:last-child {
+                border-bottom: none;
+            }
+            .cart-item-image {
+                width: 80px;
+                height: 80px;
+                object-fit: contain;
+                background: #f9f6f1;
+                border-radius: 8px;
+                padding: 8px;
+            }
+            .cart-item-details {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+            .cart-item-name {
+                font-family: 'Playfair Display', Georgia, serif;
+                font-size: 16px;
+                font-weight: 500;
+                color: #2c2c2c;
+                margin: 0 0 4px;
+            }
+            .cart-item-variant {
+                font-size: 13px;
+                color: #888;
+                margin: 0;
+            }
+            .cart-item-bottom {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .cart-item-qty {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .qty-btn {
+                width: 28px;
+                height: 28px;
+                border: 1px solid #ddd;
+                background: #fff;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+            }
+            .qty-btn:hover {
+                background: #f5f5f5;
+                border-color: #bbb;
+            }
+            .qty-value {
+                font-size: 14px;
+                min-width: 20px;
+                text-align: center;
+            }
+            .cart-item-price {
+                font-weight: 600;
+                color: #2c2c2c;
+            }
+            .cart-item-remove {
+                background: none;
+                border: none;
+                color: #999;
+                cursor: pointer;
+                font-size: 12px;
+                padding: 4px;
+                transition: color 0.2s;
+            }
+            .cart-item-remove:hover {
+                color: #c44;
+            }
+            .cart-footer {
+                padding: 20px 24px;
+                border-top: 1px solid #e5e5e5;
+                background: #fafafa;
+            }
+            .cart-total {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+            .cart-total span:first-child {
+                font-size: 16px;
+                color: #666;
+            }
+            #cart-subtotal {
+                font-family: 'Playfair Display', Georgia, serif;
+                font-size: 24px;
+                font-weight: 600;
+                color: #2c2c2c;
+            }
+            .cart-shipping-note {
+                font-size: 13px;
+                color: #888;
+                margin: 0 0 16px;
+            }
+            .cart-checkout-btn {
+                width: 100%;
+                padding: 16px;
+                background: #6b5344;
+                color: #fff;
+                border: none;
+                border-radius: 6px;
+                font-size: 16px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .cart-checkout-btn:hover {
+                background: #5a4538;
+            }
+            .cart-checkout-btn:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
+            @media (max-width: 480px) {
+                .cart-sidebar {
+                    width: 100%;
+                }
+            }
+            
+            /* Toast notification */
+            .cart-toast {
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                background: #2c2c2c;
+                color: #fff;
+                padding: 14px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                z-index: 10000;
+                transform: translateY(100px);
+                opacity: 0;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            }
+            .cart-toast.show {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            .cart-toast .toast-icon {
+                margin-right: 8px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Render cart items
+    function renderCart() {
+        const container = document.getElementById('cart-items');
+        const footer = document.getElementById('cart-footer');
+        const checkoutBtn = document.getElementById('cart-checkout-btn');
+
+        if (cart.length === 0) {
+            container.innerHTML = `
+                <div class="cart-empty">
+                    <div class="cart-empty-icon">☕</div>
+                    <p>Your cart is empty</p>
+                    <a href="collections.html">Continue Shopping</a>
+                </div>
+            `;
+            footer.style.display = 'none';
+            return;
+        }
+
+        footer.style.display = 'block';
+        
+        container.innerHTML = cart.map((item, index) => `
+            <div class="cart-item" data-index="${index}">
+                <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+                <div class="cart-item-details">
+                    <div>
+                        <h3 class="cart-item-name">${item.name}</h3>
+                        <p class="cart-item-variant">${item.description || ''}</p>
+                    </div>
+                    <div class="cart-item-bottom">
+                        <div class="cart-item-qty">
+                            <button class="qty-btn qty-minus" data-index="${index}">−</button>
+                            <span class="qty-value">${item.quantity}</span>
+                            <button class="qty-btn qty-plus" data-index="${index}">+</button>
+                        </div>
+                        <span class="cart-item-price">$${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                    <button class="cart-item-remove" data-index="${index}">Remove</button>
+                </div>
+            </div>
+        `).join('');
+
+        // Update subtotal
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+    }
+
+    // Add item to cart
+    function addToCart(itemData) {
+        const existingIndex = cart.findIndex(item => item.id === itemData.id);
+        
+        if (existingIndex > -1) {
+            cart[existingIndex].quantity += 1;
+        } else {
+            cart.push({
+                id: itemData.id,
+                name: itemData.name,
+                price: parseFloat(itemData.price),
+                description: itemData.description || '',
+                image: itemData.image || '',
+                quantity: 1
+            });
+        }
+        
+        saveCart();
+        showToast(`${itemData.name} added to cart`);
+        openCart();
+    }
+
+    // Update item quantity
+    function updateQuantity(index, delta) {
+        if (cart[index]) {
+            cart[index].quantity += delta;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            saveCart();
+            renderCart();
+        }
+    }
+
+    // Remove item from cart
+    function removeItem(index) {
+        if (cart[index]) {
+            cart.splice(index, 1);
+            saveCart();
+            renderCart();
+        }
+    }
+
+    // Open cart
+    function openCart() {
+        isCartOpen = true;
+        document.getElementById('cart-overlay').classList.add('active');
+        document.getElementById('cart-sidebar').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        renderCart();
+    }
+
+    // Close cart
+    function closeCart() {
+        isCartOpen = false;
+        document.getElementById('cart-overlay').classList.remove('active');
+        document.getElementById('cart-sidebar').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Show toast notification
+    function showToast(message) {
+        // Remove existing toast
+        const existingToast = document.querySelector('.cart-toast');
+        if (existingToast) existingToast.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'cart-toast';
+        toast.innerHTML = `<span class="toast-icon">✓</span>${message}`;
+        document.body.appendChild(toast);
+
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
+    // Bind events
+    function bindEvents() {
+        // Cart open buttons (including Snipcart compatibility classes)
+        document.addEventListener('click', function(e) {
+            // Open cart
+            if (e.target.closest('.snipcart-checkout') || e.target.closest('.cart-btn')) {
+                e.preventDefault();
+                openCart();
+            }
+
+            // Add to cart buttons (Snipcart compatibility)
+            if (e.target.closest('.snipcart-add-item')) {
+                e.preventDefault();
+                const btn = e.target.closest('.snipcart-add-item');
+                addToCart({
+                    id: btn.dataset.itemId,
+                    name: btn.dataset.itemName,
+                    price: btn.dataset.itemPrice,
+                    description: btn.dataset.itemDescription || '',
+                    image: btn.dataset.itemImage || ''
+                });
+            }
+
+            // Close cart
+            if (e.target.closest('.cart-close') || e.target.id === 'cart-overlay') {
+                closeCart();
+            }
+
+            // Quantity buttons
+            if (e.target.closest('.qty-minus')) {
+                const index = parseInt(e.target.closest('.qty-minus').dataset.index);
+                updateQuantity(index, -1);
+            }
+            if (e.target.closest('.qty-plus')) {
+                const index = parseInt(e.target.closest('.qty-plus').dataset.index);
+                updateQuantity(index, 1);
+            }
+
+            // Remove item
+            if (e.target.closest('.cart-item-remove')) {
+                const index = parseInt(e.target.closest('.cart-item-remove').dataset.index);
+                removeItem(index);
+            }
+
+            // Checkout button
+            if (e.target.id === 'cart-checkout-btn') {
+                if (cart.length > 0) {
+                    alert('Checkout functionality would connect to your payment processor here.\n\nCart total: $' + cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2));
+                }
+            }
+        });
+
+        // Close cart with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isCartOpen) {
+                closeCart();
+            }
+        });
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCart);
+    } else {
+        initCart();
+    }
+
+    // Expose for debugging if needed
+    window.GrainhouseCart = {
+        open: openCart,
+        close: closeCart,
+        add: addToCart,
+        getItems: () => [...cart],
+        clear: () => { cart = []; saveCart(); renderCart(); }
+    };
+})();
+

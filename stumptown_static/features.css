@@ -1,0 +1,1120 @@
+/* =========================================================
+   GRAINHOUSE COFFEE - UNIQUE FEATURES STYLES
+   ========================================================= */
+
+/* =========================================================
+   FEATURE 1: FLAVOR WHEEL
+   ========================================================= */
+.flavor-wheel-container {
+    background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d5 100%);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.wheel-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: #4a3728;
+    margin-bottom: 8px;
+}
+
+.wheel-subtitle {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.wheel-wrapper {
+    max-width: 400px;
+    margin: 0 auto 30px;
+}
+
+.flavor-wheel-svg {
+    width: 100%;
+    height: auto;
+}
+
+.flavor-segment {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    transform-origin: center;
+}
+
+.flavor-segment:hover {
+    transform: scale(1.03);
+}
+
+.segment-path {
+    transition: opacity 0.3s;
+}
+
+.segment-label {
+    pointer-events: none;
+}
+
+.wheel-results {
+    min-height: 100px;
+}
+
+.wheel-result-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: left;
+    animation: slideUp 0.3s ease;
+}
+
+.wheel-result-card h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: #4a3728;
+    margin-bottom: 8px;
+}
+
+.flavor-notes {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.matching-coffees {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.matching-coffee-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: #f5f0e8;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s;
+}
+
+.matching-coffee-item:hover {
+    background: #e8e0d5;
+    transform: translateX(5px);
+}
+
+.coffee-name {
+    font-weight: 600;
+    color: #4a3728;
+}
+
+.coffee-price {
+    color: #c9a96e;
+    font-weight: 600;
+}
+
+/* =========================================================
+   FEATURE 2: COFFEE PAIRING
+   ========================================================= */
+.pairing-container {
+    background: linear-gradient(135deg, #2d5a3d 0%, #1a3d2a 100%);
+    border-radius: 20px;
+    padding: 40px;
+    color: #fff;
+}
+
+.pairing-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.pairing-subtitle {
+    text-align: center;
+    opacity: 0.9;
+    margin-bottom: 25px;
+}
+
+.pairing-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.pairing-tab {
+    padding: 10px 25px;
+    border: 2px solid rgba(255,255,255,0.3);
+    background: transparent;
+    color: #fff;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.pairing-tab:hover, .pairing-tab.active {
+    background: #c9a96e;
+    border-color: #c9a96e;
+    color: #1a1a1a;
+}
+
+.occasion-grid, .food-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.occasion-card, .food-card {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 12px;
+    padding: 20px 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    color: #fff;
+}
+
+.occasion-card:hover, .food-card:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-3px);
+}
+
+.occasion-icon, .food-icon {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.occasion-name, .food-name {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.occasion-desc {
+    display: block;
+    font-size: 12px;
+    opacity: 0.7;
+    margin-top: 4px;
+}
+
+.pairing-results {
+    margin-top: 25px;
+}
+
+.pairing-result-card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 12px;
+    padding: 25px;
+    color: #333;
+    animation: slideUp 0.3s ease;
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.result-icon {
+    font-size: 32px;
+}
+
+.result-header h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: #4a3728;
+}
+
+.recommended-coffees {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.recommended-coffee {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    background: #f5f0e8;
+    border-radius: 10px;
+}
+
+.recommended-coffee img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 8px;
+    padding: 5px;
+}
+
+.coffee-details {
+    flex: 1;
+}
+
+.coffee-details strong {
+    display: block;
+    color: #4a3728;
+    margin-bottom: 4px;
+}
+
+.coffee-details .coffee-notes {
+    font-size: 13px;
+    color: #888;
+}
+
+.coffee-details .coffee-price {
+    color: #c9a96e;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.quick-add-pairing {
+    padding: 10px 20px;
+    background: #4a3728;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.quick-add-pairing:hover {
+    background: #c9a96e;
+    color: #1a1a1a;
+}
+
+/* =========================================================
+   FEATURE 3: FRESHNESS TIMER
+   ========================================================= */
+.freshness-container {
+    background: linear-gradient(135deg, #4a3728 0%, #2d1f17 100%);
+    border-radius: 20px;
+    padding: 40px;
+    color: #fff;
+    text-align: center;
+}
+
+.freshness-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.freshness-card {
+    background: rgba(255,255,255,0.1);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 20px;
+}
+
+.roast-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.roast-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.8;
+}
+
+.roast-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: #c9a96e;
+}
+
+.freshness-meter {
+    margin-bottom: 25px;
+}
+
+.meter-label {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #c9a96e;
+}
+
+.meter-bar {
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    height: 12px;
+    overflow: hidden;
+}
+
+.meter-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.meter-percent {
+    font-size: 14px;
+    margin-top: 8px;
+    opacity: 0.8;
+}
+
+.peak-countdown {
+    border-top: 1px solid rgba(255,255,255,0.2);
+    padding-top: 20px;
+}
+
+.peak-label {
+    font-size: 13px;
+    opacity: 0.8;
+    margin-bottom: 15px;
+}
+
+.countdown-timer {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.time-unit {
+    text-align: center;
+}
+
+.time-value {
+    display: block;
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    color: #c9a96e;
+}
+
+.time-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+}
+
+.freshness-tip {
+    font-size: 14px;
+    opacity: 0.8;
+    background: rgba(201, 169, 110, 0.2);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin: 0;
+}
+
+/* =========================================================
+   FEATURE 4: BREW CALCULATOR
+   ========================================================= */
+.brew-calc-container {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.brew-calc-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: #4a3728;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.brew-calc-subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.calc-form {
+    max-width: 500px;
+    margin: 0 auto 30px;
+}
+
+.calc-row {
+    margin-bottom: 20px;
+}
+
+.calc-row label {
+    display: block;
+    font-weight: 600;
+    color: #4a3728;
+    margin-bottom: 8px;
+}
+
+.calc-select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0d5c5;
+    border-radius: 10px;
+    font-size: 16px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.cups-selector {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.cup-btn {
+    width: 50px;
+    height: 50px;
+    border: 2px solid #e0d5c5;
+    background: #fff;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.cup-btn:hover, .cup-btn.active {
+    background: #4a3728;
+    color: #fff;
+    border-color: #4a3728;
+}
+
+.strength-slider {
+    width: 100%;
+    height: 8px;
+    -webkit-appearance: none;
+    background: linear-gradient(90deg, #d4a574, #4a3728);
+    border-radius: 4px;
+    outline: none;
+}
+
+.strength-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border: 3px solid #4a3728;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.strength-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+}
+
+.calc-results {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.result-item {
+    background: #f5f0e8;
+    border-radius: 12px;
+    padding: 20px 15px;
+    text-align: center;
+}
+
+.result-item.full-width {
+    grid-column: span 4;
+}
+
+.result-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.result-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.result-value {
+    display: block;
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: #4a3728;
+    font-weight: 600;
+}
+
+.start-timer-btn {
+    width: 100%;
+    padding: 15px;
+    background: #2d5a3d;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.start-timer-btn:hover {
+    background: #1a3d2a;
+}
+
+.brew-timer {
+    background: #2d5a3d;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.timer-display {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    color: #fff;
+    margin-bottom: 20px;
+}
+
+.timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.timer-btn {
+    padding: 10px 25px;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.timer-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* =========================================================
+   FEATURE 5: TASTING JOURNAL
+   ========================================================= */
+.journal-container {
+    background: linear-gradient(135deg, #f5f0e8 0%, #fff 100%);
+    border-radius: 20px;
+    padding: 40px;
+    border: 2px solid #e0d5c5;
+}
+
+.journal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: #4a3728;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.journal-subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+.new-entry-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background: #c9a96e;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 25px;
+}
+
+.new-entry-btn:hover {
+    background: #b89a5e;
+}
+
+.journal-form {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.form-row {
+    margin-bottom: 20px;
+}
+
+.form-row label {
+    display: block;
+    font-weight: 600;
+    color: #4a3728;
+    margin-bottom: 8px;
+}
+
+.journal-input, .journal-select, .journal-textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0d5c5;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+}
+
+.journal-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.journal-input:focus, .journal-select:focus, .journal-textarea:focus {
+    outline: none;
+    border-color: #c9a96e;
+}
+
+.rating-row {
+    text-align: center;
+}
+
+.star-rating {
+    font-size: 32px;
+}
+
+.star {
+    cursor: pointer;
+    color: #ddd;
+    transition: all 0.2s;
+}
+
+.star:hover, .star.filled {
+    color: #c9a96e;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+.cancel-btn, .save-btn {
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.cancel-btn {
+    background: #f5f0e8;
+    border: none;
+    color: #666;
+}
+
+.save-btn {
+    background: #4a3728;
+    border: none;
+    color: #fff;
+}
+
+.save-btn:hover {
+    background: #c9a96e;
+    color: #1a1a1a;
+}
+
+.journal-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.no-entries {
+    text-align: center;
+    color: #888;
+    padding: 40px 20px;
+}
+
+.journal-entry {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    position: relative;
+}
+
+.entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.entry-header h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: #4a3728;
+    margin: 0;
+}
+
+.entry-date {
+    font-size: 12px;
+    color: #888;
+}
+
+.entry-rating {
+    color: #c9a96e;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.entry-method, .entry-flavors {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.entry-notes {
+    font-size: 14px;
+    color: #555;
+    font-style: italic;
+    border-top: 1px solid #eee;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+.delete-entry-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 12px;
+    transition: color 0.3s;
+}
+
+.delete-entry-btn:hover {
+    color: #e74c3c;
+}
+
+/* =========================================================
+   FEATURE 6: CAFFEINE TRACKER
+   ========================================================= */
+.caffeine-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-radius: 20px;
+    padding: 40px;
+    color: #fff;
+}
+
+.caffeine-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.caffeine-subtitle {
+    text-align: center;
+    opacity: 0.8;
+    margin-bottom: 30px;
+}
+
+.caffeine-meter {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.meter-circle {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 15px;
+}
+
+.meter-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(0deg);
+}
+
+.meter-progress {
+    transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
+}
+
+.meter-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.current-mg {
+    display: block;
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 700;
+    color: #c9a96e;
+}
+
+.mg-label {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.meter-status {
+    font-size: 16px;
+    color: #c9a96e;
+}
+
+.add-drink {
+    margin-bottom: 30px;
+}
+
+.add-label {
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.drink-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.drink-btn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 12px;
+    padding: 15px 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    color: #fff;
+}
+
+.drink-btn:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+}
+
+.drink-btn.added {
+    animation: pulse 0.3s ease;
+    background: #4CAF50;
+}
+
+.drink-icon {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.drink-name {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.drink-mg {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.today-log {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.today-log h4 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    opacity: 0.8;
+}
+
+.log-entries {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.no-cups {
+    text-align: center;
+    opacity: 0.5;
+    font-size: 14px;
+}
+
+.log-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-time {
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+.log-type {
+    flex: 1;
+    margin-left: 15px;
+}
+
+.log-caffeine {
+    color: #c9a96e;
+    font-weight: 600;
+}
+
+.undo-btn {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.undo-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* =========================================================
+   RESPONSIVE DESIGN
+   ========================================================= */
+@media (max-width: 768px) {
+    .occasion-grid, .food-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .calc-results {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .result-item.full-width {
+        grid-column: span 2;
+    }
+    
+    .drink-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .countdown-timer {
+        gap: 15px;
+    }
+    
+    .time-value {
+        font-size: 28px;
+    }
+    
+    .flavor-wheel-container,
+    .pairing-container,
+    .freshness-container,
+    .brew-calc-container,
+    .journal-container,
+    .caffeine-container {
+        padding: 25px;
+        border-radius: 15px;
+    }
+    
+    .wheel-title,
+    .pairing-title,
+    .freshness-title,
+    .brew-calc-title,
+    .journal-title,
+    .caffeine-title {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .occasion-grid, .food-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .calc-results {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .cups-selector {
+        justify-content: center;
+    }
+    
+    .timer-display {
+        font-size: 48px;
+    }
+    
+    .meter-circle {
+        width: 160px;
+        height: 160px;
+    }
+    
+    .current-mg {
+        font-size: 36px;
+    }
+}
+
+/* =========================================================
+   FEATURES SECTION LAYOUT
+   ========================================================= */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 60px 40px;
+}
+
+.feature-card {
+    min-height: 400px;
+}
+
+@media (max-width: 1024px) {
+    .features-grid {
+        grid-template-columns: 1fr;
+        padding: 40px 20px;
+    }
+}
+

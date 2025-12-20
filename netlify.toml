@@ -1,0 +1,155 @@
+[build]
+  publish = "stumptown_static"
+  functions = "netlify/functions"
+  edge_functions = "netlify/edge-functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# ============================================
+# EDGE FUNCTIONS CONFIGURATION
+# ============================================
+[[edge_functions]]
+  path = "/*"
+  function = "bot-protection"
+
+[[edge_functions]]
+  path = "/.netlify/functions/*"
+  function = "security-check"
+
+# ============================================
+# PERFORMANCE HEADERS - AGGRESSIVE CACHING
+# ============================================
+
+# Images - Cache for 1 year (immutable)
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    X-Content-Type-Options = "nosniff"
+
+# SVG files
+[[headers]]
+  for = "/*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Content-Type = "image/svg+xml"
+
+# Favicon
+[[headers]]
+  for = "/favicon.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# CSS files - Long cache with versioning
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    X-Content-Type-Options = "nosniff"
+
+# JavaScript files - Long cache
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    X-Content-Type-Options = "nosniff"
+
+# Font files
+[[headers]]
+  for = "/*.woff2"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/*.woff"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Access-Control-Allow-Origin = "*"
+
+# HTML files - Short cache for speed but fresh content
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    # Early hints for faster loading
+    Link = "</styles.css>; rel=preload; as=style, </instant-load.js>; rel=preload; as=script"
+
+# Root index - Short cache for quick loads
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Link = "</styles.css>; rel=preload; as=style, </instant-load.js>; rel=preload; as=script, </images/coffee.jpg>; rel=preload; as=image"
+
+# ============================================
+# SECURITY HEADERS - ALL ROUTES
+# ============================================
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=(self)"
+    # Content Security Policy - Allow necessary resources
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.snipcart.com https://app.snipcart.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.snipcart.com https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com https://cdn.snipcart.com data:; connect-src 'self' https://app.snipcart.com https://api.snipcart.com https://cdn.snipcart.com https://api.resend.com; frame-src https://app.snipcart.com https://checkout.snipcart.com; object-src 'none'; base-uri 'self';"
+    # Strict Transport Security
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+# ============================================
+# COMPRESSION - Enable Brotli/Gzip
+# ============================================
+# Netlify automatically compresses with Brotli/Gzip
+# These headers help with precompressed assets
+[[headers]]
+  for = "/*.js.br"
+  [headers.values]
+    Content-Encoding = "br"
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "/*.css.br"
+  [headers.values]
+    Content-Encoding = "br"
+    Content-Type = "text/css"
+
+# ============================================
+# REDIRECTS - Defined in netlify.toml for priority
+# ============================================
+
+# Force HTTPS
+[[redirects]]
+  from = "http://grainhousecoffee.com/*"
+  to = "https://grainhousecoffee.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://www.grainhousecoffee.com/*"
+  to = "https://grainhousecoffee.com/:splat"
+  status = 301
+  force = true
+
+# WWW to non-WWW
+[[redirects]]
+  from = "https://www.grainhousecoffee.com/*"
+  to = "https://grainhousecoffee.com/:splat"
+  status = 301
+  force = true
+
+# ============================================
+# PLUGINS
+# ============================================
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+
+  [plugins.inputs]
+    output_path = "reports/lighthouse.html"

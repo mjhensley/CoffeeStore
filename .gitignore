@@ -1,0 +1,36 @@
+# Editor
+.vscode/
+.cursor/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# OS junk
+Thumbs.db
+.DS_Store
+
+# Secrets
+.env
+.env.*
+# Huge downloaded assets (do not commit)
+stumpstown_smart/videos.ctfassets.net/
+stumpstown_smart/images.ctfassets.net/
+stumpstown_smart/*.mp4
+stumpstown_smart/**/*.mp4
+stumpstown_smart/**/*.webm
+stumpstown_smart/**/*.mov
+stumpstown_smart/**/*.m4v
+
+# General large media
+*.mp4
+*.webm
+*.mov
+*.m4v
+
+

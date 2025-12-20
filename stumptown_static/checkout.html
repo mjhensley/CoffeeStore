@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Checkout - Grainhouse Coffee</title>
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Content Security Policy - Allow Snipcart resources for localhost and production -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.snipcart.com https://app.snipcart.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.snipcart.com https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com https://cdn.snipcart.com data:; connect-src 'self' https://app.snipcart.com https://api.snipcart.com https://cdn.snipcart.com; frame-src https://app.snipcart.com https://checkout.snipcart.com; object-src 'none'; base-uri 'self';">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Snipcart CSS -->
+    <link rel="preconnect" href="https://app.snipcart.com">
+    <link rel="preconnect" href="https://cdn.snipcart.com">
+    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.css" />
+    
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --color-canvas: #ffffff;
+            --color-canvas-subdued: #faf9f7;
+            --color-ink: #1a1a1a;
+            --color-ink-subdued: #707070;
+            --color-border: #d9d9d9;
+            --color-interactive: #1773b0;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;
+        }
+        
+        html, body {
+            height: 100%;
+            font-family: var(--font-family);
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--color-ink);
+            background-color: var(--color-canvas);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        
+        /* Header styling */
+        .checkout-header {
+            padding: 1.5em 2em;
+            border-bottom: 1px solid var(--color-border);
+            background: var(--color-canvas);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .checkout-header__logo {
+            font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+            font-size: 24px;
+            font-weight: 400;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--color-ink);
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .checkout-header__logo:hover {
+            opacity: 0.8;
+        }
+        
+        /* Empty cart message */
+        .empty-cart-message {
+            display: none;
+            max-width: 600px;
+            margin: 4em auto;
+            padding: 3em 2em;
+            text-align: center;
+            background: var(--color-canvas);
+        }
+        
+        .empty-cart-message.show {
+            display: block;
+        }
+        
+        .empty-cart-message h1 {
+            font-size: 28px;
+            margin-bottom: 1em;
+            color: var(--color-ink);
+        }
+        
+        .empty-cart-message p {
+            color: var(--color-ink-subdued);
+            font-size: 16px;
+            margin-bottom: 2em;
+        }
+        
+        .empty-cart-message__button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: var(--color-interactive);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+        
+        .empty-cart-message__button:hover {
+            background: #135a8f;
+        }
+        
+        /* Prevent layout shift - maintain stable height */
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Snipcart Modal - Full width checkout */
+        .snipcart-modal__container {
+            max-width: 1200px !important;
+            width: 100% !important;
+            margin: 0 auto !important;
+        }
+        
+        /* Hide cart summary view when on checkout page - show checkout directly */
+        /* This prevents the cart from showing before checkout */
+        .snipcart-modal--opened .snipcart-cart-summary:not(.snipcart-checkout),
+        .snipcart-modal--opened [class*="cart-summary"]:not([class*="checkout"]):not([class*="order-summary"]) {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        
+        /* Ensure checkout form is visible immediately */
+        .snipcart-checkout,
+        .snipcart-modal--opened [class*="checkout"] {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        /* Prevent blank flash by pre-loading modal structure */
+        #snipcart {
+            min-height: 600px;
+        }
+        
+        /* Ensure modal opens smoothly without layout shift */
+        .snipcart-modal {
+            transition: opacity 0.15s ease !important;
+        }
+        
+        .snipcart-modal--opened {
+            opacity: 1 !important;
+        }
+        
+        /* Error diagnostic panel */
+        .snipcart-error-panel {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border: 2px solid #d32f2f;
+            border-radius: 8px;
+            padding: 2em;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 10000;
+        }
+        
+        .snipcart-error-panel.show {
+            display: block;
+        }
+        
+        .snipcart-error-panel h2 {
+            color: #d32f2f;
+            margin-bottom: 1em;
+            font-size: 20px;
+        }
+        
+        .snipcart-error-panel p {
+            margin-bottom: 1em;
+            color: var(--color-ink);
+            line-height: 1.6;
+        }
+        
+        .snipcart-error-panel code {
+            background: #f5f5f5;
+            padding: 0.25em 0.5em;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            word-break: break-all;
+        }
+        
+        .snipcart-error-panel__actions {
+            margin-top: 1.5em;
+            display: flex;
+            gap: 1em;
+        }
+        
+        .snipcart-error-panel__button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .snipcart-error-panel__button--primary {
+            background: var(--color-interactive);
+            color: #fff;
+        }
+        
+        .snipcart-error-panel__button--primary:hover {
+            background: #135a8f;
+        }
+        
+        .snipcart-error-panel__button--secondary {
+            background: var(--color-border);
+            color: var(--color-ink);
+        }
+        
+        .snipcart-error-panel__button--secondary:hover {
+            background: #c0c0c0;
+        }
+        
+        @media (max-width: 768px) {
+            .checkout-header {
+                padding: 1em;
+            }
+            
+            .checkout-header__logo {
+                font-size: 20px;
+            }
+            
+            .empty-cart-message {
+                padding: 2em 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="checkout-header">
+        <a href="index.html" class="checkout-header__logo">Grainhouse Coffee</a>
+    </header>
+    
+    <!-- Empty Cart Message (hidden by default) -->
+    <div class="empty-cart-message" id="emptyCartMessage">
+        <h1>Your Cart is Empty</h1>
+        <p>Looks like you haven't added any items to your cart yet.</p>
+        <a href="collections.html" class="empty-cart-message__button">Back to Shop</a>
+    </div>
+    
+    <!-- Snipcart Container -->
+    <div id="snipcart" 
+         data-api-key="ODMwYTIxNjQtMjkxYy00YjNlLWI0NTAtYTkyNWFkNTdlNzNhNjM5MDE1ODA5OTIzMjEyMTUw" 
+         data-config-modal-style="side">
+        <!-- Custom template for order summary items with images -->
+        <order-summary-item-custom section="cart-summary-items">
+            <li class="snipcart-cart-summary-item">
+                <div class="snipcart-cart-summary-item__image" style="width:64px;height:64px;min-width:64px;border-radius:8px;overflow:hidden;background:#f8f6f3;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+                    <img :src="item.image" :alt="item.name" style="width:100%;height:100%;object-fit:cover;">
+                </div>
+                <div class="snipcart-cart-summary-item__content" style="flex:1;min-width:0;">
+                    <div class="snipcart-cart-summary-item__name" style="font-weight:600;color:#333;font-size:14px;line-height:1.3;">{{ item.name }}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                        <span class="snipcart-cart-summary-item__quantity" style="color:#666;font-size:13px;">x{{ item.quantity }}</span>
+                        <span class="snipcart-cart-summary-item__price" style="font-weight:600;color:#333;font-size:14px;">{{ item.totalPrice | money }}</span>
+                    </div>
+                </div>
+            </li>
+        </order-summary-item-custom>
+    </div>
+    
+    <!-- Snipcart Script -->
+    <script async src="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.js"></script>
+    
+    <!-- Error Diagnostic Panel -->
+    <div class="snipcart-error-panel" id="snipcartErrorPanel">
+        <h2>Snipcart Failed to Load</h2>
+        <p>The checkout system could not be loaded. This is usually caused by:</p>
+        <ul style="margin-left: 1.5em; margin-bottom: 1em; line-height: 1.8;">
+            <li><strong>CSP blocked script:</strong> Content Security Policy restrictions</li>
+            <li><strong>Ad-blocker:</strong> Browser extension blocked the request</li>
+            <li><strong>404 script URL:</strong> Snipcart CDN is unreachable</li>
+            <li><strong>Mixed content:</strong> HTTP page trying to load HTTPS script</li>
+            <li><strong>Network issue:</strong> Firewall or antivirus blocking requests</li>
+        </ul>
+        <p><strong>Script URL attempted:</strong></p>
+        <code id="snipcartScriptUrl">https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.js</code>
+        <div class="snipcart-error-panel__actions">
+            <button class="snipcart-error-panel__button snipcart-error-panel__button--primary" onclick="window.location.reload()">
+                Reload Page
+            </button>
+            <button class="snipcart-error-panel__button snipcart-error-panel__button--secondary" onclick="window.location.href='collections.html'">
+                Return to Shop
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================
+        // SNIPCART CHECKOUT INITIALIZATION
+        // ============================================
+        
+        const SCRIPT_URL = 'https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.js';
+        const CHECK_DELAY = 2000;
+        const errorPanel = document.getElementById('snipcartErrorPanel');
+        const emptyCartMessage = document.getElementById('emptyCartMessage');
+        const scriptUrlElement = document.getElementById('snipcartScriptUrl');
+        
+        // Set script URL in error panel
+        if (scriptUrlElement) {
+            scriptUrlElement.textContent = SCRIPT_URL;
+        }
+        
+        // Diagnostics logging
+        function logInfo(message) {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('🔵 [Checkout]', message);
+            }
+        }
+        
+        function logError(message) {
+            console.error('❌ [Checkout]', message);
+        }
+        
+        function logSuccess(message) {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('✅ [Checkout]', message);
+            }
+        }
+        
+        // Check if Snipcart loaded
+        setTimeout(function() {
+            if (typeof window.Snipcart === 'undefined') {
+                logError('Snipcart failed to load after ' + CHECK_DELAY + 'ms');
+                logError('Possible causes: CSP, ad-blocker, network issue, or script URL 404');
+                if (errorPanel) {
+                    errorPanel.classList.add('show');
+                }
+            } else {
+                logSuccess('Snipcart script loaded');
+            }
+        }, CHECK_DELAY);
+        
+        // Listen for script load errors
+        window.addEventListener('error', function(e) {
+            if (e.target && e.target.src && e.target.src.includes('snipcart')) {
+                logError('Snipcart script failed to load: ' + e.target.src);
+                setTimeout(function() {
+                    if (typeof window.Snipcart === 'undefined') {
+                        if (errorPanel) {
+                            errorPanel.classList.add('show');
+                        }
+                    }
+                }, CHECK_DELAY);
+            }
+        }, true);
+        
+        // Sync custom cart to Snipcart
+        function syncCartToSnipcart() {
+            if (!window.Snipcart || !window.Snipcart.api) {
+                logInfo('Snipcart not ready, retrying...');
+                setTimeout(syncCartToSnipcart, 500);
+                return;
+            }
+            
+            try {
+                const customCartJson = localStorage.getItem('grainhouse_cart');
+                let customCart = [];
+                
+                if (customCartJson) {
+                    try {
+                        customCart = JSON.parse(customCartJson);
+                    } catch (e) {
+                        logError('Failed to parse custom cart: ' + e.message);
+                    }
+                }
+                
+                if (customCart && customCart.length > 0) {
+                    logInfo('Syncing ' + customCart.length + ' items from custom cart to Snipcart');
+                    
+                    // Clear Snipcart cart first
+                    try {
+                        const snipcartItems = window.Snipcart.api.cart.items.all();
+                        snipcartItems.forEach(item => {
+                            window.Snipcart.api.cart.items.remove(item.id);
+                        });
+                    } catch (e) {
+                        logError('Could not clear Snipcart cart: ' + e.message);
+                    }
+                    
+                    // Add all items to Snipcart
+                    customCart.forEach((item, index) => {
+                        try {
+                            window.Snipcart.api.cart.items.add({
+                                id: item.id || 'item-' + index,
+                                name: item.name || 'Product',
+                                price: parseFloat(item.price) || 0,
+                                quantity: parseInt(item.quantity) || 1,
+                                description: item.description || '',
+                                image: item.image || '',
+                                url: window.location.origin + window.location.pathname
+                            });
+                        } catch (e) {
+                            logError('Failed to add item to Snipcart: ' + e.message);
+                        }
+                    });
+                    
+                    logSuccess('Cart synced to Snipcart');
+                }
+            } catch (e) {
+                logError('Error syncing cart: ' + e.message);
+            }
+        }
+        
+        // Open full checkout form directly (skip cart step)
+        function openFullCheckout() {
+            if (!window.Snipcart || !window.Snipcart.api) {
+                logInfo('Snipcart not ready, retrying...');
+                setTimeout(openFullCheckout, 500);
+                return;
+            }
+            
+            try {
+                // First sync cart
+                syncCartToSnipcart();
+                
+                // Wait for sync to complete, then check cart and open checkout
+                setTimeout(function() {
+                    try {
+                        const itemCount = window.Snipcart.api.cart.items.count();
+                        logInfo('Cart item count: ' + itemCount);
+                        
+                        if (itemCount === 0) {
+                            logInfo('Cart is empty - showing empty cart message');
+                            if (emptyCartMessage) {
+                                emptyCartMessage.classList.add('show');
+                            }
+                            return;
+                        }
+                        
+                        // Hide empty cart message if shown
+                        if (emptyCartMessage) {
+                            emptyCartMessage.classList.remove('show');
+                        }
+                        
+                        logSuccess('Opening full checkout directly with ' + itemCount + ' items');
+                        
+                        // Directly open checkout - skip cart summary view
+                        function openCheckoutDirectly() {
+                            try {
+                                // Strategy: Open modal, then immediately navigate to checkout
+                                // We'll use a combination of API calls and DOM manipulation
+                                
+                                // First, open the modal
+                                if (window.Snipcart.api.modal && window.Snipcart.api.modal.show) {
+                                    window.Snipcart.api.modal.show();
+                                    logSuccess('Modal opened');
+                                } else if (window.Snipcart.api.theme && window.Snipcart.api.theme.cart) {
+                                    window.Snipcart.api.theme.cart.open();
+                                    logSuccess('Cart opened (will navigate to checkout)');
+                                }
+                                
+                                // Function to navigate to checkout step
+                                function navigateToCheckout() {
+                                    // Try multiple methods to get to checkout
+                                    let navigated = false;
+                                    
+                                    // Method 1: Look for checkout button and click it
+                                    const checkoutSelectors = [
+                                        'button[data-action="checkout"]',
+                                        'button.snipcart-button-primary:not(.snipcart-button-link)',
+                                        '.snipcart-summary__actions button.snipcart-button-primary',
+                                        'button:contains("Checkout")',
+                                        '[class*="checkout"] button'
+                                    ];
+                                    
+                                    for (let selector of checkoutSelectors) {
+                                        const buttons = document.querySelectorAll(selector);
+                                        for (let btn of buttons) {
+                                            const text = (btn.textContent || '').toLowerCase().trim();
+                                            const action = btn.getAttribute('data-action');
+                                            
+                                            if (action === 'checkout' || text.includes('checkout') || 
+                                                (btn.classList.contains('snipcart-button-primary') && !btn.classList.contains('snipcart-button-link'))) {
+                                                logSuccess('Found checkout button, clicking: ' + (btn.textContent || selector));
+                                                btn.click();
+                                                navigated = true;
+                                                break;
+                                            }
+                                        }
+                                        if (navigated) break;
+                                    }
+                                    
+                                    return navigated;
+                                }
+                                
+                                // Try to navigate immediately, then with delays as fallback
+                                if (!navigateToCheckout()) {
+                                    // Wait a bit for modal to render
+                                    setTimeout(function() {
+                                        if (!navigateToCheckout()) {
+                                            // Try again after a longer delay
+                                            setTimeout(function() {
+                                                navigateToCheckout();
+                                            }, 300);
+                                        }
+                                    }, 100);
+                                }
+                                
+                                // Also listen for modal/cart opened events
+                                if (window.Snipcart.events) {
+                                    const eventHandler = function() {
+                                        setTimeout(function() {
+                                            navigateToCheckout();
+                                        }, 50);
+                                    };
+                                    
+                                    // Listen for both cart and modal events
+                                    window.Snipcart.events.on('cart.opened', eventHandler);
+                                    window.Snipcart.events.on('modal.opened', eventHandler);
+                                    
+                                    // Clean up after successful navigation
+                                    setTimeout(function() {
+                                        window.Snipcart.events.off('cart.opened', eventHandler);
+                                        window.Snipcart.events.off('modal.opened', eventHandler);
+                                    }, 2000);
+                                }
+                                
+                            } catch (e) {
+                                logError('Error in openCheckoutDirectly: ' + e.message);
+                            }
+                        }
+                        
+                        // Open checkout directly
+                        openCheckoutDirectly();
+                        
+                    } catch (e) {
+                        logError('Error opening checkout: ' + e.message);
+                    }
+                }, 600); // Reduced delay for faster checkout opening
+            } catch (e) {
+                logError('Error in openFullCheckout: ' + e.message);
+            }
+        }
+        
+        // Initialize when Snipcart is ready
+        document.addEventListener('snipcart.ready', function() {
+            logSuccess('Snipcart ready event fired');
+            
+            if (errorPanel) {
+                errorPanel.classList.remove('show');
+            }
+            
+            // Log diagnostics
+            const itemCount = window.Snipcart && window.Snipcart.api ? window.Snipcart.api.cart.items.count() : 0;
+            logInfo('Action: ' + (itemCount > 0 ? 'Opening checkout directly' : 'Cart empty - showing empty message'));
+            
+            // Open full checkout
+            openFullCheckout();
+        });
+        
+        // Fallback: Try after delay if ready event didn't fire
+        setTimeout(function() {
+            if (window.Snipcart && window.Snipcart.api) {
+                const isOpen = document.querySelector('.snipcart-modal--opened, .snipcart-checkout');
+                if (!isOpen) {
+                    logInfo('Fallback: Snipcart loaded but ready event may not have fired');
+                    const itemCount = window.Snipcart.api.cart.items.count();
+                    logInfo('Action: ' + (itemCount > 0 ? 'Opening checkout directly (fallback)' : 'Cart empty'));
+                    openFullCheckout();
+                }
+            }
+        }, 3000);
+        
+        // Enhanced diagnostics: Log script load status
+        logInfo('Checkout page loaded');
+        logInfo('Script URL: ' + SCRIPT_URL);
+        logInfo('Hostname: ' + window.location.hostname);
+    </script>
+    
+    <!-- Snipcart Checkout Customizations -->
+    <style>
+        /* Force product images in checkout */
+        .snipcart-item-line {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+        }
+        
+        .snipcart-item-line__image,
+        .snipcart-item-line__media {
+            display: block !important;
+            width: 80px !important;
+            height: 80px !important;
+            min-width: 80px !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            background: #f8f6f3 !important;
+            flex-shrink: 0 !important;
+        }
+        
+        .snipcart-item-line__image img,
+        .snipcart-item-line__media img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+        
+        /* Order summary items */
+        .snipcart-order-summary .snipcart-cart-summary-item,
+        .snipcart-cart-summary .snipcart-cart-summary-item,
+        .snipcart-cart-summary-side .snipcart-cart-summary-item {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+            padding: 16px 0 !important;
+            border-bottom: 1px solid #eee !important;
+        }
+        
+        .snipcart-order-summary .snipcart-cart-summary-item:last-child,
+        .snipcart-cart-summary .snipcart-cart-summary-item:last-child,
+        .snipcart-cart-summary-side .snipcart-cart-summary-item:last-child {
+            border-bottom: none !important;
+        }
+        
+        .snipcart-cart-summary-item__image,
+        .snipcart-order-summary [class*="image"],
+        .snipcart-cart-summary [class*="item__image"] {
+            display: block !important;
+            width: 64px !important;
+            height: 64px !important;
+            min-width: 64px !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            background: #f8f6f3 !important;
+            flex-shrink: 0 !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+        }
+        
+        .snipcart-cart-summary-item__image img,
+        .snipcart-order-summary [class*="image"] img,
+        .snipcart-cart-summary [class*="item__image"] img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+        
+        .snipcart-cart-summary-item__name {
+            font-weight: 600 !important;
+            color: #333 !important;
+            font-size: 15px !important;
+            margin-bottom: 4px !important;
+        }
+        
+        .snipcart-cart-summary-item__quantity {
+            color: #888 !important;
+            font-size: 14px !important;
+        }
+        
+        .snipcart-cart-summary-item__price {
+            font-weight: 600 !important;
+            color: #333 !important;
+        }
+        
+        /* Ensure checkout form is visible and full width */
+        .snipcart-modal__container {
+            max-width: 1200px !important;
+            margin: 0 auto !important;
+        }
+        
+        .snipcart-checkout {
+            width: 100% !important;
+        }
+        
+        /* Match desired layout: left column (form) + right column (order summary) */
+        /* Snipcart v3 uses a side-by-side layout when modal-style is "side" */
+        .snipcart-modal__container {
+            display: flex !important;
+            flex-direction: row !important;
+        }
+        
+        /* Left column: checkout form fields */
+        .snipcart-checkout__form-container,
+        .snipcart-checkout > div:first-child,
+        .snipcart-modal__container > div:first-child:not([class*="summary"]) {
+            flex: 1 !important;
+            padding: 40px !important;
+            min-width: 0 !important;
+        }
+        
+        /* Right column: order summary sidebar */
+        .snipcart-order-summary,
+        .snipcart-cart-summary-side,
+        .snipcart-modal__container [class*="summary"],
+        .snipcart-modal__container [class*="sidebar"],
+        .snipcart-modal__container > div[class*="side"] {
+            width: 400px !important;
+            min-width: 400px !important;
+            max-width: 400px !important;
+            background: #fafafa !important;
+            padding: 40px !important;
+            border-left: 1px solid #e5e5e5 !important;
+        }
+        
+        /* Prevent blank flash - ensure modal content is ready */
+        .snipcart-modal {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        .snipcart-modal__container {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+        
+        /* Smooth transitions - prevent jarring movements */
+        .snipcart-modal,
+        .snipcart-modal__container,
+        .snipcart-checkout {
+            transition: opacity 0.2s ease, transform 0.2s ease !important;
+        }
+        
+        /* Hide fees notice if present */
+        #snipcart .snipcart-cart-summary-fees__notice,
+        #snipcart [class*="fees__notice"],
+        .snipcart-modal [class*="fees__notice"],
+        .snipcart-checkout [class*="fees__notice"] {
+            margin-bottom: 24px !important;
+        }
+        
+        /* Total styling */
+        #snipcart .snipcart-cart-summary__total,
+        #snipcart [class*="summary__total"],
+        .snipcart-modal [class*="summary__total"],
+        .snipcart-checkout [class*="summary__total"] {
+            margin-top: 16px !important;
+            padding-top: 16px !important;
+        }
+        
+        /* Responsive: stack columns on mobile */
+        @media (max-width: 768px) {
+            .snipcart-checkout,
+            .snipcart-modal__container {
+                flex-direction: column !important;
+            }
+            
+            .snipcart-order-summary,
+            .snipcart-cart-summary-side,
+            .snipcart-checkout [class*="summary"],
+            .snipcart-checkout [class*="right"] {
+                width: 100% !important;
+                min-width: 100% !important;
+                border-left: none !important;
+                border-top: 1px solid #e5e5e5 !important;
+            }
+        }
+    </style>
+</body>
+</html>

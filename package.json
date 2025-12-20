@@ -1,0 +1,17 @@
+{
+  "name": "coffee-store",
+  "version": "1.0.0",
+  "description": "Coffee Store e-commerce site with payment gateway",
+  "scripts": {
+    "dev": "python serve.py"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
+
+
+

@@ -1,0 +1,209 @@
+# ============================================
+# GRAINHOUSE COFFEE - COMPREHENSIVE REDIRECTS
+# Eliminates all 404s with smart fallbacks
+# ============================================
+
+# ============================================
+# HTTPS & WWW REDIRECTS (Highest Priority)
+# ============================================
+https://www.grainhousecoffee.com/*  https://grainhousecoffee.com/:splat  301!
+http://www.grainhousecoffee.com/*   https://grainhousecoffee.com/:splat  301!
+http://grainhousecoffee.com/*       https://grainhousecoffee.com/:splat  301!
+
+# ============================================
+# TRAILING SLASH HANDLING - Consistent URLs
+# ============================================
+/collections/       /collections.html    301
+/subscribe/         /subscribe.html      301
+/gear/              /gear.html           301
+/locations/         /locations.html      301
+/brew-guides/       /brew-guides.html    301
+/our-story/         /our-story.html      301
+/contact/           /contact.html        301
+/learn/             /learn.html          301
+/rewards/           /rewards.html        301
+/coffee-quiz/       /coffee-quiz.html    301
+/account/           /account.html        301
+/blog/              /blog.html           301
+/impact/            /impact.html         301
+/accessibility/     /accessibility.html  301
+/cold-brew/         /cold-brew.html      301
+/gift-guide/        /gift-guide.html     301
+
+# ============================================
+# CLEAN URL REDIRECTS (No .html extension)
+# ============================================
+/collections        /collections.html    200
+/subscribe          /subscribe.html      200
+/gear               /gear.html           200
+/locations          /locations.html      200
+/brew-guides        /brew-guides.html    200
+/our-story          /our-story.html      200
+/contact            /contact.html        200
+/learn              /learn.html          200
+/rewards            /rewards.html        200
+/coffee-quiz        /coffee-quiz.html    200
+/account            /account.html        200
+/blog               /blog.html           200
+/impact             /impact.html         200
+/accessibility      /accessibility.html  200
+/cold-brew          /cold-brew.html      200
+/gift-guide         /gift-guide.html     200
+/index              /index.html          200
+/home               /index.html          301
+
+# ============================================
+# PRODUCT PAGE REDIRECTS
+# ============================================
+/products/hair-bender       /product-hair-bender.html       200
+/products/hair-bender/      /product-hair-bender.html       301
+/products/holler-mountain   /product-holler-mountain.html   200
+/products/holler-mountain/  /product-holler-mountain.html   301
+/products/ethiopia          /product-ethiopia.html          200
+/products/ethiopia/         /product-ethiopia.html          301
+/products/ethiopia-mordecofe /product-ethiopia.html         301
+/products/trapper-creek     /product-trapper-creek.html     200
+/products/trapper-creek/    /product-trapper-creek.html     301
+/products/decaf             /product-trapper-creek.html     301
+
+# Product wildcards - Catch any product URL patterns
+/products/:product          /collections.html               200
+/product/:product           /collections.html               200
+/coffee/:product            /collections.html               200
+/shop/:product              /collections.html               200
+
+# ============================================
+# COLLECTION/CATEGORY REDIRECTS
+# ============================================
+/shop                       /collections.html               200
+/shop/                      /collections.html               301
+/store                      /collections.html               301
+/store/                     /collections.html               301
+/coffee                     /collections.html               301
+/coffee/                    /collections.html               301
+/coffees                    /collections.html               301
+/all                        /collections.html               301
+/all-coffee                 /collections.html               301
+/all-products               /collections.html               301
+/catalog                    /collections.html               301
+/browse                     /collections.html               301
+/menu                       /collections.html               301
+
+# Collection sub-pages
+/collections/all            /collections.html               301
+/collections/coffee         /collections.html               301
+/collections/blends         /collections.html               301
+/collections/single-origin  /collections.html               301
+/collections/decaf          /collections.html               301
+/collections/cold-brew      /cold-brew.html                 301
+/collections/gear           /gear.html                      301
+/collections/subscription   /subscribe.html                 301
+/collections/gifts          /gift-guide.html                301
+/collections/sale           /collections.html               301
+
+# ============================================
+# COMMON MISSPELLINGS & VARIATIONS
+# ============================================
+/subscribtion       /subscribe.html      301
+/subscription       /subscribe.html      301
+/subscriptions      /subscribe.html      301
+/brewing-guides     /brew-guides.html    301
+/brewing            /brew-guides.html    301
+/how-to-brew        /brew-guides.html    301
+/guides             /brew-guides.html    301
+/story              /our-story.html      301
+/about              /our-story.html      301
+/about-us           /our-story.html      301
+/aboutus            /our-story.html      301
+/our-team           /our-story.html      301
+/team               /our-story.html      301
+/company            /our-story.html      301
+/history            /our-story.html      301
+/mission            /our-story.html      301
+/stores             /locations.html      301
+/store-locator      /locations.html      301
+/find-us            /locations.html      301
+/cafes              /locations.html      301
+/cafe               /locations.html      301
+/location           /locations.html      301
+/contactus          /contact.html        301
+/contact-us         /contact.html        301
+/help               /contact.html        301
+/support            /contact.html        301
+/faq                /contact.html        301
+/faqs               /contact.html        301
+/quiz               /coffee-quiz.html    301
+/find-your-coffee   /coffee-quiz.html    301
+/recommendation     /coffee-quiz.html    301
+/signin             /account.html        301
+/sign-in            /account.html        301
+/login              /account.html        301
+/log-in             /account.html        301
+/signup             /account.html        301
+/sign-up            /account.html        301
+/register           /account.html        301
+/my-account         /account.html        301
+/myaccount          /account.html        301
+/profile            /account.html        301
+/dashboard          /account.html        301
+/loyalty            /rewards.html        301
+/points             /rewards.html        301
+/reward             /rewards.html        301
+/articles           /blog.html           301
+/news               /blog.html           301
+/posts              /blog.html           301
+/sustainability     /impact.html         301
+/environment        /impact.html         301
+/social-impact      /impact.html         301
+/giving-back        /impact.html         301
+/cold-brew-coffee   /cold-brew.html      301
+/coldbrew           /cold-brew.html      301
+/nitro              /cold-brew.html      301
+/nitro-coffee       /cold-brew.html      301
+/gifts              /gift-guide.html     301
+/gift               /gift-guide.html     301
+/holiday            /gift-guide.html     301
+/holiday-gifts      /gift-guide.html     301
+/gift-cards         /gift-guide.html     301
+/giftcard           /gift-guide.html     301
+/equipment          /gear.html           301
+/merchandise        /gear.html           301
+/merch              /gear.html           301
+/accessories        /gear.html           301
+
+# ============================================
+# LEGACY/OLD URL PATTERNS (From Stumptown)
+# ============================================
+/pages/*            /our-story.html      301
+/blogs/*            /blog.html           301
+/cart               /collections.html    200
+/cart/              /collections.html    301
+/checkout           /collections.html    301
+/checkout/          /collections.html    301
+/search             /collections.html    200
+/search/*           /collections.html    200
+
+# ============================================
+# API & FUNCTION ROUTES
+# ============================================
+# These are handled by Netlify Functions
+/.netlify/functions/*   /.netlify/functions/:splat   200
+
+# ============================================
+# STATIC ASSETS - 404 FALLBACKS
+# ============================================
+# If an image isn't found, serve a placeholder
+/images/not-found.png  /images/coffee.jpg  200
+
+# ============================================
+# SEO FILES
+# ============================================
+/sitemap            /sitemap.xml         200
+/robots             /robots.txt          200
+
+# ============================================
+# CATCH-ALL FALLBACK
+# Redirect any unmatched URL to collections
+# This prevents 404s completely
+# ============================================
+/*                  /index.html          200

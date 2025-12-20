@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <!-- Homepage -->
+  <url>
+    <loc>https://grainhousecoffee.com/</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Shop & Products -->
+  <url>
+    <loc>https://grainhousecoffee.com/collections.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://grainhousecoffee.com/product-hair-bender.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://grainhousecoffee.com/images/Hair-Bender_e0a4e119-c201-4e7a-bf1c-f4cc4ae240e1_750x_2b77870c.png</image:loc>
+      <image:title>Hair Bender Coffee</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://grainhousecoffee.com/product-holler-mountain.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://grainhousecoffee.com/images/5lb_HollerMtn_750x_020a6823.png</image:loc>
+      <image:title>Holler Mountain Coffee</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://grainhousecoffee.com/product-ethiopia.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://grainhousecoffee.com/images/Ethiopia_Mordecofe_72DPI_750x_8f486bfc.png</image:loc>
+      <image:title>Ethiopia Mordecofe Coffee</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://grainhousecoffee.com/product-trapper-creek.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://grainhousecoffee.com/images/SCR_Trapper_750x_c5bcc4b8.png</image:loc>
+      <image:title>Trapper Creek Decaf Coffee</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://grainhousecoffee.com/gear.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Subscriptions -->
+  <url>
+    <loc>https://grainhousecoffee.com/subscribe.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Gift Guide (Seasonal - High Priority) -->
+  <url>
+    <loc>https://grainhousecoffee.com/gift-guide.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Cold Brew -->
+  <url>
+    <loc>https://grainhousecoffee.com/cold-brew.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Learn & Education -->
+  <url>
+    <loc>https://grainhousecoffee.com/learn.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://grainhousecoffee.com/brew-guides.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://grainhousecoffee.com/coffee-quiz.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Blog -->
+  <url>
+    <loc>https://grainhousecoffee.com/blog.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Company -->
+  <url>
+    <loc>https://grainhousecoffee.com/our-story.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://grainhousecoffee.com/impact.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://grainhousecoffee.com/locations.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Support -->
+  <url>
+    <loc>https://grainhousecoffee.com/contact.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://grainhousecoffee.com/accessibility.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  
+  <!-- Account -->
+  <url>
+    <loc>https://grainhousecoffee.com/account.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://grainhousecoffee.com/rewards.html</loc>
+    <lastmod>2025-12-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>

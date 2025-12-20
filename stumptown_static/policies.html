@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2d5a3d">
+    <title>Policies | Grainhouse Coffee</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Grainhouse Coffee policies including Privacy Policy, Terms of Service, Shipping & Returns, and Refund Policy. Learn about how we handle your data and orders.">
+    <meta name="keywords" content="Grainhouse Coffee policies, privacy policy, terms of service, shipping policy, returns, refund policy">
+    <link rel="canonical" href="https://grainhousecoffee.com/policies.html">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://grainhousecoffee.com/policies.html">
+    <meta property="og:title" content="Policies | Grainhouse Coffee">
+    <meta property="og:description" content="Our policies covering privacy, terms of service, shipping, returns, and refunds.">
+    <meta property="og:image" content="https://grainhousecoffee.com/images/coffee.jpg">
+    
+    <!-- Shared Head Content (Performance, Fonts, Styles) -->
+    <!--#include virtual="shared/head-standard.html"-->
+    
+    <!-- Snipcart Styles -->
+    <!--#include virtual="shared/snipcart-styles.html"-->
+    
+    <style>
+        /* Policies Page Styles */
+        .policies-hero {
+            background: linear-gradient(135deg, #2d5a3d 0%, #1a3d2a 100%);
+            padding: 120px 40px 80px;
+            text-align: center;
+            color: #fff;
+        }
+        
+        .policies-hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            font-weight: 400;
+            margin: 0 0 20px;
+        }
+        
+        .policies-hero p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+        
+        /* Policy Navigation */
+        .policy-nav {
+            background: #fff;
+            padding: 20px 40px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-bottom: 1px solid #e8e4df;
+        }
+        
+        .policy-nav-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .policy-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: #f8f6f3;
+            color: #333;
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .policy-nav a:hover,
+        .policy-nav a.active {
+            background: #2d5a3d;
+            color: #fff;
+        }
+        
+        .policy-nav a svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        /* Policy Content */
+        .policies-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 40px 80px;
+        }
+        
+        .policy-section {
+            margin-bottom: 70px;
+            padding-top: 30px;
+        }
+        
+        .policy-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .policy-section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e8e4df;
+        }
+        
+        .policy-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #2d5a3d 0%, #1a3d2a 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .policy-icon svg {
+            width: 28px;
+            height: 28px;
+            color: #fff;
+        }
+        
+        .policy-section h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            color: #333;
+            margin: 0;
+        }
+        
+        .policy-section h3 {
+            font-size: 20px;
+            color: #2d5a3d;
+            margin: 30px 0 15px;
+            font-weight: 600;
+        }
+        
+        .policy-section p {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.8;
+            margin: 0 0 20px;
+        }
+        
+        .policy-section ul {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.8;
+            margin: 0 0 20px;
+            padding-left: 24px;
+        }
+        
+        .policy-section ul li {
+            margin-bottom: 10px;
+        }
+        
+        .policy-section a {
+            color: #2d5a3d;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .policy-section a:hover {
+            color: #c9a96e;
+            text-decoration: underline;
+        }
+        
+        .policy-highlight {
+            background: #f8f6f3;
+            padding: 24px 28px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border-left: 4px solid #c9a96e;
+        }
+        
+        .policy-highlight p {
+            margin: 0;
+            color: #444;
+        }
+        
+        .policy-highlight strong {
+            color: #2d5a3d;
+        }
+        
+        /* Shipping Table */
+        .shipping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        
+        .shipping-table th,
+        .shipping-table td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e8e4df;
+        }
+        
+        .shipping-table th {
+            background: #2d5a3d;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .shipping-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .shipping-table tr:hover td {
+            background: #f8f6f3;
+        }
+        
+        .shipping-table td {
+            color: #555;
+            font-size: 15px;
+        }
+        
+        /* Contact CTA */
+        .policy-contact {
+            background: linear-gradient(135deg, #2d5a3d 0%, #1a3d2a 100%);
+            padding: 50px 40px;
+            border-radius: 16px;
+            text-align: center;
+            margin-top: 60px;
+        }
+        
+        .policy-contact h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            color: #fff;
+            margin: 0 0 15px;
+        }
+        
+        .policy-contact p {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+            margin: 0 0 25px;
+        }
+        
+        .policy-contact a {
+            display: inline-block;
+            background: #c9a96e;
+            color: #1a1a1a;
+            padding: 14px 32px;
+            border-radius: 30px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .policy-contact a:hover {
+            background: #fff;
+            transform: translateY(-2px);
+        }
+        
+        /* Last Updated */
+        .last-updated {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e8e4df;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .policies-hero {
+                padding: 100px 20px 60px;
+            }
+            
+            .policies-hero h1 {
+                font-size: 40px;
+            }
+            
+            .policy-nav {
+                padding: 15px 16px;
+            }
+            
+            .policy-nav a {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+            
+            .policies-content {
+                padding: 40px 20px 60px;
+            }
+            
+            .policy-section h2 {
+                font-size: 28px;
+            }
+            
+            .policy-section-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .shipping-table {
+                font-size: 14px;
+            }
+            
+            .shipping-table th,
+            .shipping-table td {
+                padding: 12px 14px;
+            }
+            
+            .policy-contact {
+                padding: 40px 24px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .policies-hero h1 {
+                font-size: 32px;
+            }
+            
+            .policy-nav-inner {
+                gap: 8px;
+            }
+            
+            .policy-nav a {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+            
+            .policy-nav a svg {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip Navigation -->
+    <a href="#main-content" class="skip-nav">Skip to main content</a>
+
+    <!-- Shared Navigation -->
+    <!--#include virtual="shared/navigation.html"-->
+
+    <main id="main-content">
+        <!-- Hero Section -->
+        <section class="policies-hero">
+            <h1>Our Policies</h1>
+            <p>Transparency is at the heart of everything we do. Here you'll find all our policies regarding privacy, shipping, returns, and terms of service.</p>
+        </section>
+
+        <!-- Policy Navigation -->
+        <div class="policy-nav">
+            <div class="policy-nav-inner">
+                <a href="#privacy">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    Privacy Policy
+                </a>
+                <a href="#terms">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Terms of Service
+                </a>
+                <a href="#shipping">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="3" width="15" height="13"/>
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                        <circle cx="5.5" cy="18.5" r="2.5"/>
+                        <circle cx="18.5" cy="18.5" r="2.5"/>
+                    </svg>
+                    Shipping & Delivery
+                </a>
+                <a href="#returns">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"/>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    </svg>
+                    Returns & Refunds
+                </a>
+            </div>
+        </div>
+
+        <!-- Policy Content -->
+        <div class="policies-content">
+            
+            <!-- Privacy Policy -->
+            <section class="policy-section" id="privacy">
+                <div class="policy-section-header">
+                    <div class="policy-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                    </div>
+                    <h2>Privacy Policy</h2>
+                </div>
+                
+                <p>At Grainhouse Coffee, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you visit our website or make a purchase.</p>
+                
+                <h3>Information We Collect</h3>
+                <p>We collect information that you provide directly to us, including:</p>
+                <ul>
+                    <li><strong>Personal Information:</strong> Name, email address, shipping address, billing address, and phone number when you place an order or create an account.</li>
+                    <li><strong>Payment Information:</strong> Credit card details are processed securely through our payment processor Snipcart and are never stored on our servers.</li>
+                    <li><strong>Communication Preferences:</strong> Email subscription preferences and communication history.</li>
+                    <li><strong>Order History:</strong> Records of your purchases, subscriptions, and preferences.</li>
+                </ul>
+                
+                <h3>How We Use Your Information</h3>
+                <p>We use the information we collect to:</p>
+                <ul>
+                    <li>Process and fulfill your orders, including shipping and delivery</li>
+                    <li>Send order confirmations, shipping updates, and receipts</li>
+                    <li>Manage your subscription and account preferences</li>
+                    <li>Respond to your questions and provide customer support</li>
+                    <li>Send promotional emails (only if you've opted in)</li>
+                    <li>Improve our website, products, and services</li>
+                    <li>Detect and prevent fraud</li>
+                </ul>
+                
+                <div class="policy-highlight">
+                    <p><strong>We never sell your personal information.</strong> Your data is only shared with trusted third parties necessary to fulfill your orders (shipping carriers, payment processors) and is protected under strict confidentiality agreements.</p>
+                </div>
+                
+                <h3>Cookies and Tracking</h3>
+                <p>We use cookies and similar technologies to enhance your browsing experience, analyze site traffic, and understand user behavior. You can control cookie preferences through your browser settings.</p>
+                
+                <h3>Your Rights</h3>
+                <p>You have the right to:</p>
+                <ul>
+                    <li>Access the personal information we hold about you</li>
+                    <li>Request correction of inaccurate data</li>
+                    <li>Request deletion of your personal information</li>
+                    <li>Opt out of marketing communications at any time</li>
+                    <li>Request a copy of your data in a portable format</li>
+                </ul>
+                
+                <h3>Data Security</h3>
+                <p>We implement industry-standard security measures including SSL encryption, secure payment processing, and regular security audits to protect your information.</p>
+                
+                <h3>Contact Us About Privacy</h3>
+                <p>If you have questions about this Privacy Policy or wish to exercise your rights, please contact us at <a href="mailto:privacy@grainhousecoffee.com">privacy@grainhousecoffee.com</a>.</p>
+            </section>
+            
+            <!-- Terms of Service -->
+            <section class="policy-section" id="terms">
+                <div class="policy-section-header">
+                    <div class="policy-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                    </div>
+                    <h2>Terms of Service</h2>
+                </div>
+                
+                <p>Welcome to Grainhouse Coffee. By accessing our website and making purchases, you agree to be bound by these Terms of Service. Please read them carefully.</p>
+                
+                <h3>Use of Our Website</h3>
+                <p>By using grainhousecoffee.com, you agree to:</p>
+                <ul>
+                    <li>Use the website only for lawful purposes</li>
+                    <li>Provide accurate and complete information when creating an account or placing orders</li>
+                    <li>Maintain the security of your account credentials</li>
+                    <li>Not engage in any activity that disrupts or interferes with our services</li>
+                </ul>
+                
+                <h3>Products and Pricing</h3>
+                <p>All products are subject to availability. We reserve the right to:</p>
+                <ul>
+                    <li>Limit quantities on any order</li>
+                    <li>Refuse or cancel any order at our discretion</li>
+                    <li>Correct pricing errors (we will notify you before processing if a price was listed incorrectly)</li>
+                    <li>Discontinue products without notice</li>
+                </ul>
+                
+                <div class="policy-highlight">
+                    <p><strong>Freshness Guarantee:</strong> All coffee is roasted to order and shipped within 1-3 business days of roasting. We guarantee the freshness and quality of our products.</p>
+                </div>
+                
+                <h3>Subscriptions</h3>
+                <p>Coffee subscriptions are subject to the following terms:</p>
+                <ul>
+                    <li>Subscriptions automatically renew at the selected frequency until cancelled</li>
+                    <li>You may pause, skip, or cancel your subscription at any time through your account</li>
+                    <li>Changes must be made at least 48 hours before your next scheduled shipment</li>
+                    <li>We reserve the right to substitute products of equal or greater value if your selection is unavailable</li>
+                </ul>
+                
+                <h3>Intellectual Property</h3>
+                <p>All content on this website, including text, images, logos, and designs, is the property of Grainhouse Coffee and is protected by copyright and trademark laws. You may not reproduce, distribute, or create derivative works without our written permission.</p>
+                
+                <h3>Limitation of Liability</h3>
+                <p>Grainhouse Coffee shall not be liable for any indirect, incidental, special, or consequential damages arising from the use of our website or products. Our total liability is limited to the amount you paid for the product in question.</p>
+                
+                <h3>Governing Law</h3>
+                <p>These Terms of Service are governed by the laws of the United States. Any disputes shall be resolved in the courts of the state where Grainhouse Coffee is headquartered.</p>
+                
+                <h3>Changes to Terms</h3>
+                <p>We may update these Terms of Service from time to time. Continued use of our website after changes constitutes acceptance of the new terms.</p>
+            </section>
+            
+            <!-- Shipping & Delivery -->
+            <section class="policy-section" id="shipping">
+                <div class="policy-section-header">
+                    <div class="policy-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="1" y="3" width="15" height="13"/>
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                            <circle cx="5.5" cy="18.5" r="2.5"/>
+                            <circle cx="18.5" cy="18.5" r="2.5"/>
+                        </svg>
+                    </div>
+                    <h2>Shipping & Delivery</h2>
+                </div>
+                
+                <p>We ship fresh roasted coffee from our roastery directly to your door. All orders are roasted within 1-3 business days and shipped promptly to ensure maximum freshness.</p>
+                
+                <div class="policy-highlight">
+                    <p><strong>Free Shipping:</strong> Enjoy free standard shipping on all orders over $45 within the continental United States!</p>
+                </div>
+                
+                <h3>Shipping Rates & Delivery Times</h3>
+                <table class="shipping-table" id="shipping-rates-table">
+                    <thead>
+                        <tr>
+                            <th>Shipping Method</th>
+                            <th>Estimated Delivery</th>
+                            <th>Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Shipping rates populated from shipping-config.js -->
+                        <tr>
+                            <td>Standard Shipping</td>
+                            <td>3-4 business days</td>
+                            <td>$6.60 (Free over $45)</td>
+                        </tr>
+                        <tr>
+                            <td>UPS® Ground</td>
+                            <td>3-5 business days</td>
+                            <td>$15.54</td>
+                        </tr>
+                        <tr>
+                            <td>UPS 2nd Day Air®</td>
+                            <td>2 business days</td>
+                            <td>$23.97</td>
+                        </tr>
+                        <tr>
+                            <td>UPS Next Day Air®</td>
+                            <td>Next business day</td>
+                            <td>$31.53</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Processing Time</h3>
+                <p>Orders are typically processed and shipped within 1-3 business days. During peak seasons or promotions, processing may take up to 5 business days. You'll receive a shipping confirmation email with tracking information once your order ships.</p>
+                
+                <h3>Shipping Destinations</h3>
+                <ul>
+                    <li><strong>Domestic:</strong> We ship to all 50 US states. Alaska and Hawaii may have extended delivery times.</li>
+                    <li><strong>International:</strong> We currently ship to Canada. International orders may be subject to customs duties and taxes, which are the responsibility of the recipient.</li>
+                    <li><strong>PO Boxes & APO/FPO:</strong> We ship to PO Boxes and military addresses via USPS.</li>
+                </ul>
+                
+                <h3>Subscription Shipping</h3>
+                <p>Subscription orders receive free standard shipping regardless of order value. Subscriptions are shipped on a recurring schedule based on your selected frequency (weekly, bi-weekly, or monthly).</p>
+                
+                <h3>Order Tracking</h3>
+                <p>Once your order ships, you'll receive an email with tracking information. You can also view your order status by logging into your <a href="account.html">account</a>.</p>
+                
+                <h3>Delivery Issues</h3>
+                <p>If your package is lost, damaged, or significantly delayed, please <a href="contact.html">contact us</a> within 14 days of the expected delivery date. We'll work with the carrier to resolve the issue or send a replacement.</p>
+            </section>
+            
+            <!-- Returns & Refunds -->
+            <section class="policy-section" id="returns">
+                <div class="policy-section-header">
+                    <div class="policy-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"/>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                        </svg>
+                    </div>
+                    <h2>Returns & Refunds</h2>
+                </div>
+                
+                <p>Your satisfaction is our top priority. If you're not completely happy with your purchase, we're here to make it right.</p>
+                
+                <div class="policy-highlight">
+                    <p><strong>100% Satisfaction Guarantee:</strong> If you're not satisfied with your coffee for any reason, contact us within 30 days of delivery and we'll provide a replacement or full refund — no questions asked.</p>
+                </div>
+                
+                <h3>Coffee Products</h3>
+                <p>Due to the perishable nature of coffee, we cannot accept returns of opened bags. However, if you're unhappy with your coffee:</p>
+                <ul>
+                    <li>Contact us within 30 days of receiving your order</li>
+                    <li>Let us know what went wrong — we love feedback!</li>
+                    <li>We'll send a replacement or issue a full refund at your preference</li>
+                </ul>
+                
+                <h3>Brewing Equipment & Gear</h3>
+                <p>Non-coffee items may be returned within 30 days of delivery if:</p>
+                <ul>
+                    <li>The item is unused and in its original packaging</li>
+                    <li>All tags and accessories are included</li>
+                    <li>You have proof of purchase</li>
+                </ul>
+                <p>Return shipping costs are the responsibility of the customer unless the item arrived damaged or defective.</p>
+                
+                <h3>Damaged or Defective Items</h3>
+                <p>If your order arrives damaged or defective:</p>
+                <ul>
+                    <li>Take photos of the damage</li>
+                    <li>Contact us within 7 days of delivery</li>
+                    <li>We'll send a free replacement immediately</li>
+                </ul>
+                
+                <h3>Subscription Cancellations</h3>
+                <p>You can cancel your subscription at any time through your account dashboard. Cancellations made at least 48 hours before your next billing date will stop the upcoming shipment. Shipments already processed cannot be cancelled but are eligible for our satisfaction guarantee.</p>
+                
+                <h3>How to Request a Return or Refund</h3>
+                <p>To initiate a return or refund, please:</p>
+                <ul>
+                    <li>Email us at <a href="mailto:support@grainhousecoffee.com">support@grainhousecoffee.com</a></li>
+                    <li>Include your order number and reason for the return</li>
+                    <li>Our team will respond within 24 hours with next steps</li>
+                </ul>
+                
+                <h3>Refund Processing</h3>
+                <p>Refunds are processed within 5-7 business days of approval. The refund will be credited to your original payment method. Please allow an additional 3-5 business days for the refund to appear on your statement, depending on your bank.</p>
+                
+                <h3>Exchanges</h3>
+                <p>We don't offer direct exchanges. If you'd like a different product, please return the original item for a refund and place a new order.</p>
+            </section>
+            
+            <!-- Contact CTA -->
+            <div class="policy-contact">
+                <h3>Questions About Our Policies?</h3>
+                <p>Our customer support team is here to help. Reach out anytime and we'll get back to you within 24 hours.</p>
+                <a href="contact.html">Contact Support</a>
+            </div>
+            
+            <!-- Last Updated -->
+            <p class="last-updated">Last updated: December 2025</p>
+        </div>
+    </main>
+
+    <!-- Shared Footer -->
+    <!--#include virtual="shared/footer.html"-->
+    
+    <!-- Shared Scripts -->
+    <!--#include virtual="shared/scripts.html"-->
+    
+    <!-- Page-specific scripts for policy navigation -->
+    <script>
+        // Smooth scroll for policy navigation
+        document.querySelectorAll('.policy-nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetSection = document.getElementById(targetId);
+                
+                if (targetSection) {
+                    const navHeight = document.querySelector('.policy-nav').offsetHeight;
+                    const targetPosition = targetSection.offsetTop - navHeight - 20;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Update active state
+                    document.querySelectorAll('.policy-nav a').forEach(a => a.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update URL without scrolling
+                    history.pushState(null, null, '#' + targetId);
+                }
+            });
+        });
+        
+        // Update active nav on scroll
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('.policy-section');
+            const navLinks = document.querySelectorAll('.policy-nav a');
+            const navHeight = document.querySelector('.policy-nav').offsetHeight;
+            
+            let currentSection = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - navHeight - 100;
+                if (window.scrollY >= sectionTop) {
+                    currentSection = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + currentSection) {
+                    link.classList.add('active');
+                }
+            });
+        });
+        
+        // Handle direct link to section on page load
+        if (window.location.hash) {
+            setTimeout(() => {
+                const targetId = window.location.hash.substring(1);
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    const navHeight = document.querySelector('.policy-nav').offsetHeight;
+                    const targetPosition = targetSection.offsetTop - navHeight - 20;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 100);
+        }
+    </script>
+    
+    <!-- Load shipping config to keep prices in sync -->
+    <script src="shipping-config.js"></script>
+    <script>
+        // Update shipping table with current rates from config
+        (function() {
+            if (typeof window.getShippingTableData !== 'undefined') {
+                const tableBody = document.querySelector('#shipping-rates-table tbody');
+                if (tableBody) {
+                    const data = window.getShippingTableData();
+                    tableBody.innerHTML = data.map(row => `
+                        <tr>
+                            <td>${row.method}</td>
+                            <td>${row.delivery}</td>
+                            <td>${row.cost}</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
+

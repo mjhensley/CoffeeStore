@@ -1,0 +1,33 @@
+<!-- PERFORMANCE: Preconnect to critical origins FIRST -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.snipcart.com" crossorigin>
+<link rel="preconnect" href="https://app.snipcart.com" crossorigin>
+<link rel="dns-prefetch" href="https://api.snipcart.com">
+<link rel="dns-prefetch" href="https://api.resend.com">
+
+<!-- PERFORMANCE: Preload critical resources -->
+<link rel="preload" href="styles.css" as="style">
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" as="style" crossorigin>
+
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon.svg">
+
+<!-- Fonts - display swap for faster text visibility -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
+
+<!-- CRITICAL INLINE CSS for instant first paint -->
+<style>*{margin:0;padding:0;box-sizing:border-box}:root{--brown:#4a3728;--cream:#f5f0e8;--gold:#c9a96e;--dark:#1a1a1a;--white:#fff;--green:#2d5a3d}html{scroll-behavior:smooth}body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:var(--cream);color:var(--dark);line-height:1.6;opacity:1}.top-banner{background:var(--brown);color:var(--white);padding:12px 20px;font-size:13px;text-align:center}nav{background:var(--white);padding:20px 40px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.05)}.logo{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--brown);text-decoration:none}.nav-links{display:flex;gap:35px;list-style:none}.nav-links a{text-decoration:none;color:var(--dark);font-weight:500;font-size:14px;text-transform:uppercase;letter-spacing:1px}.cart-btn{background:var(--brown);color:var(--white);border:none;padding:10px 18px;border-radius:25px;cursor:pointer;font-size:13px}@media(max-width:768px){nav{padding:12px 16px}.nav-links{display:none}}</style>
+
+<!-- Styles - Load asynchronously for speed -->
+<link rel="stylesheet" href="styles.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="styles.css"></noscript>
+<link rel="stylesheet" href="enhanced-ui.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="enhanced-ui.css"></noscript>
+
+<!-- Snipcart - Load asynchronously for better performance -->
+<link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.css"></noscript>
+

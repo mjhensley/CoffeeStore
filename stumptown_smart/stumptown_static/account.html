@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | Grainhouse Coffee</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sign in to your Grainhouse Coffee account to earn rewards, track orders, and enjoy exclusive member benefits.">
+    <meta name="keywords" content="Grainhouse Coffee login, coffee rewards, member account">
+    <link rel="canonical" href="https://grainhousecoffee.com/account.html">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://grainhousecoffee.com/account.html">
+    <meta property="og:title" content="Sign In | Grainhouse Coffee">
+    <meta property="og:description" content="Sign in to earn rewards and enjoy member benefits.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <!-- Fonts & Styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Snipcart -->
+    <link rel="preconnect" href="https://app.snipcart.com">
+    <link rel="preconnect" href="https://cdn.snipcart.com">
+    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.css" />
+    
+    <style>
+        .account-page {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, var(--cream) 0%, #e8e0d5 100%);
+        }
+        
+        .account-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            max-width: 1000px;
+            width: 100%;
+            background: var(--white);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        
+        .account-hero {
+            background: linear-gradient(135deg, var(--brown) 0%, #2d1f15 100%);
+            color: var(--white);
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .account-hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .account-hero p {
+            font-size: 16px;
+            opacity: 0.9;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+        
+        .rewards-preview {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 25px;
+        }
+        
+        .rewards-preview h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: var(--gold);
+        }
+        
+        .reward-perks {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .reward-perk {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+        }
+        
+        .reward-perk-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .account-forms {
+            padding: 60px 50px;
+        }
+        
+        .form-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .form-tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .form-tab.active {
+            color: var(--brown);
+        }
+        
+        .form-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gold);
+        }
+        
+        .form-panel {
+            display: none;
+        }
+        
+        .form-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 2px solid #e5e5e5;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(201, 169, 110, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-submit {
+            width: 100%;
+            padding: 18px 30px;
+            background: var(--brown);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .form-submit:hover {
+            background: #3a2a1c;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(74, 55, 40, 0.3);
+        }
+        
+        .form-footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .form-footer a {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .form-message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .form-message.error {
+            display: block;
+            background: #fee;
+            color: #c00;
+            border: 1px solid #fcc;
+        }
+        
+        .form-message.success {
+            display: block;
+            background: #efe;
+            color: #060;
+            border: 1px solid #cfc;
+        }
+        
+        .bonus-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--gold);
+            color: var(--brown);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .account-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .account-hero {
+                padding: 40px 30px;
+            }
+            
+            .account-hero h1 {
+                font-size: 32px;
+            }
+            
+            .account-forms {
+                padding: 40px 30px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-nav">Skip to main content</a>
+
+    <div class="top-banner">
+        <div class="banner-scroll">
+            <span class="banner-item">Save 15% on orders $75+ with code <strong>HOLIDAY15</strong></span>
+            <span class="banner-item">☕ Free shipping on all orders over $45</span>
+            <span class="banner-item">Save 30% on first subscription with code <strong>SAVE30</strong></span>
+            <span class="banner-item">Save 15% on orders $75+ with code <strong>HOLIDAY15</strong></span>
+            <span class="banner-item">☕ Free shipping on all orders over $45</span>
+            <span class="banner-item">Save 30% on first subscription with code <strong>SAVE30</strong></span>
+        </div>
+    </div>
+    
+    <nav role="navigation" aria-label="Main navigation">
+        <a href="index.html" class="logo">Grainhouse Coffee</a>
+        
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle mobile menu" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        
+        <ul class="nav-links">
+            <li><a href="collections.html">Shop</a></li>
+            <li><a href="subscribe.html">Subscribe</a></li>
+            <li><a href="locations.html">Locations</a></li>
+            <li><a href="brew-guides.html">Brew Guides</a></li>
+            <li><a href="our-story.html">Our Story</a></li>
+        </ul>
+        <div class="nav-right">
+            <button class="snipcart-checkout cart-btn" aria-label="Shopping cart">
+                <svg class="cart-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="9" cy="21" r="1"/>
+                    <circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span class="cart-text">Cart</span>
+                <span class="cart-count-badge snipcart-items-count" aria-live="polite"></span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+    <div class="mobile-nav" id="mobileNav">
+        <ul class="mobile-nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="collections.html">Shop</a></li>
+            <li><a href="subscribe.html">Subscribe</a></li>
+            <li><a href="locations.html">Locations</a></li>
+            <li><a href="brew-guides.html">Brew Guides</a></li>
+            <li><a href="our-story.html">Our Story</a></li>
+            <li><a href="gear.html">Gear</a></li>
+        </ul>
+    </div>
+
+    <main id="main-content">
+        <section class="account-page">
+            <div class="account-container">
+                <div class="account-hero">
+                    <h1>Join the<br>Grainhouse<br>Rewards</h1>
+                    <p>Create an account to start earning points on every purchase. Redeem for free coffee, discounts, and exclusive perks.</p>
+                    
+                    <div class="rewards-preview">
+                        <h3>Member Benefits</h3>
+                        <div class="reward-perks">
+                            <div class="reward-perk">
+                                <span class="reward-perk-icon">✨</span>
+                                <span>Earn 10 points per $1 spent</span>
+                            </div>
+                            <div class="reward-perk">
+                                <span class="reward-perk-icon">🎁</span>
+                                <span>Redeem points for free coffee & discounts</span>
+                            </div>
+                            <div class="reward-perk">
+                                <span class="reward-perk-icon">⭐</span>
+                                <span>Unlock tiers for bonus point multipliers</span>
+                            </div>
+                            <div class="reward-perk">
+                                <span class="reward-perk-icon">🎂</span>
+                                <span>Birthday rewards & early access</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bonus-badge">
+                        🎉 Get 150 bonus points when you sign up!
+                    </div>
+                </div>
+                
+                <div class="account-forms">
+                    <div class="form-tabs">
+                        <button class="form-tab active" data-tab="signin">Sign In</button>
+                        <button class="form-tab" data-tab="signup">Create Account</button>
+                    </div>
+                    
+                    <div id="form-message" class="form-message"></div>
+                    
+                    <!-- Sign In Form -->
+                    <div class="form-panel active" id="signin-panel">
+                        <form id="signin-form">
+                            <div class="form-group">
+                                <label for="signin-email">Email Address</label>
+                                <input type="email" id="signin-email" name="email" required placeholder="you@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="signin-password">Password</label>
+                                <input type="password" id="signin-password" name="password" required placeholder="Enter your password">
+                            </div>
+                            <button type="submit" class="form-submit">Sign In</button>
+                        </form>
+                        <div class="form-footer">
+                            <a href="#">Forgot your password?</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Sign Up Form -->
+                    <div class="form-panel" id="signup-panel">
+                        <form id="signup-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="signup-firstname">First Name</label>
+                                    <input type="text" id="signup-firstname" name="firstname" required placeholder="John">
+                                </div>
+                                <div class="form-group">
+                                    <label for="signup-lastname">Last Name</label>
+                                    <input type="text" id="signup-lastname" name="lastname" required placeholder="Doe">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="signup-email">Email Address</label>
+                                <input type="email" id="signup-email" name="email" required placeholder="you@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="signup-password">Password</label>
+                                <input type="password" id="signup-password" name="password" required minlength="6" placeholder="At least 6 characters">
+                            </div>
+                            <button type="submit" class="form-submit">Create Account & Earn 150 Points</button>
+                        </form>
+                        <div class="form-footer">
+                            By creating an account, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-grid">
+            <div>
+                <div class="footer-brand">Grainhouse Coffee</div>
+                <p class="footer-desc">Premium artisan coffee, expertly sourced and roasted. From our roastery to coffee lovers everywhere.</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Shop</h4>
+                <ul class="footer-links">
+                    <li><a href="collections.html">All Coffee</a></li>
+                    <li><a href="subscribe.html">Subscriptions</a></li>
+                    <li><a href="gear.html">Gear</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Learn</h4>
+                <ul class="footer-links">
+                    <li><a href="brew-guides.html">Brew Guides</a></li>
+                    <li><a href="our-story.html">Our Story</a></li>
+                    <li><a href="locations.html">Locations</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Account</h4>
+                <ul class="footer-links">
+                    <li><a href="account.html">Sign In</a></li>
+                    <li><a href="rewards.html">Rewards</a></li>
+                    <li><a href="account.html">Create Account</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2025 Grainhouse Coffee Roasters. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Snipcart -->
+    <div hidden id="snipcart" data-api-key="ODMwYTIxNjQtMjkxYy00YjNlLWI0NTAtYTkyNWFkNTdlNzNhNjM5MDE1ODA5OTIzMjEyMTUw" data-config-modal-style="side"></div>
+    <script async src="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.js"></script>
+    
+    <!-- Snipcart Checkout Customizations -->
+    <style>
+        .snipcart-cart-summary-side .snipcart-cart-summary-item { display: flex !important; align-items: flex-start !important; gap: 16px !important; padding: 16px 0 !important; border-bottom: 1px solid #eee !important; }
+        .snipcart-cart-summary-side .snipcart-cart-summary-item:last-child { border-bottom: none !important; }
+        .snipcart-cart-summary-side .snipcart-cart-summary-item__image { display: block !important; width: 72px !important; height: 72px !important; min-width: 72px !important; border-radius: 8px !important; object-fit: cover !important; background: #f8f6f3 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; }
+        .snipcart-cart-summary-side .snipcart-cart-summary-item__image img { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 8px !important; }
+        .snipcart-cart-summary-item .snipcart-item-line__media, .snipcart-cart-summary-item__image-container { display: block !important; flex-shrink: 0 !important; }
+        .snipcart-item-line .snipcart-item-line__image { display: block !important; width: 80px !important; height: 80px !important; border-radius: 8px !important; overflow: hidden !important; background: #f8f6f3 !important; }
+        .snipcart-item-line .snipcart-item-line__image img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+        .snipcart-checkout .snipcart-item-line { display: flex !important; align-items: center !important; gap: 16px !important; padding: 16px 0 !important; }
+        .snipcart-checkout .snipcart-item-line__media { display: block !important; width: 64px !important; height: 64px !important; min-width: 64px !important; border-radius: 8px !important; overflow: hidden !important; background: #f8f6f3 !important; }
+        .snipcart-checkout .snipcart-item-line__media img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+        #snipcart .snipcart-cart-summary-fees__notice, #snipcart [class*="fees__notice"], .snipcart-modal [class*="fees__notice"], .snipcart-checkout [class*="fees__notice"] { margin-bottom: 24px !important; }
+        #snipcart .snipcart-cart-summary__total, #snipcart [class*="summary__total"], .snipcart-modal [class*="summary__total"], .snipcart-checkout [class*="summary__total"] { margin-top: 16px !important; padding-top: 16px !important; }
+        .snipcart-cart-summary-item__name { font-weight: 600 !important; color: #333 !important; font-size: 15px !important; margin-bottom: 4px !important; }
+        .snipcart-cart-summary-item__quantity { color: #888 !important; font-size: 14px !important; }
+        .snipcart-cart-summary-item__price { font-weight: 600 !important; color: #333 !important; }
+    </style>
+    
+    <!-- Account System -->
+    <script src="account.js"></script>
+    
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileNav = document.getElementById('mobileNav');
+        const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+
+        function toggleMobileMenu() {
+            const isOpen = mobileNav.classList.contains('active');
+            mobileMenuBtn.classList.toggle('active');
+            mobileNav.classList.toggle('active');
+            mobileNavOverlay.classList.toggle('active');
+            mobileMenuBtn.setAttribute('aria-expanded', !isOpen);
+            document.body.style.overflow = isOpen ? '' : 'hidden';
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        mobileNavOverlay.addEventListener('click', toggleMobileMenu);
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && mobileNav.classList.contains('active')) {
+                toggleMobileMenu();
+            }
+        });
+
+        // Form Tab Switching
+        const formTabs = document.querySelectorAll('.form-tab');
+        const formPanels = document.querySelectorAll('.form-panel');
+        
+        formTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                formTabs.forEach(t => t.classList.remove('active'));
+                formPanels.forEach(p => p.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(targetTab + '-panel').classList.add('active');
+                
+                // Clear message
+                document.getElementById('form-message').className = 'form-message';
+                document.getElementById('form-message').textContent = '';
+            });
+        });
+
+        // Show message helper
+        function showMessage(message, type) {
+            const msgEl = document.getElementById('form-message');
+            msgEl.textContent = message;
+            msgEl.className = 'form-message ' + type;
+        }
+
+        // Sign In Form
+        document.getElementById('signin-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('signin-email').value;
+            const password = document.getElementById('signin-password').value;
+            
+            const result = GrainhouseAccount.login(email, password);
+            
+            if (result.success) {
+                showMessage(result.message, 'success');
+                setTimeout(() => {
+                    window.location.href = 'rewards.html';
+                }, 1000);
+            } else {
+                showMessage(result.message, 'error');
+            }
+        });
+
+        // Sign Up Form
+        document.getElementById('signup-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const firstName = document.getElementById('signup-firstname').value;
+            const lastName = document.getElementById('signup-lastname').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            const result = GrainhouseAccount.signup(email, password, firstName, lastName);
+            
+            if (result.success) {
+                showMessage(result.message, 'success');
+                setTimeout(() => {
+                    window.location.href = 'rewards.html';
+                }, 1500);
+            } else {
+                showMessage(result.message, 'error');
+            }
+        });
+
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = GrainhouseAccount.getCurrentUser();
+            if (user) {
+                window.location.href = 'rewards.html';
+            }
+        });
+    </script>
+    
+    <script>
+        // Banner scroll animation fallback for browsers that may have issues
+        (function() {
+            const bannerScroll = document.querySelector('.banner-scroll');
+            if (!bannerScroll) return;
+            
+            const checkAnimation = function() {
+                const style = window.getComputedStyle(bannerScroll);
+                const animName = style.animationName || style.webkitAnimationName;
+                const animDuration = parseFloat(style.animationDuration) || parseFloat(style.webkitAnimationDuration);
+                
+                if (!animName || animName === 'none' || !animDuration) {
+                    startJSAnimation();
+                }
+            };
+            
+            function startJSAnimation() {
+                let position = 0;
+                const speed = 1;
+                const scrollWidth = bannerScroll.scrollWidth / 2;
+                
+                function animate() {
+                    position -= speed;
+                    if (position <= -scrollWidth) {
+                        position = 0;
+                    }
+                    bannerScroll.style.transform = 'translateX(' + position + 'px)';
+                    requestAnimationFrame(animate);
+                }
+                
+                bannerScroll.style.animation = 'none';
+                bannerScroll.style.webkitAnimation = 'none';
+                animate();
+            }
+            
+            setTimeout(checkAnimation, 500);
+        })();
+    </script>
+</body>
+</html>
+

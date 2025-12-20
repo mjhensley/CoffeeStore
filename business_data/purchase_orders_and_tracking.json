@@ -1,0 +1,966 @@
+{
+  "business_info": {
+    "company": "Grainhouse Coffee Roasters",
+    "address": "2847 NW Industrial Way, Portland, OR 97210",
+    "phone": "(503) 555-0187",
+    "ein": "84-2957361"
+  },
+  
+  "suppliers": [
+    {
+      "id": "SUP-001",
+      "name": "Caravela Coffee Trading",
+      "contact": "Diego Ramirez",
+      "email": "diego@caravelacoffee.com",
+      "phone": "+57 1 555 2847",
+      "address": "Calle 93 #11-26, Bogotá, Colombia",
+      "specialty": "Green Coffee Beans - Latin America"
+    },
+    {
+      "id": "SUP-002", 
+      "name": "Ethiopian Yirgacheffe Exporters",
+      "contact": "Alemayehu Bekele",
+      "email": "abekele@eyecoffee.et",
+      "phone": "+251 11 551 2847",
+      "address": "Bole Road, Addis Ababa, Ethiopia",
+      "specialty": "Green Coffee Beans - Africa"
+    },
+    {
+      "id": "SUP-003",
+      "name": "Pacific Bag Company",
+      "contact": "Sarah Mitchell",
+      "email": "sarah.m@pacificbag.com",
+      "phone": "(206) 555-3920",
+      "address": "1420 S Industrial Blvd, Seattle, WA 98134",
+      "specialty": "Coffee Packaging & Bags"
+    },
+    {
+      "id": "SUP-004",
+      "name": "Sumatra Prima Cooperative",
+      "contact": "Budi Santoso",
+      "email": "budi@sumatraprima.id",
+      "phone": "+62 61 455 8821",
+      "address": "Jl. Gatot Subroto 45, Medan, Indonesia",
+      "specialty": "Green Coffee Beans - Indonesia"
+    },
+    {
+      "id": "SUP-005",
+      "name": "Roaster Supply Co",
+      "contact": "Mike Thompson",
+      "email": "mike@roastersupply.com",
+      "phone": "(415) 555-7291",
+      "address": "890 Harrison St, San Francisco, CA 94107",
+      "specialty": "Roasting Equipment & Parts"
+    }
+  ],
+
+  "supplier_purchase_orders": [
+    {
+      "po_number": "PO-2024-0847",
+      "supplier_id": "SUP-001",
+      "supplier_name": "Caravela Coffee Trading",
+      "order_date": "2024-10-19",
+      "expected_delivery": "2024-11-08",
+      "actual_delivery": "2024-11-06",
+      "status": "Delivered",
+      "tracking_number": "MAEU847291035",
+      "carrier": "Maersk Shipping",
+      "items": [
+        {
+          "sku": "GCB-COL-001",
+          "description": "Colombia El Jordan - Green Beans",
+          "quantity_kg": 500,
+          "unit_price": 8.45,
+          "total": 4225.00
+        },
+        {
+          "sku": "GCB-COL-002", 
+          "description": "Colombia Huila - Green Beans",
+          "quantity_kg": 300,
+          "unit_price": 7.90,
+          "total": 2370.00
+        }
+      ],
+      "subtotal": 6595.00,
+      "shipping": 1850.00,
+      "import_duties": 412.50,
+      "total": 8857.50,
+      "payment_status": "Paid",
+      "payment_date": "2024-10-22",
+      "notes": "Direct trade lot - Finca El Jordan, Nariño region"
+    },
+    {
+      "po_number": "PO-2024-0863",
+      "supplier_id": "SUP-002",
+      "supplier_name": "Ethiopian Yirgacheffe Exporters",
+      "order_date": "2024-10-25",
+      "expected_delivery": "2024-11-18",
+      "actual_delivery": "2024-11-20",
+      "status": "Delivered",
+      "tracking_number": "MSCU9284751",
+      "carrier": "MSC Mediterranean Shipping",
+      "items": [
+        {
+          "sku": "GCB-ETH-001",
+          "description": "Ethiopia Mordecofe - Green Beans",
+          "quantity_kg": 400,
+          "unit_price": 11.20,
+          "total": 4480.00
+        },
+        {
+          "sku": "GCB-ETH-002",
+          "description": "Ethiopia Duromina - Green Beans", 
+          "quantity_kg": 350,
+          "unit_price": 12.50,
+          "total": 4375.00
+        },
+        {
+          "sku": "GCB-ETH-003",
+          "description": "Ethiopia Suke Quto - Green Beans",
+          "quantity_kg": 250,
+          "unit_price": 14.80,
+          "total": 3700.00
+        }
+      ],
+      "subtotal": 12555.00,
+      "shipping": 2340.00,
+      "import_duties": 785.00,
+      "total": 15680.00,
+      "payment_status": "Paid",
+      "payment_date": "2024-10-28",
+      "notes": "Washed process, Grade 1 specialty lot"
+    },
+    {
+      "po_number": "PO-2024-0891",
+      "supplier_id": "SUP-003",
+      "supplier_name": "Pacific Bag Company",
+      "order_date": "2024-11-02",
+      "expected_delivery": "2024-11-09",
+      "actual_delivery": "2024-11-08",
+      "status": "Delivered",
+      "tracking_number": "1Z999AA10123456784",
+      "carrier": "UPS Ground",
+      "items": [
+        {
+          "sku": "PKG-12OZ-KFT",
+          "description": "12oz Kraft Stand-Up Pouches w/ Valve",
+          "quantity": 5000,
+          "unit_price": 0.42,
+          "total": 2100.00
+        },
+        {
+          "sku": "PKG-5LB-KFT",
+          "description": "5lb Kraft Bags w/ Valve & Tin Tie",
+          "quantity": 1000,
+          "unit_price": 0.89,
+          "total": 890.00
+        },
+        {
+          "sku": "PKG-LBL-GH",
+          "description": "Grainhouse Custom Labels (Roll of 1000)",
+          "quantity": 10,
+          "unit_price": 45.00,
+          "total": 450.00
+        }
+      ],
+      "subtotal": 3440.00,
+      "shipping": 185.00,
+      "import_duties": 0,
+      "total": 3625.00,
+      "payment_status": "Paid",
+      "payment_date": "2024-11-02",
+      "notes": "Holiday season stock-up order"
+    },
+    {
+      "po_number": "PO-2024-0912",
+      "supplier_id": "SUP-004",
+      "supplier_name": "Sumatra Prima Cooperative",
+      "order_date": "2024-11-10",
+      "expected_delivery": "2024-12-05",
+      "actual_delivery": "2024-12-03",
+      "status": "Delivered",
+      "tracking_number": "HLCU8847291",
+      "carrier": "Hapag-Lloyd",
+      "items": [
+        {
+          "sku": "GCB-IND-001",
+          "description": "Indonesia Beis Penantan - Green Beans",
+          "quantity_kg": 450,
+          "unit_price": 9.75,
+          "total": 4387.50
+        },
+        {
+          "sku": "GCB-IND-002",
+          "description": "Sumatra Mandheling - Green Beans",
+          "quantity_kg": 300,
+          "unit_price": 8.90,
+          "total": 2670.00
+        }
+      ],
+      "subtotal": 7057.50,
+      "shipping": 1920.00,
+      "import_duties": 441.00,
+      "total": 9418.50,
+      "payment_status": "Paid",
+      "payment_date": "2024-11-13",
+      "notes": "Wet-hulled process, Gayo Highland"
+    },
+    {
+      "po_number": "PO-2024-0934",
+      "supplier_id": "SUP-001",
+      "supplier_name": "Caravela Coffee Trading",
+      "order_date": "2024-11-18",
+      "expected_delivery": "2024-12-10",
+      "actual_delivery": "2024-12-09",
+      "status": "Delivered",
+      "tracking_number": "MAEU912847503",
+      "carrier": "Maersk Shipping",
+      "items": [
+        {
+          "sku": "GCB-GUA-001",
+          "description": "Guatemala Injerto - Green Beans",
+          "quantity_kg": 400,
+          "unit_price": 9.20,
+          "total": 3680.00
+        },
+        {
+          "sku": "GCB-CR-001",
+          "description": "Costa Rica Bella Vista - Green Beans",
+          "quantity_kg": 350,
+          "unit_price": 10.50,
+          "total": 3675.00
+        }
+      ],
+      "subtotal": 7355.00,
+      "shipping": 1780.00,
+      "import_duties": 459.70,
+      "total": 9594.70,
+      "payment_status": "Paid",
+      "payment_date": "2024-11-21",
+      "notes": "Honey process, micro-lot selection"
+    },
+    {
+      "po_number": "PO-2024-0958",
+      "supplier_id": "SUP-005",
+      "supplier_name": "Roaster Supply Co",
+      "order_date": "2024-11-25",
+      "expected_delivery": "2024-12-02",
+      "actual_delivery": "2024-12-02",
+      "status": "Delivered",
+      "tracking_number": "794644790132",
+      "carrier": "FedEx Ground",
+      "items": [
+        {
+          "sku": "EQP-PROB-DRM",
+          "description": "Probat Drum Bearing Assembly",
+          "quantity": 2,
+          "unit_price": 485.00,
+          "total": 970.00
+        },
+        {
+          "sku": "EQP-TEMP-PRB",
+          "description": "Temperature Probe K-Type Replacement",
+          "quantity": 4,
+          "unit_price": 89.00,
+          "total": 356.00
+        }
+      ],
+      "subtotal": 1326.00,
+      "shipping": 45.00,
+      "import_duties": 0,
+      "total": 1371.00,
+      "payment_status": "Paid",
+      "payment_date": "2024-11-25",
+      "notes": "Preventive maintenance parts"
+    },
+    {
+      "po_number": "PO-2024-0971",
+      "supplier_id": "SUP-003",
+      "supplier_name": "Pacific Bag Company",
+      "order_date": "2024-12-05",
+      "expected_delivery": "2024-12-12",
+      "actual_delivery": "2024-12-11",
+      "status": "Delivered",
+      "tracking_number": "1Z999AA10198765432",
+      "carrier": "UPS Ground",
+      "items": [
+        {
+          "sku": "PKG-12OZ-KFT",
+          "description": "12oz Kraft Stand-Up Pouches w/ Valve",
+          "quantity": 8000,
+          "unit_price": 0.40,
+          "total": 3200.00
+        },
+        {
+          "sku": "PKG-SHIP-BOX",
+          "description": "Shipping Boxes 12x8x6",
+          "quantity": 500,
+          "unit_price": 1.25,
+          "total": 625.00
+        }
+      ],
+      "subtotal": 3825.00,
+      "shipping": 210.00,
+      "import_duties": 0,
+      "total": 4035.00,
+      "payment_status": "Paid",
+      "payment_date": "2024-12-05",
+      "notes": "Rush order for holiday fulfillment"
+    },
+    {
+      "po_number": "PO-2024-0989",
+      "supplier_id": "SUP-002",
+      "supplier_name": "Ethiopian Yirgacheffe Exporters",
+      "order_date": "2024-12-10",
+      "expected_delivery": "2025-01-05",
+      "actual_delivery": null,
+      "status": "In Transit",
+      "tracking_number": "MSCU1029847",
+      "carrier": "MSC Mediterranean Shipping",
+      "items": [
+        {
+          "sku": "GCB-ETH-001",
+          "description": "Ethiopia Mordecofe - Green Beans (New Crop)",
+          "quantity_kg": 600,
+          "unit_price": 11.50,
+          "total": 6900.00
+        }
+      ],
+      "subtotal": 6900.00,
+      "shipping": 1650.00,
+      "import_duties": 431.25,
+      "total": 8981.25,
+      "payment_status": "Paid",
+      "payment_date": "2024-12-12",
+      "notes": "2024/2025 harvest, arrival scheduled early January"
+    }
+  ],
+
+  "customer_orders": [
+    {
+      "order_id": "GH-47291",
+      "order_date": "2024-10-20",
+      "ship_date": "2024-10-21",
+      "delivery_date": "2024-10-24",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847291847",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Jennifer Morrison",
+        "email": "jmorrison84@gmail.com",
+        "address": "4521 Maple Drive",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78745"
+      },
+      "items": [
+        {"product": "Hair Bender", "size": "12oz", "quantity": 2, "price": 50.95},
+        {"product": "Holler Mountain", "size": "12oz", "quantity": 1, "price": 51.99}
+      ],
+      "subtotal": 153.89,
+      "discount_code": "WELCOME10",
+      "discount_amount": 15.39,
+      "shipping": 0,
+      "tax": 11.40,
+      "total": 149.90
+    },
+    {
+      "order_id": "GH-47305",
+      "order_date": "2024-10-22",
+      "ship_date": "2024-10-23",
+      "delivery_date": "2024-10-26",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847305291",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Marcus Chen",
+        "email": "mchen.dev@outlook.com",
+        "address": "892 Pine Street, Apt 4B",
+        "city": "San Francisco",
+        "state": "CA",
+        "zip": "94108"
+      },
+      "items": [
+        {"product": "Ethiopia Mordecofe", "size": "12oz", "quantity": 1, "price": 55.99},
+        {"product": "Ethiopia Duromina", "size": "12oz", "quantity": 1, "price": 59.99}
+      ],
+      "subtotal": 115.98,
+      "discount_code": null,
+      "discount_amount": 0,
+      "shipping": 0,
+      "tax": 10.73,
+      "total": 126.71
+    },
+    {
+      "order_id": "GH-47318",
+      "order_date": "2024-10-25",
+      "ship_date": "2024-10-26",
+      "delivery_date": "2024-10-29",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847318472",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Sarah Blackwood",
+        "email": "sblackwood@yahoo.com",
+        "address": "1247 Oak Lane",
+        "city": "Denver",
+        "state": "CO",
+        "zip": "80202"
+      },
+      "items": [
+        {"product": "Two Bag Subscription", "size": "12oz x2", "quantity": 1, "price": 76.99},
+        {"product": "Origami Dripper", "size": "Medium", "quantity": 1, "price": 42.00}
+      ],
+      "subtotal": 118.99,
+      "discount_code": "SAVE30",
+      "discount_amount": 23.10,
+      "shipping": 0,
+      "tax": 6.84,
+      "total": 102.73
+    },
+    {
+      "order_id": "GH-47342",
+      "order_date": "2024-10-28",
+      "ship_date": "2024-10-29",
+      "delivery_date": "2024-11-01",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847342918",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "David Kowalski",
+        "email": "dkowalski77@gmail.com",
+        "address": "3892 Birch Road",
+        "city": "Chicago",
+        "state": "IL",
+        "zip": "60614"
+      },
+      "items": [
+        {"product": "Hair Bender", "size": "5lb", "quantity": 1, "price": 152.85},
+        {"product": "Cold Brew Concentrate", "size": "25.4oz", "quantity": 2, "price": 44.99}
+      ],
+      "subtotal": 242.83,
+      "discount_code": "HOLIDAY15",
+      "discount_amount": 36.42,
+      "shipping": 0,
+      "tax": 12.90,
+      "total": 219.31
+    },
+    {
+      "order_id": "GH-47358",
+      "order_date": "2024-10-31",
+      "ship_date": "2024-11-01",
+      "delivery_date": "2024-11-05",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847358274",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Emily Rodriguez",
+        "email": "emily.r.photography@gmail.com",
+        "address": "567 Willow Ave",
+        "city": "Seattle",
+        "state": "WA",
+        "zip": "98103"
+      },
+      "items": [
+        {"product": "Trapper Creek Decaf", "size": "12oz", "quantity": 3, "price": 54.95}
+      ],
+      "subtotal": 164.85,
+      "discount_code": null,
+      "discount_amount": 0,
+      "shipping": 0,
+      "tax": 16.49,
+      "total": 181.34
+    },
+    {
+      "order_id": "GH-47391",
+      "order_date": "2024-11-04",
+      "ship_date": "2024-11-05",
+      "delivery_date": "2024-11-08",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847391028",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Robert Kim",
+        "email": "rkim.seattle@icloud.com",
+        "address": "2341 Cedar Blvd",
+        "city": "Portland",
+        "state": "OR",
+        "zip": "97205"
+      },
+      "items": [
+        {"product": "Guatemala Injerto", "size": "12oz", "quantity": 1, "price": 54.99},
+        {"product": "Colombia El Jordan", "size": "12oz", "quantity": 1, "price": 55.95},
+        {"product": "Hario Buono Kettle", "size": "1.2L", "quantity": 1, "price": 64.95}
+      ],
+      "subtotal": 175.89,
+      "discount_code": "WELCOME10",
+      "discount_amount": 17.59,
+      "shipping": 0,
+      "tax": 0,
+      "total": 158.30
+    },
+    {
+      "order_id": "GH-47412",
+      "order_date": "2024-11-08",
+      "ship_date": "2024-11-09",
+      "delivery_date": "2024-11-13",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847412847",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Amanda Foster",
+        "email": "afoster.design@gmail.com",
+        "address": "8921 Spruce Court",
+        "city": "Brooklyn",
+        "state": "NY",
+        "zip": "11201"
+      },
+      "items": [
+        {"product": "6-Month Gift Subscription", "size": "Standard", "quantity": 1, "price": 183.95}
+      ],
+      "subtotal": 183.95,
+      "discount_code": null,
+      "discount_amount": 0,
+      "shipping": 0,
+      "tax": 16.37,
+      "total": 200.32
+    },
+    {
+      "order_id": "GH-47438",
+      "order_date": "2024-11-12",
+      "ship_date": "2024-11-13",
+      "delivery_date": "2024-11-16",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847438192",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Thomas Wright",
+        "email": "twright.consulting@proton.me",
+        "address": "4567 Aspen Way",
+        "city": "Boulder",
+        "state": "CO",
+        "zip": "80301"
+      },
+      "items": [
+        {"product": "Indonesia Beis Penantan", "size": "12oz", "quantity": 2, "price": 56.95},
+        {"product": "Ethiopia Suke Quto", "size": "12oz", "quantity": 1, "price": 61.95}
+      ],
+      "subtotal": 175.85,
+      "discount_code": "HOLIDAY15",
+      "discount_amount": 26.38,
+      "shipping": 0,
+      "tax": 10.68,
+      "total": 160.15
+    },
+    {
+      "order_id": "GH-47456",
+      "order_date": "2024-11-15",
+      "ship_date": "2024-11-16",
+      "delivery_date": "2024-11-19",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847456381",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Lisa Nakamura",
+        "email": "lnakamura@earthlink.net",
+        "address": "1892 Redwood Circle",
+        "city": "Los Angeles",
+        "state": "CA",
+        "zip": "90027"
+      },
+      "items": [
+        {"product": "Hair Bender", "size": "12oz", "quantity": 1, "price": 50.95},
+        {"product": "AeroPress", "size": "Standard", "quantity": 1, "price": 39.95}
+      ],
+      "subtotal": 90.90,
+      "discount_code": null,
+      "discount_amount": 0,
+      "shipping": 0,
+      "tax": 8.63,
+      "total": 99.53
+    },
+    {
+      "order_id": "GH-47481",
+      "order_date": "2024-11-18",
+      "ship_date": "2024-11-19",
+      "delivery_date": "2024-11-22",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847481029",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "James O'Brien",
+        "email": "jobrien.atl@gmail.com",
+        "address": "3456 Magnolia Street",
+        "city": "Atlanta",
+        "state": "GA",
+        "zip": "30308"
+      },
+      "items": [
+        {"product": "Family Pack Subscription", "size": "12oz x3", "quantity": 1, "price": 97.95},
+        {"product": "Cold Brew Stubby", "size": "10.5oz 4-pack", "quantity": 1, "price": 35.95}
+      ],
+      "subtotal": 133.90,
+      "discount_code": "SAVE30",
+      "discount_amount": 29.39,
+      "shipping": 0,
+      "tax": 7.46,
+      "total": 111.97
+    },
+    {
+      "order_id": "GH-47502",
+      "order_date": "2024-11-21",
+      "ship_date": "2024-11-22",
+      "delivery_date": "2024-11-26",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847502847",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Michelle Patel",
+        "email": "mpatel.tech@outlook.com",
+        "address": "7823 Elm Drive",
+        "city": "Phoenix",
+        "state": "AZ",
+        "zip": "85016"
+      },
+      "items": [
+        {"product": "Holler Mountain", "size": "12oz", "quantity": 4, "price": 51.99}
+      ],
+      "subtotal": 207.96,
+      "discount_code": "HOLIDAY15",
+      "discount_amount": 31.19,
+      "shipping": 0,
+      "tax": 12.63,
+      "total": 189.40
+    },
+    {
+      "order_id": "GH-47528",
+      "order_date": "2024-11-24",
+      "ship_date": "2024-11-25",
+      "delivery_date": "2024-11-29",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847528173",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Christopher Davis",
+        "email": "cdavis.chef@gmail.com",
+        "address": "5612 Hickory Lane",
+        "city": "Nashville",
+        "state": "TN",
+        "zip": "37203"
+      },
+      "items": [
+        {"product": "Costa Rica Bella Vista", "size": "12oz", "quantity": 2, "price": 57.99},
+        {"product": "Ethiopia Mordecofe", "size": "12oz", "quantity": 2, "price": 55.99}
+      ],
+      "subtotal": 227.96,
+      "discount_code": "WELCOME10",
+      "discount_amount": 22.80,
+      "shipping": 0,
+      "tax": 15.62,
+      "total": 220.78
+    },
+    {
+      "order_id": "GH-47549",
+      "order_date": "2024-11-27",
+      "ship_date": "2024-11-27",
+      "delivery_date": "2024-11-30",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847549281",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Rebecca Sullivan",
+        "email": "rsullivan.nyc@yahoo.com",
+        "address": "234 Greenwich Ave, Apt 12C",
+        "city": "New York",
+        "state": "NY",
+        "zip": "10014"
+      },
+      "items": [
+        {"product": "12-Month Gift Subscription", "size": "Premium", "quantity": 1, "price": 317.99}
+      ],
+      "subtotal": 317.99,
+      "discount_code": null,
+      "discount_amount": 0,
+      "shipping": 0,
+      "tax": 28.30,
+      "total": 346.29
+    },
+    {
+      "order_id": "GH-47571",
+      "order_date": "2024-11-30",
+      "ship_date": "2024-12-01",
+      "delivery_date": "2024-12-04",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847571029",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Daniel Martinez",
+        "email": "dmartinez.la@icloud.com",
+        "address": "9012 Palm Boulevard",
+        "city": "San Diego",
+        "state": "CA",
+        "zip": "92101"
+      },
+      "items": [
+        {"product": "Hair Bender", "size": "12oz", "quantity": 1, "price": 50.95},
+        {"product": "Trapper Creek Decaf", "size": "12oz", "quantity": 1, "price": 54.95},
+        {"product": "Origami Dripper", "size": "Small", "quantity": 1, "price": 38.00}
+      ],
+      "subtotal": 143.90,
+      "discount_code": null,
+      "discount_amount": 0,
+      "shipping": 0,
+      "tax": 13.31,
+      "total": 157.21
+    },
+    {
+      "order_id": "GH-47598",
+      "order_date": "2024-12-03",
+      "ship_date": "2024-12-04",
+      "delivery_date": "2024-12-07",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847598472",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Katherine Johnson",
+        "email": "kjohnson.writer@gmail.com",
+        "address": "4521 River Road",
+        "city": "Minneapolis",
+        "state": "MN",
+        "zip": "55401"
+      },
+      "items": [
+        {"product": "Single Bag Subscription", "size": "12oz", "quantity": 1, "price": 47.95},
+        {"product": "Hario Scale", "size": "Standard", "quantity": 1, "price": 55.00}
+      ],
+      "subtotal": 102.95,
+      "discount_code": "SAVE30",
+      "discount_amount": 14.39,
+      "shipping": 0,
+      "tax": 6.34,
+      "total": 94.90
+    },
+    {
+      "order_id": "GH-47623",
+      "order_date": "2024-12-06",
+      "ship_date": "2024-12-07",
+      "delivery_date": "2024-12-10",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847623918",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Andrew Thompson",
+        "email": "athompson.philly@outlook.com",
+        "address": "1789 Chestnut Street",
+        "city": "Philadelphia",
+        "state": "PA",
+        "zip": "19103"
+      },
+      "items": [
+        {"product": "Guatemala Injerto", "size": "12oz", "quantity": 3, "price": 54.99},
+        {"product": "Cold Brew Concentrate", "size": "25.4oz", "quantity": 1, "price": 44.99}
+      ],
+      "subtotal": 209.96,
+      "discount_code": "HOLIDAY15",
+      "discount_amount": 31.49,
+      "shipping": 0,
+      "tax": 12.77,
+      "total": 191.24
+    },
+    {
+      "order_id": "GH-47651",
+      "order_date": "2024-12-09",
+      "ship_date": "2024-12-10",
+      "delivery_date": "2024-12-13",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847651284",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Nicole Williams",
+        "email": "nwilliams.boston@gmail.com",
+        "address": "3456 Beacon Hill Drive",
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02108"
+      },
+      "items": [
+        {"product": "Ethiopia Duromina", "size": "12oz", "quantity": 2, "price": 59.99},
+        {"product": "Ethiopia Suke Quto", "size": "12oz", "quantity": 1, "price": 61.95}
+      ],
+      "subtotal": 181.93,
+      "discount_code": null,
+      "discount_amount": 0,
+      "shipping": 0,
+      "tax": 11.47,
+      "total": 193.40
+    },
+    {
+      "order_id": "GH-47679",
+      "order_date": "2024-12-11",
+      "ship_date": "2024-12-12",
+      "delivery_date": "2024-12-15",
+      "status": "Delivered",
+      "tracking_number": "9400111899223847679102",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Steven Garcia",
+        "email": "sgarcia.miami@yahoo.com",
+        "address": "8765 Ocean Drive",
+        "city": "Miami",
+        "state": "FL",
+        "zip": "33139"
+      },
+      "items": [
+        {"product": "Hair Bender", "size": "5lb", "quantity": 1, "price": 152.85}
+      ],
+      "subtotal": 152.85,
+      "discount_code": "WELCOME10",
+      "discount_amount": 15.29,
+      "shipping": 0,
+      "tax": 9.62,
+      "total": 147.18
+    },
+    {
+      "order_id": "GH-47702",
+      "order_date": "2024-12-13",
+      "ship_date": "2024-12-14",
+      "delivery_date": "2024-12-17",
+      "status": "In Transit",
+      "tracking_number": "9400111899223847702847",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Laura Anderson",
+        "email": "landerson.pdx@icloud.com",
+        "address": "2341 Hawthorne Blvd",
+        "city": "Portland",
+        "state": "OR",
+        "zip": "97214"
+      },
+      "items": [
+        {"product": "Holler Mountain", "size": "12oz", "quantity": 2, "price": 51.99},
+        {"product": "Colombia El Jordan", "size": "12oz", "quantity": 1, "price": 55.95},
+        {"product": "AeroPress", "size": "Clear", "quantity": 1, "price": 44.95}
+      ],
+      "subtotal": 204.88,
+      "discount_code": "HOLIDAY15",
+      "discount_amount": 30.73,
+      "shipping": 0,
+      "tax": 0,
+      "total": 174.15
+    },
+    {
+      "order_id": "GH-47728",
+      "order_date": "2024-12-15",
+      "ship_date": "2024-12-16",
+      "delivery_date": null,
+      "status": "In Transit",
+      "tracking_number": "9400111899223847728391",
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Brandon Lee",
+        "email": "blee.tech@proton.me",
+        "address": "5678 Capitol Hill",
+        "city": "Washington",
+        "state": "DC",
+        "zip": "20002"
+      },
+      "items": [
+        {"product": "3-Month Gift Subscription", "size": "Standard", "quantity": 2, "price": 105.99}
+      ],
+      "subtotal": 211.98,
+      "discount_code": null,
+      "discount_amount": 0,
+      "shipping": 0,
+      "tax": 12.72,
+      "total": 224.70
+    },
+    {
+      "order_id": "GH-47745",
+      "order_date": "2024-12-16",
+      "ship_date": "2024-12-17",
+      "delivery_date": null,
+      "status": "Processing",
+      "tracking_number": null,
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Jessica Turner",
+        "email": "jturner.austin@gmail.com",
+        "address": "9012 Congress Ave",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78701"
+      },
+      "items": [
+        {"product": "Two Bag Subscription", "size": "12oz x2", "quantity": 1, "price": 76.99},
+        {"product": "Indonesia Beis Penantan", "size": "12oz", "quantity": 1, "price": 56.95}
+      ],
+      "subtotal": 133.94,
+      "discount_code": "SAVE30",
+      "discount_amount": 23.10,
+      "shipping": 0,
+      "tax": 9.15,
+      "total": 119.99
+    },
+    {
+      "order_id": "GH-47758",
+      "order_date": "2024-12-17",
+      "ship_date": null,
+      "delivery_date": null,
+      "status": "Pending",
+      "tracking_number": null,
+      "carrier": "USPS Priority Mail",
+      "customer": {
+        "name": "Ryan Cooper",
+        "email": "rcooper.denver@outlook.com",
+        "address": "3456 Mountain View Dr",
+        "city": "Denver",
+        "state": "CO",
+        "zip": "80205"
+      },
+      "items": [
+        {"product": "Hair Bender", "size": "12oz", "quantity": 1, "price": 50.95},
+        {"product": "Ethiopia Mordecofe", "size": "12oz", "quantity": 1, "price": 55.99},
+        {"product": "Costa Rica Bella Vista", "size": "12oz", "quantity": 1, "price": 57.99}
+      ],
+      "subtotal": 164.93,
+      "discount_code": "WELCOME10",
+      "discount_amount": 16.49,
+      "shipping": 0,
+      "tax": 10.60,
+      "total": 159.04
+    }
+  ],
+
+  "summary_statistics": {
+    "period": "October 18, 2024 - December 17, 2024",
+    "supplier_orders": {
+      "total_orders": 8,
+      "total_spend": 61563.95,
+      "green_coffee_kg_purchased": 3905,
+      "packaging_units_ordered": 14500,
+      "pending_deliveries": 1
+    },
+    "customer_orders": {
+      "total_orders": 24,
+      "total_revenue": 4108.62,
+      "average_order_value": 171.19,
+      "orders_delivered": 20,
+      "orders_in_transit": 2,
+      "orders_processing": 1,
+      "orders_pending": 1,
+      "discount_codes_used": {
+        "WELCOME10": 5,
+        "HOLIDAY15": 6,
+        "SAVE30": 4
+      },
+      "total_discounts_given": 363.69,
+      "top_selling_products": [
+        "Hair Bender",
+        "Holler Mountain", 
+        "Ethiopia Mordecofe",
+        "Guatemala Injerto"
+      ]
+    }
+  }
+}
+

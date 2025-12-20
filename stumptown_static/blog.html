@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Blog | Brewing Tips, Origin Stories & News | Grainhouse Coffee</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Explore the Grainhouse Coffee blog. Brewing guides, coffee origin stories, barista tips, seasonal announcements, and the latest from our roastery.">
+    <meta name="keywords" content="coffee blog, brewing tips, coffee origins, coffee news, barista tips, specialty coffee articles, coffee education">
+    <link rel="canonical" href="https://grainhousecoffee.com/blog.html">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="blog">
+    <meta property="og:url" content="https://grainhousecoffee.com/blog.html">
+    <meta property="og:title" content="Coffee Blog | Grainhouse Coffee">
+    <meta property="og:description" content="Brewing guides, origin stories, and the latest coffee news from our roastery.">
+    <meta property="og:image" content="https://grainhousecoffee.com/images/coffee.jpg">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@grainhousecoffee">
+    <meta name="twitter:title" content="Coffee Blog | Grainhouse Coffee">
+    
+    <!-- Schema.org Blog -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "name": "Grainhouse Coffee Blog",
+        "description": "Coffee brewing guides, origin stories, and specialty coffee news",
+        "url": "https://grainhousecoffee.com/blog.html",
+        "publisher": {
+            "@type": "Organization",
+            "name": "Grainhouse Coffee",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://grainhousecoffee.com/favicon.svg"
+            }
+        },
+        "blogPost": [
+            {
+                "@type": "BlogPosting",
+                "headline": "The Perfect Pour Over: A Complete Guide",
+                "description": "Master the art of pour over coffee with our comprehensive brewing guide.",
+                "datePublished": "2025-12-15",
+                "author": {
+                    "@type": "Person",
+                    "name": "Grainhouse Coffee Team"
+                }
+            },
+            {
+                "@type": "BlogPosting",
+                "headline": "Meet the Farmers: Ethiopia Suke Quto",
+                "description": "Journey to the birthplace of coffee and meet the families behind our latest single origin.",
+                "datePublished": "2025-12-10",
+                "author": {
+                    "@type": "Person",
+                    "name": "Grainhouse Coffee Team"
+                }
+            }
+        ]
+    }
+    </script>
+    
+    <!-- Shared Head Content (Performance, Fonts, Styles) -->
+    <!--#include virtual="shared/head-standard.html"-->
+    
+    <!-- Snipcart Styles -->
+    <!--#include virtual="shared/snipcart-styles.html"-->
+    
+    <style>
+        /* Blog Hero */
+        .blog-hero {
+            background: linear-gradient(135deg, #4a3728 0%, #2d1f17 100%);
+            padding: 120px 40px 80px;
+            text-align: center;
+            color: #fff;
+        }
+        
+        .blog-hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            margin: 0 0 15px;
+        }
+        
+        .blog-hero p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Blog Categories */
+        .blog-categories {
+            background: #fff;
+            padding: 20px 40px;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .categories-inner {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .category-link {
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+        
+        .category-link:hover,
+        .category-link.active {
+            background: #f8f6f3;
+            color: #333;
+        }
+        
+        /* Featured Post */
+        .featured-post {
+            padding: 60px 40px;
+            background: #f8f6f3;
+        }
+        
+        .featured-post-inner {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 50px;
+            max-width: 1100px;
+            margin: 0 auto;
+            align-items: center;
+        }
+        
+        .featured-post-image {
+            border-radius: 16px;
+            overflow: hidden;
+            aspect-ratio: 16/10;
+            background: #e8e4de;
+        }
+        
+        .featured-post-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .featured-post-content .badge {
+            display: inline-block;
+            background: #c9a96e;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+        
+        .featured-post-content h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            color: #333;
+            margin: 0 0 15px;
+            line-height: 1.2;
+        }
+        
+        .featured-post-content h2 a {
+            color: inherit;
+            text-decoration: none;
+        }
+        
+        .featured-post-content h2 a:hover {
+            color: #2d5a3d;
+        }
+        
+        .featured-post-content .excerpt {
+            font-size: 17px;
+            color: #555;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+        
+        .featured-post-content .meta {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .featured-post-content .meta span {
+            margin-right: 15px;
+        }
+        
+        /* Blog Grid */
+        .blog-grid-section {
+            padding: 60px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .blog-grid-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        
+        .blog-grid-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            color: #333;
+            margin: 0;
+        }
+        
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+        
+        .blog-card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.1);
+        }
+        
+        .blog-card-image {
+            aspect-ratio: 16/10;
+            background: #f8f6f3;
+            overflow: hidden;
+        }
+        
+        .blog-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .blog-card:hover .blog-card-image img {
+            transform: scale(1.05);
+        }
+        
+        .blog-card-content {
+            padding: 25px;
+        }
+        
+        .blog-card-content .category {
+            display: inline-block;
+            background: #f0ebe4;
+            color: #8b7355;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        
+        .blog-card-content h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            color: #333;
+            margin: 0 0 10px;
+            line-height: 1.3;
+        }
+        
+        .blog-card-content .excerpt {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .blog-card-content .meta {
+            font-size: 13px;
+            color: #999;
+        }
+        
+        /* Newsletter Section */
+        .blog-newsletter {
+            background: #2d5a3d;
+            padding: 80px 40px;
+            text-align: center;
+            color: #fff;
+        }
+        
+        .blog-newsletter h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            margin: 0 0 15px;
+        }
+        
+        .blog-newsletter p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 500px;
+            margin: 0 auto 30px;
+        }
+        
+        .newsletter-form-inline {
+            display: flex;
+            gap: 12px;
+            max-width: 450px;
+            margin: 0 auto;
+        }
+        
+        .newsletter-form-inline input {
+            flex: 1;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+        }
+        
+        .newsletter-form-inline button {
+            padding: 16px 30px;
+            background: #c9a96e;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+        
+        .newsletter-form-inline button:hover {
+            background: #b8986d;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .blog-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .featured-post-inner {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .blog-hero {
+                padding: 100px 20px 60px;
+            }
+            
+            .blog-hero h1 {
+                font-size: 40px;
+            }
+            
+            .blog-categories {
+                padding: 15px 20px;
+            }
+            
+            .categories-inner {
+                gap: 8px;
+            }
+            
+            .category-link {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            
+            .featured-post {
+                padding: 40px 20px;
+            }
+            
+            .featured-post-content h2 {
+                font-size: 28px;
+            }
+            
+            .blog-grid-section {
+                padding: 40px 20px;
+            }
+            
+            .blog-grid {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+            
+            .blog-grid-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .blog-newsletter {
+                padding: 50px 20px;
+            }
+            
+            .blog-newsletter h2 {
+                font-size: 28px;
+            }
+            
+            .newsletter-form-inline {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-nav">Skip to main content</a>
+
+    <!-- Shared Navigation -->
+    <!--#include virtual="shared/navigation.html"-->
+
+    <main id="main-content">
+        <!-- Hero -->
+        <section class="blog-hero">
+            <h1>The Grainhouse Blog</h1>
+            <p>Brewing tips, origin stories, and the latest from our roastery. Learn something new about coffee today.</p>
+        </section>
+        
+        <!-- Categories -->
+        <nav class="blog-categories" aria-label="Blog categories">
+            <div class="categories-inner">
+                <a href="#" class="category-link active">All Posts</a>
+                <a href="#" class="category-link">Brewing Guides</a>
+                <a href="#" class="category-link">Origin Stories</a>
+                <a href="#" class="category-link">Recipes</a>
+                <a href="#" class="category-link">News</a>
+            </div>
+        </nav>
+        
+        <!-- Featured Post -->
+        <section class="featured-post">
+            <div class="featured-post-inner">
+                <div class="featured-post-image">
+                    <img src="images/Origami_Dripper_1_750x_18501aad.png" alt="Pour over coffee brewing setup">
+                </div>
+                <div class="featured-post-content">
+                    <span class="badge">Featured</span>
+                    <h2><a href="brew-guides.html#pour-over">The Perfect Pour Over: A Complete Guide</a></h2>
+                    <p class="excerpt">Master the art of pour over coffee with our comprehensive guide. From water temperature to pouring technique, learn every step to brew café-quality coffee at home.</p>
+                    <div class="meta">
+                        <span>📅 December 15, 2025</span>
+                        <span>⏱️ 8 min read</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Latest Posts -->
+        <section class="blog-grid-section">
+            <div class="blog-grid-header">
+                <h2>Latest Articles</h2>
+            </div>
+            
+            <div class="blog-grid">
+                <a href="brew-guides.html" class="blog-card">
+                    <div class="blog-card-image">
+                        <img src="images/Ethiopia_Mordecofe_72DPI_750x_8f486bfc.png" alt="Ethiopia coffee farm">
+                    </div>
+                    <div class="blog-card-content">
+                        <span class="category">Origin Stories</span>
+                        <h3>Meet the Farmers: Ethiopia Suke Quto</h3>
+                        <p class="excerpt">Journey to the birthplace of coffee and meet the families behind our latest single origin.</p>
+                        <div class="meta">December 10, 2025</div>
+                    </div>
+                </a>
+                
+                <a href="brew-guides.html#espresso" class="blog-card">
+                    <div class="blog-card-image">
+                        <img src="images/Hair-Bender_e0a4e119-c201-4e7a-bf1c-f4cc4ae240e1_750x_2b77870c.png" alt="Espresso brewing">
+                    </div>
+                    <div class="blog-card-content">
+                        <span class="category">Brewing Guides</span>
+                        <h3>Dialing In Your Espresso: A Beginner's Guide</h3>
+                        <p class="excerpt">Learn how to adjust grind size, dose, and yield for the perfect espresso shot every time.</p>
+                        <div class="meta">December 5, 2025</div>
+                    </div>
+                </a>
+                
+                <a href="gift-guide.html" class="blog-card">
+                    <div class="blog-card-image">
+                        <img src="images/Blend_Trio_Bags_72_750x_d373d66c.png" alt="Coffee gift guide">
+                    </div>
+                    <div class="blog-card-content">
+                        <span class="category">News</span>
+                        <h3>2025 Holiday Gift Guide for Coffee Lovers</h3>
+                        <p class="excerpt">Find the perfect gift for the coffee enthusiast in your life with our curated guide.</p>
+                        <div class="meta">December 1, 2025</div>
+                    </div>
+                </a>
+                
+                <a href="learn.html" class="blog-card">
+                    <div class="blog-card-image">
+                        <img src="images/5lb_HollerMtn_750x_020a6823.png" alt="Coffee roasting">
+                    </div>
+                    <div class="blog-card-content">
+                        <span class="category">Education</span>
+                        <h3>Light vs Dark Roast: What's the Real Difference?</h3>
+                        <p class="excerpt">Debunking myths about roast levels, caffeine content, and flavor profiles.</p>
+                        <div class="meta">November 28, 2025</div>
+                    </div>
+                </a>
+                
+                <a href="brew-guides.html" class="blog-card">
+                    <div class="blog-card-image">
+                        <img src="images/Aeropress_White_2025_8_NoFunnel_750x_a7ae74b8.png" alt="AeroPress coffee">
+                    </div>
+                    <div class="blog-card-content">
+                        <span class="category">Brewing Guides</span>
+                        <h3>5 AeroPress Recipes to Try This Weekend</h3>
+                        <p class="excerpt">From competition winners to barista favorites, explore new ways to brew with your AeroPress.</p>
+                        <div class="meta">November 20, 2025</div>
+                    </div>
+                </a>
+                
+                <a href="impact.html" class="blog-card">
+                    <div class="blog-card-image">
+                        <img src="images/coffee.jpg" alt="Sustainable coffee farming">
+                    </div>
+                    <div class="blog-card-content">
+                        <span class="category">Sustainability</span>
+                        <h3>Our 2025 Impact Report: What We've Accomplished</h3>
+                        <p class="excerpt">Transparency in our sourcing, environmental initiatives, and community investments.</p>
+                        <div class="meta">November 15, 2025</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+        
+        <!-- Newsletter -->
+        <section class="blog-newsletter">
+            <h2>Never Miss a Post</h2>
+            <p>Get brewing tips, origin stories, and exclusive offers delivered to your inbox.</p>
+            <form class="newsletter-form-inline" onsubmit="event.preventDefault(); this.querySelector('button').textContent = 'Subscribed!'; this.querySelector('input').value = '';">
+                <input type="email" placeholder="your@email.com" required>
+                <button type="submit">Subscribe</button>
+            </form>
+        </section>
+    </main>
+
+    <!-- Shared Footer -->
+    <!--#include virtual="shared/footer.html"-->
+    
+    <!-- Shared Scripts -->
+    <!--#include virtual="shared/scripts.html"-->
+</body>
+</html>
+
