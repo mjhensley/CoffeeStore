@@ -145,19 +145,6 @@ const GrainhouseAccount = {
         return Math.abs(hash).toString(36);
     },
 
-    // Synchronous hash for comparison (legacy support)
-    hashPasswordSync(password) {
-        // Simple but improved hash for synchronous operations
-        // Note: This is less secure than the async version
-        let hash = 5381;
-        for (let i = 0; i < password.length; i++) {
-            const char = password.charCodeAt(i);
-            hash = ((hash << 5) + hash) ^ char;
-        }
-        hash = hash ^ (password.length * 31);
-        return Math.abs(hash).toString(36);
-    },
-
     // Get user's current tier
     getUserTier(user) {
         if (!user) return this.TIERS.BRONZE;

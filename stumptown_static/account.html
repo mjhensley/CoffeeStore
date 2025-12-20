@@ -574,13 +574,13 @@
         }
 
         // Sign In Form
-        document.getElementById('signin-form').addEventListener('submit', function(e) {
+        document.getElementById('signin-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const email = document.getElementById('signin-email').value;
             const password = document.getElementById('signin-password').value;
             
-            const result = GrainhouseAccount.login(email, password);
+            const result = await GrainhouseAccount.login(email, password);
             
             if (result.success) {
                 showMessage(result.message, 'success');
@@ -593,7 +593,7 @@
         });
 
         // Sign Up Form
-        document.getElementById('signup-form').addEventListener('submit', function(e) {
+        document.getElementById('signup-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const firstName = document.getElementById('signup-firstname').value;
@@ -601,7 +601,7 @@
             const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-password').value;
             
-            const result = GrainhouseAccount.signup(email, password, firstName, lastName);
+            const result = await GrainhouseAccount.signup(email, password, firstName, lastName);
             
             if (result.success) {
                 showMessage(result.message, 'success');
