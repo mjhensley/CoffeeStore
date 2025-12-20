@@ -41,17 +41,21 @@ const GrainhouseAccount = {
     },
 
     // Sign up new user
-    signup(email, password, firstName, lastName) {
+    // Sign up new user (async due to password hashing)
+    async signup(email, password, firstName, lastName) {
         // Check if user already exists
         const existingUsers = this.getAllUsers();
         if (existingUsers.find(u => u.email === email)) {
             return { success: false, message: 'An account with this email already exists.' };
         }
 
+        // Hash password securely
+        const hashedPassword = await this.hashPassword(password);
+
         const newUser = {
             id: Date.now().toString(),
             email,
-            password: this.hashPassword(password),
+            password: hashedPassword,
             firstName,
             lastName,
             points: this.SIGNUP_BONUS,
@@ -80,10 +84,11 @@ const GrainhouseAccount = {
         return { success: true, message: 'Account created! You earned ' + this.SIGNUP_BONUS + ' bonus points!', user: newUser };
     },
 
-    // Login user
-    login(email, password) {
+    // Login user (async due to password hashing)
+    async login(email, password) {
         const users = this.getAllUsers();
-        const user = users.find(u => u.email === email && u.password === this.hashPassword(password));
+        const hashedPassword = await this.hashPassword(password);
+        const user = users.find(u => u.email === email && u.password === hashedPassword);
         
         if (user) {
             this.saveUser(user);
@@ -106,15 +111,51 @@ const GrainhouseAccount = {
         return users ? JSON.parse(users) : [];
     },
 
-    // Simple hash function (for demo - use proper hashing in production)
-    hashPassword(password) {
-        let hash = 0;
+    // Secure password hashing using Web Crypto API
+    // WARNING: This is client-side only authentication stored in localStorage.
+    // For production use, implement server-side authentication with proper
+    // password hashing (bcrypt/Argon2) and secure session management.
+    async hashPassword(password) {
+        // Use SHA-256 via Web Crypto API for a more secure hash
+        // Note: This is still not as secure as server-side bcrypt/Argon2
+        // but is significantly better than a simple mathematical hash
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        
+        try {
+            // Use SubtleCrypto if available (modern browsers)
+            if (window.crypto && window.crypto.subtle) {
+                const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        } catch (e) {
+            console.warn('Web Crypto API not available, using fallback');
+        }
+        
+        // Fallback: Improved hash function (not cryptographically secure)
+        // This should only be used if Web Crypto is unavailable
+        let hash = 5381;
         for (let i = 0; i < password.length; i++) {
             const char = password.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
+            hash = ((hash << 5) + hash) ^ char;
         }
-        return hash.toString();
+        // Add salt-like behavior using password length
+        hash = hash ^ (password.length * 31);
+        return Math.abs(hash).toString(36);
+    },
+
+    // Synchronous hash for comparison (legacy support)
+    hashPasswordSync(password) {
+        // Simple but improved hash for synchronous operations
+        // Note: This is less secure than the async version
+        let hash = 5381;
+        for (let i = 0; i < password.length; i++) {
+            const char = password.charCodeAt(i);
+            hash = ((hash << 5) + hash) ^ char;
+        }
+        hash = hash ^ (password.length * 31);
+        return Math.abs(hash).toString(36);
     },
 
     // Get user's current tier
