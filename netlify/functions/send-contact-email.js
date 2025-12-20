@@ -1,12 +1,71 @@
 // Netlify Serverless Function - Send Contact Form Email
 // Uses Resend API to send contact form submissions
 
+/**
+ * Escape HTML special characters to prevent XSS attacks
+ * @param {string} str - String to escape
+ * @returns {string} - HTML-escaped string
+ */
+function escapeHtml(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+/**
+ * Sanitize email address for use in email headers to prevent header injection
+ * @param {string} email - Email address to sanitize
+ * @returns {string|null} - Sanitized email or null if invalid
+ */
+function sanitizeEmailForHeader(email) {
+  if (!email || typeof email !== 'string') return null;
+  
+  // Remove any newlines, carriage returns, or other control characters
+  // that could be used for header injection
+  const sanitized = email.replace(/[\r\n\t]/g, '').trim();
+  
+  // Validate the sanitized email format
+  const emailRegex = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+  if (!emailRegex.test(sanitized)) return null;
+  
+  // Additional check: ensure no angle brackets or quotes that could break headers
+  if (/[<>"']/.test(sanitized)) return null;
+  
+  return sanitized;
+}
+
+/**
+ * Get allowed origins for CORS
+ * @returns {string[]} - Array of allowed origins
+ */
+function getAllowedOrigins() {
+  const origins = [
+    'https://grainhousecoffee.com',
+    'https://www.grainhousecoffee.com'
+  ];
+  // Allow localhost in development
+  if (process.env.NODE_ENV !== 'production') {
+    origins.push('http://localhost:8080', 'http://localhost:8888', 'http://127.0.0.1:8080');
+  }
+  return origins;
+}
+
 exports.handler = async (event, context) => {
-  // CORS headers
+  // Get the origin from the request
+  const origin = event.headers.origin || event.headers.Origin || '';
+  const allowedOrigins = getAllowedOrigins();
+  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+
+  // CORS headers with restricted origin
   const headers = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true'
   };
 
   // Handle preflight requests
@@ -45,7 +104,13 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Build the email HTML
+    // Sanitize all user inputs to prevent XSS
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safeSubject = escapeHtml(subject);
+    const safeMessage = escapeHtml(message);
+
+    // Build the email HTML with sanitized inputs
     const emailHtml = `
 <!DOCTYPE html>
 <html>
@@ -97,29 +162,29 @@ exports.handler = async (event, context) => {
                       <tr>
                         <td style="padding: 12px 0; border-bottom: 1px solid #eee;">
                           <span style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;">From</span>
-                          <p style="margin: 6px 0 0; font-size: 16px; color: #333; font-weight: 600;">${name}</p>
+                          <p style="margin: 6px 0 0; font-size: 16px; color: #333; font-weight: 600;">${safeName}</p>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding: 12px 0; border-bottom: 1px solid #eee;">
                           <span style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;">Email</span>
                           <p style="margin: 6px 0 0; font-size: 16px; color: #333;">
-                            <a href="mailto:${email}" style="color: #2d5a3d; text-decoration: none;">${email}</a>
+                            <a href="mailto:${safeEmail}" style="color: #2d5a3d; text-decoration: none;">${safeEmail}</a>
                           </p>
                         </td>
                       </tr>
-                      ${subject ? `
+                      ${safeSubject ? `
                       <tr>
                         <td style="padding: 12px 0; border-bottom: 1px solid #eee;">
                           <span style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;">Subject</span>
-                          <p style="margin: 6px 0 0; font-size: 16px; color: #333;">${subject}</p>
+                          <p style="margin: 6px 0 0; font-size: 16px; color: #333;">${safeSubject}</p>
                         </td>
                       </tr>
                       ` : ''}
                       <tr>
                         <td style="padding: 12px 0 0;">
                           <span style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;">Message</span>
-                          <p style="margin: 10px 0 0; font-size: 15px; color: #333; line-height: 1.7; white-space: pre-wrap;">${message}</p>
+                          <p style="margin: 10px 0 0; font-size: 15px; color: #333; line-height: 1.7; white-space: pre-wrap;">${safeMessage}</p>
                         </td>
                       </tr>
                     </table>
@@ -132,8 +197,8 @@ exports.handler = async (event, context) => {
           <!-- Reply Button -->
           <tr>
             <td style="padding: 0 40px 40px; text-align: center;">
-              <a href="mailto:${email}" style="display: inline-block; background: #2d5a3d; color: #ffffff; padding: 16px 40px; text-decoration: none; font-weight: 600; font-size: 14px; border-radius: 30px;">
-                Reply to ${name}
+              <a href="mailto:${safeEmail}" style="display: inline-block; background: #2d5a3d; color: #ffffff; padding: 16px 40px; text-decoration: none; font-weight: 600; font-size: 14px; border-radius: 30px;">
+                Reply to ${safeName}
               </a>
             </td>
           </tr>
@@ -158,6 +223,16 @@ exports.handler = async (event, context) => {
 </html>
     `;
 
+    // Sanitize email for use in reply_to header
+    const safeReplyTo = sanitizeEmailForHeader(email);
+    if (!safeReplyTo) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Invalid email format for reply-to' })
+      };
+    }
+
     // Send email using Resend API
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -168,9 +243,9 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         from: 'Grainhouse Coffee <support@grainhousecoffee.com>',
         to: 'admin@grainhousecoffee.com',
-        subject: subject ? `Contact Form: ${subject}` : `New message from ${name}`,
+        subject: safeSubject ? `Contact Form: ${safeSubject}` : `New message from ${safeName}`,
         html: emailHtml,
-        reply_to: email
+        reply_to: safeReplyTo
       })
     });
 
@@ -181,7 +256,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'Failed to send message', details: result })
+        body: JSON.stringify({ error: 'Failed to send message' })
       };
     }
 
@@ -199,7 +274,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Internal server error', message: error.message })
+      body: JSON.stringify({ error: 'Internal server error' })
     };
   }
 };

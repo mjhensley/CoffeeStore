@@ -1,21 +1,110 @@
 // Netlify Serverless Function - Send Order Confirmation Email
 // Uses Resend API to send beautiful order confirmation emails
 
+/**
+ * Escape HTML special characters to prevent XSS attacks
+ * @param {string} str - String to escape
+ * @returns {string} - HTML-escaped string
+ */
+function escapeHtml(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+/**
+ * Validate and sanitize image URL
+ * Only allows HTTPS URLs from trusted domains
+ * @param {string} url - Image URL to validate
+ * @returns {string} - Safe URL or default placeholder
+ */
+function sanitizeImageUrl(url) {
+  const defaultImage = 'https://grainhousecoffee.com/images/coffee-bag-placeholder.png';
+  
+  if (!url || typeof url !== 'string') return defaultImage;
+  
+  // Trim and check for allowed protocols
+  const trimmedUrl = url.trim();
+  
+  // Only allow HTTPS URLs
+  if (!trimmedUrl.startsWith('https://')) return defaultImage;
+  
+  // Allowlist of trusted image domains
+  const trustedDomains = [
+    'grainhousecoffee.com',
+    'www.grainhousecoffee.com',
+    'cdn.grainhousecoffee.com',
+    'cdn.shopify.com',
+    'images.unsplash.com',
+    'i.imgur.com'
+  ];
+  
+  try {
+    const urlObj = new URL(trimmedUrl);
+    const hostname = urlObj.hostname.toLowerCase();
+    
+    // Check if domain is trusted
+    const isTrusted = trustedDomains.some(domain => 
+      hostname === domain || hostname.endsWith('.' + domain)
+    );
+    
+    if (!isTrusted) return defaultImage;
+    
+    // Return the validated URL
+    return trimmedUrl;
+  } catch (e) {
+    return defaultImage;
+  }
+}
+
+/**
+ * Get allowed origins for CORS
+ * @returns {string[]} - Array of allowed origins
+ */
+function getAllowedOrigins() {
+  const origins = [
+    'https://grainhousecoffee.com',
+    'https://www.grainhousecoffee.com'
+  ];
+  // Allow localhost in development
+  if (process.env.NODE_ENV !== 'production') {
+    origins.push('http://localhost:8080', 'http://localhost:8888', 'http://127.0.0.1:8080');
+  }
+  return origins;
+}
+
 exports.handler = async (event, context) => {
+  // Get the origin from the request
+  const origin = event.headers.origin || event.headers.Origin || '';
+  const allowedOrigins = getAllowedOrigins();
+  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+
+  // CORS headers with restricted origin
+  const headers = {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true',
+    'Content-Type': 'application/json'
+  };
+
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers, body: '' };
+  }
+
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
-
-  // CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-  };
 
   try {
     const { customerEmail, customerName, items, subtotal, orderNumber } = JSON.parse(event.body);
@@ -29,37 +118,61 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Generate order number if not provided
-    const finalOrderNumber = orderNumber || `GH-${Date.now().toString(36).toUpperCase()}`;
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail)) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Invalid email format' })
+      };
+    }
 
-    // Build the items HTML
-    const itemsHtml = items.map(item => `
+    // Sanitize customer name
+    const safeCustomerName = escapeHtml(customerName);
+
+    // Generate order number if not provided (sanitize if provided)
+    const finalOrderNumber = escapeHtml(orderNumber) || `GH-${Date.now().toString(36).toUpperCase()}`;
+
+    // Build the items HTML with sanitized data
+    const itemsHtml = items.map(item => {
+      const safeName = escapeHtml(item.name);
+      const safeImage = sanitizeImageUrl(item.image);
+      // Bounds checking for quantity (1-999) and price ($0-$10000)
+      const quantity = Math.max(1, Math.min(parseInt(item.quantity, 10) || 1, 999));
+      const price = Math.max(0, Math.min(parseFloat(item.price) || 0, 10000));
+      
+      return `
       <tr>
         <td style="padding: 16px 0; border-bottom: 1px solid #e5e0d8;">
           <table cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>
               <td width="80" style="vertical-align: top;">
-                <img src="${item.image || 'https://grainhousecoffee.com/images/coffee-bag-placeholder.png'}" 
-                     alt="${item.name}" 
+                <img src="${safeImage}" 
+                     alt="${safeName}" 
                      width="70" 
                      style="border-radius: 8px; background: #f9f6f1;">
               </td>
               <td style="vertical-align: top; padding-left: 16px;">
                 <p style="margin: 0 0 4px; font-family: Georgia, serif; font-size: 16px; color: #2c2c2c; font-weight: 600;">
-                  ${item.name}
+                  ${safeName}
                 </p>
                 <p style="margin: 0; font-size: 14px; color: #666;">
-                  Qty: ${item.quantity} × $${item.price.toFixed(2)}
+                  Qty: ${quantity} × $${price.toFixed(2)}
                 </p>
               </td>
               <td style="vertical-align: top; text-align: right; font-weight: 600; color: #2c2c2c;">
-                $${(item.price * item.quantity).toFixed(2)}
+                $${(price * quantity).toFixed(2)}
               </td>
             </tr>
           </table>
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
+
+    // Sanitize and validate subtotal
+    const safeSubtotal = parseFloat(subtotal) || 0;
 
     // Beautiful email HTML template
     const emailHtml = `
@@ -98,7 +211,7 @@ exports.handler = async (event, context) => {
                 Thank You for Your Order!
               </h2>
               <p style="margin: 0; color: #666; font-size: 16px; line-height: 1.6;">
-                ${customerName ? `Hi ${customerName}, we're` : "We're"} roasting up something special for you.
+                ${safeCustomerName ? `Hi ${safeCustomerName}, we're` : "We're"} roasting up something special for you.
               </p>
             </td>
           </tr>
@@ -143,7 +256,7 @@ exports.handler = async (event, context) => {
                       <tr>
                         <td style="color: #ffffff; font-size: 16px;">Subtotal</td>
                         <td style="color: #ffffff; font-size: 20px; font-weight: bold; text-align: right; font-family: Georgia, serif;">
-                          $${subtotal.toFixed(2)}
+                          $${safeSubtotal.toFixed(2)}
                         </td>
                       </tr>
                     </table>
@@ -247,7 +360,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'Failed to send email', details: result })
+        body: JSON.stringify({ error: 'Failed to send email' })
       };
     }
 
@@ -257,8 +370,7 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({ 
         success: true, 
         message: 'Order confirmation sent!',
-        orderNumber: finalOrderNumber,
-        emailId: result.id
+        orderNumber: finalOrderNumber
       })
     };
 
@@ -267,7 +379,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Internal server error', message: error.message })
+      body: JSON.stringify({ error: 'Internal server error' })
     };
   }
 };

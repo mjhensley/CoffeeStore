@@ -3,25 +3,50 @@
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+/**
+ * Get allowed origins for CORS
+ * @returns {string[]} - Array of allowed origins
+ */
+function getAllowedOrigins() {
+  const origins = [
+    'https://grainhousecoffee.com',
+    'https://www.grainhousecoffee.com'
+  ];
+  // Allow localhost in development
+  if (process.env.NODE_ENV !== 'production') {
+    origins.push('http://localhost:8080', 'http://localhost:8888', 'http://127.0.0.1:8080');
+  }
+  return origins;
+}
+
 exports.handler = async (event, context) => {
+  // Get the origin from the request
+  const origin = event.headers.origin || event.headers.Origin || '';
+  const allowedOrigins = getAllowedOrigins();
+  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+
+  // CORS headers with restricted origin
+  const headers = {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true',
+    'Content-Type': 'application/json'
+  };
+
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers, body: '' };
+  }
+
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
-
-  // CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-  };
 
   try {
     const { paymentIntentId, orderData } = JSON.parse(event.body);
@@ -116,8 +141,7 @@ exports.handler = async (event, context) => {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
-        error: 'Failed to confirm payment',
-        message: error.message 
+        error: 'Failed to confirm payment'
       })
     };
   }
