@@ -17,6 +17,28 @@ function escapeHtml(str) {
 }
 
 /**
+ * Sanitize email address for use in email headers to prevent header injection
+ * @param {string} email - Email address to sanitize
+ * @returns {string|null} - Sanitized email or null if invalid
+ */
+function sanitizeEmailForHeader(email) {
+  if (!email || typeof email !== 'string') return null;
+  
+  // Remove any newlines, carriage returns, or other control characters
+  // that could be used for header injection
+  const sanitized = email.replace(/[\r\n\t]/g, '').trim();
+  
+  // Validate the sanitized email format
+  const emailRegex = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+  if (!emailRegex.test(sanitized)) return null;
+  
+  // Additional check: ensure no angle brackets or quotes that could break headers
+  if (/[<>"']/.test(sanitized)) return null;
+  
+  return sanitized;
+}
+
+/**
  * Get allowed origins for CORS
  * @returns {string[]} - Array of allowed origins
  */
@@ -201,6 +223,16 @@ exports.handler = async (event, context) => {
 </html>
     `;
 
+    // Sanitize email for use in reply_to header
+    const safeReplyTo = sanitizeEmailForHeader(email);
+    if (!safeReplyTo) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Invalid email format for reply-to' })
+      };
+    }
+
     // Send email using Resend API
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -213,7 +245,7 @@ exports.handler = async (event, context) => {
         to: 'admin@grainhousecoffee.com',
         subject: safeSubject ? `Contact Form: ${safeSubject}` : `New message from ${safeName}`,
         html: emailHtml,
-        reply_to: email
+        reply_to: safeReplyTo
       })
     });
 

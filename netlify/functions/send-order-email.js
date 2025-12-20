@@ -17,6 +17,51 @@ function escapeHtml(str) {
 }
 
 /**
+ * Validate and sanitize image URL
+ * Only allows HTTPS URLs from trusted domains
+ * @param {string} url - Image URL to validate
+ * @returns {string} - Safe URL or default placeholder
+ */
+function sanitizeImageUrl(url) {
+  const defaultImage = 'https://grainhousecoffee.com/images/coffee-bag-placeholder.png';
+  
+  if (!url || typeof url !== 'string') return defaultImage;
+  
+  // Trim and check for allowed protocols
+  const trimmedUrl = url.trim();
+  
+  // Only allow HTTPS URLs
+  if (!trimmedUrl.startsWith('https://')) return defaultImage;
+  
+  // Allowlist of trusted image domains
+  const trustedDomains = [
+    'grainhousecoffee.com',
+    'www.grainhousecoffee.com',
+    'cdn.grainhousecoffee.com',
+    'cdn.shopify.com',
+    'images.unsplash.com',
+    'i.imgur.com'
+  ];
+  
+  try {
+    const urlObj = new URL(trimmedUrl);
+    const hostname = urlObj.hostname.toLowerCase();
+    
+    // Check if domain is trusted
+    const isTrusted = trustedDomains.some(domain => 
+      hostname === domain || hostname.endsWith('.' + domain)
+    );
+    
+    if (!isTrusted) return defaultImage;
+    
+    // Return the validated URL
+    return trimmedUrl;
+  } catch (e) {
+    return defaultImage;
+  }
+}
+
+/**
  * Get allowed origins for CORS
  * @returns {string[]} - Array of allowed origins
  */
@@ -92,7 +137,7 @@ exports.handler = async (event, context) => {
     // Build the items HTML with sanitized data
     const itemsHtml = items.map(item => {
       const safeName = escapeHtml(item.name);
-      const safeImage = escapeHtml(item.image || 'https://grainhousecoffee.com/images/coffee-bag-placeholder.png');
+      const safeImage = sanitizeImageUrl(item.image);
       const quantity = parseInt(item.quantity, 10) || 1;
       const price = parseFloat(item.price) || 0;
       
