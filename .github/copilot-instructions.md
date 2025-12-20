@@ -51,8 +51,7 @@ pip install -r requirements.txt
 ```bash
 # Start local development server
 npm run dev
-# OR
-python serve.py
+# (This runs: python serve.py)
 ```
 
 ## Code Style and Conventions
@@ -133,7 +132,7 @@ python serve.py
 - Aggressive caching configured in `netlify.toml`
 - Images: 1-year cache (immutable)
 - CSS/JS: 1-year cache with versioning
-- HTML: 1-hour cache with stale-while-revalidate
+- HTML: 1-hour cache with 24-hour stale-while-revalidate
 
 ### Optimization Practices
 - Minimize JavaScript bundle sizes
