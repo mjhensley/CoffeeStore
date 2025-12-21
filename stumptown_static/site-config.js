@@ -36,6 +36,16 @@ const SITE_CONFIG = {
     // ============================================
     cart: {
         storageKey: 'grainhouse_cart' // localStorage key for cart data
+    },
+    
+    // ============================================
+    // GOOGLE PLACES API CONFIGURATION
+    // ============================================
+    googlePlaces: {
+        // API key for address autocomplete (optional)
+        // Set this to enable address autocomplete on checkout
+        // Leave empty to disable autocomplete
+        apiKey: '' // Add your Google Places API key here to enable autocomplete
     }
 };
 
