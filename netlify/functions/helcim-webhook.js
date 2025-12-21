@@ -3,7 +3,10 @@
  * 
  * Handles payment event webhooks from Helcim payment gateway.
  * 
- * Endpoint: /.netlify/functions/helcim-webhook
+ * Supported URLs:
+ *   - /.netlify/functions/helcim-webhook (direct function endpoint)
+ *   - /webhooks/payment (rewritten to the above via netlify.toml)
+ * 
  * Supported methods: HEAD, GET, POST, OPTIONS
  * 
  * Events handled:
@@ -14,6 +17,7 @@
  * Setup:
  * 1. In Helcim Dashboard → Integrations → Webhooks
  * 2. Add webhook URL: https://your-site.netlify.app/.netlify/functions/helcim-webhook
+ *    OR: https://your-site.netlify.app/webhooks/payment
  * 3. Helcim will validate the URL with a HEAD request
  * 4. (Optional) Set HELCIM_WEBHOOK_SECRET for signature verification (not yet implemented)
  */
@@ -28,10 +32,14 @@ exports.handler = async (event, context) => {
     };
 
     // Handle OPTIONS request for CORS preflight
+    // Access-Control-Max-Age reduces unnecessary preflight requests
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 204,
-            headers,
+            headers: {
+                ...headers,
+                'Access-Control-Max-Age': '86400'
+            },
             body: ''
         };
     }
@@ -108,6 +116,18 @@ exports.handler = async (event, context) => {
         }
 
         try {
+            // ============================================================
+            // Idempotency safeguard: Extract webhook event identifier
+            // TODO: For production systems, persist processed IDs in a
+            // database or KV store to prevent duplicate event processing.
+            // ============================================================
+            const webhookEventId = payload.id || payload.transactionId || payload.eventId || null;
+            if (!webhookEventId) {
+                console.warn('Webhook received without identifiable event ID - unable to ensure idempotency', {
+                    payloadKeys: Object.keys(payload),
+                    timestamp: new Date().toISOString()
+                });
+            }
 
             // Optional: Verify webhook signature if HELCIM_WEBHOOK_SECRET is set
             // NOTE: Signature verification algorithm is not yet implemented.
