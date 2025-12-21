@@ -4,9 +4,126 @@
  * Creates a secure checkout session with Helcim API.
  * The API token is only accessible server-side via environment variable.
  * Returns client-safe data (checkout token/session ID) - NO secrets.
+ * 
+ * SECURITY: All prices are calculated server-side from PRODUCT_CATALOG.
+ * Client-submitted totals are IGNORED.
  */
 
 const https = require('https');
+
+// ============================================
+// AUTHORITATIVE PRODUCT CATALOG (Server-Side)
+// All prices in CENTS to avoid floating-point errors
+// ============================================
+const PRODUCT_CATALOG = {
+    // Signature Blends
+    'hair-bender': 3700,
+    'holler-mountain': 3875,
+    'french-roast': 3325,
+    'founders-blend': 3500,
+    'homestead': 3500,
+    'hundred-mile': 3500,
+    'evergreen': 3500,
+    
+    // Single Origins
+    'ethiopia-mordecofe': 4475,
+    'ethiopia-duromina': 4200,
+    'ethiopia-suke-quto': 4400,
+    'guatemala-injerto': 3800,
+    'guatemala-bella-vista': 4100,
+    'colombia-el-jordan': 3900,
+    'colombia-cantillo': 4100,
+    'costa-rica-montes': 4300,
+    'indonesia-bies': 4000,
+    'honduras-puente': 3900,
+    'roasters-pick': 3900,
+    
+    // Decaf
+    'trapper-creek-decaf': 3950,
+    
+    // Cold Brew
+    'cold-brew-concentrate': 2825,
+    'cold-brew-original': 875,
+    'cold-brew-decaf': 2825,
+    'cold-brew-nitro': 975,
+    'cold-brew-oatly-original': 1075,
+    'cold-brew-oatly-chocolate': 1075,
+    'ethiopia-cold-brew': 3125,
+    'french-roast-cold-brew': 2925,
+    
+    // Gear
+    'aeropress': 3995,
+    'aeropress-filters': 895,
+    'chemex-6cup': 4995,
+    'chemex-filters': 1495,
+    'hario-v60': 2600,
+    'hario-v60-filters': 895,
+    'hario-kettle': 9500,
+    'hario-grinder': 3995,
+    'baratza-encore': 16900,
+    'kalita-wave': 4400,
+    'kalita-filters': 1200,
+    'french-press': 3995,
+    'bonavita-brewer': 16900,
+    'ratio-six': 34900,
+    'oxo-cold-brewer': 2995,
+    'scale': 2995,
+    'origami-dripper': 4600,
+    'origami-filters': 995,
+    
+    // Merch
+    'diner-mug': 1600,
+    'rose-gold-mug': 1700,
+    'kinto-tumbler': 3500,
+    'kinto-mug': 2995,
+    'fellow-mug': 3500,
+    'tote-bag': 2500,
+    'snow-bunny-tote': 2500,
+    'good-luck-hat': 2995,
+    'forest-beanie': 2500,
+    'patch': 800,
+    'camp-mug': 2000,
+    'cold-brew-koozie': 700,
+    'cold-brew-glass': 1495,
+    'puzzle': 2995,
+    'mug-ornament': 995,
+    
+    // Bundles
+    'blend-trio': 9950,
+    'passport-trio': 11225,
+    'adventure-bundle': 7495,
+    'day-night-bundle': 6925,
+    'home-barista-bundle': 12900,
+    'evergreen-bundle': 6250,
+    'cold-brew-delight': 2995,
+    'oatly-variety': 2100,
+    'holiday-host': 7995,
+    
+    // Gift Cards
+    'gift-card-25': 2500,
+    'gift-card-50': 5000,
+    'gift-card-100': 10000,
+    'gift-subscription-3mo': 7495
+};
+
+// Size multipliers for coffee bags (base is 12oz)
+const SIZE_MULTIPLIERS = {
+    '12oz': 1,
+    '2lb': 2.35,
+    '5lb': 5.25
+};
+
+// Shipping rates in cents
+const SHIPPING_RATES = {
+    'standard': 599,      // $5.99 standard shipping
+    'expedited': 1299,    // $12.99 expedited shipping
+    'ups-ground': 1554,   // $15.54 UPS Ground
+    'ups-2day': 2397,     // $23.97 UPS 2nd Day
+    'ups-overnight': 3153 // $31.53 UPS Next Day
+};
+
+// Tax rate (7%)
+const TAX_RATE = 0.07;
 
 exports.handler = async (event, context) => {
     // Only allow POST requests
@@ -33,9 +150,11 @@ exports.handler = async (event, context) => {
     try {
         // Parse request body
         const requestBody = JSON.parse(event.body);
-        const { cart, customer, shipping, totals } = requestBody;
+        const { cart, customer, shipping, shippingMethod } = requestBody;
 
-        // Validate required fields
+        // ============================================
+        // VALIDATION STEP 1: Cart Items
+        // ============================================
         if (!cart || !Array.isArray(cart) || cart.length === 0) {
             return {
                 statusCode: 400,
@@ -43,6 +162,35 @@ exports.handler = async (event, context) => {
             };
         }
 
+        // Validate each cart item
+        for (const item of cart) {
+            // Check product ID exists in catalog
+            if (!item.id || !PRODUCT_CATALOG[item.id]) {
+                console.error('Invalid product ID:', item.id);
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ 
+                        error: 'Invalid product in cart',
+                        message: `Product "${item.id}" not found in catalog`
+                    })
+                };
+            }
+
+            // Validate quantity (1-99)
+            if (!item.quantity || item.quantity < 1 || item.quantity > 99 || !Number.isInteger(item.quantity)) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ 
+                        error: 'Invalid quantity',
+                        message: 'Quantity must be between 1 and 99'
+                    })
+                };
+            }
+        }
+
+        // ============================================
+        // VALIDATION STEP 2: Customer Information
+        // ============================================
         if (!customer || !customer.email || !customer.firstName || !customer.lastName) {
             return {
                 statusCode: 400,
@@ -50,6 +198,18 @@ exports.handler = async (event, context) => {
             };
         }
 
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(customer.email)) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: 'Invalid email address' })
+            };
+        }
+
+        // ============================================
+        // VALIDATION STEP 3: Shipping Address
+        // ============================================
         if (!shipping || !shipping.address || !shipping.city || !shipping.state || !shipping.zip) {
             return {
                 statusCode: 400,
@@ -57,20 +217,61 @@ exports.handler = async (event, context) => {
             };
         }
 
-        if (!totals || typeof totals.total === 'undefined') {
+        // ============================================
+        // SERVER-SIDE PRICE CALCULATION
+        // ============================================
+        // Calculate subtotal from cart using PRODUCT_CATALOG prices
+        let subtotalCents = 0;
+        
+        for (const item of cart) {
+            const basePrice = PRODUCT_CATALOG[item.id];
+            let itemPrice = basePrice;
+            
+            // Apply size multiplier if specified
+            if (item.size && SIZE_MULTIPLIERS[item.size]) {
+                itemPrice = Math.round(basePrice * SIZE_MULTIPLIERS[item.size]);
+            }
+            
+            // Add to subtotal (price * quantity)
+            subtotalCents += itemPrice * item.quantity;
+        }
+        
+        // Get shipping cost (default to standard if not specified)
+        const shippingMethodKey = shippingMethod || 'ups-ground';
+        const shippingCents = SHIPPING_RATES[shippingMethodKey] || SHIPPING_RATES['ups-ground'];
+        
+        // Calculate tax (7% of subtotal only, not shipping)
+        const taxCents = Math.round(subtotalCents * TAX_RATE);
+        
+        // Calculate total
+        const totalCents = subtotalCents + shippingCents + taxCents;
+        
+        // ============================================
+        // VALIDATION STEP 4: Reasonable Total
+        // ============================================
+        // Sanity check: total should be between $1 and $10,000
+        if (totalCents < 100 || totalCents > 1000000) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: 'Order totals are missing' })
+                body: JSON.stringify({ 
+                    error: 'Invalid order total',
+                    message: 'Order total must be between $1.00 and $10,000.00'
+                })
             };
         }
-
-        // Calculate amount in cents (Helcim uses cents)
-        const amountCents = Math.round(totals.total * 100);
+        
+        // Log server-calculated totals for audit
+        console.log('Server-calculated totals:', {
+            subtotal: (subtotalCents / 100).toFixed(2),
+            shipping: (shippingCents / 100).toFixed(2),
+            tax: (taxCents / 100).toFixed(2),
+            total: (totalCents / 100).toFixed(2)
+        });
 
         // Prepare Helcim checkout session request
         const helcimPayload = {
             paymentType: 'purchase',
-            amount: amountCents,
+            amount: totalCents,  // Use server-calculated total
             currency: 'USD',
             customerCode: customer.email, // Use email as customer identifier
             invoiceNumber: `GH-${Date.now()}`, // Generate unique invoice number
@@ -91,7 +292,7 @@ exports.handler = async (event, context) => {
         };
 
         console.log('Creating Helcim checkout session:', {
-            amount: amountCents,
+            amount: totalCents,
             currency: 'USD',
             invoiceNumber: helcimPayload.invoiceNumber,
             itemCount: cart.length
@@ -119,7 +320,14 @@ exports.handler = async (event, context) => {
                 checkoutToken: helcimResponse.checkoutToken,
                 sessionId: helcimResponse.sessionId,
                 invoiceNumber: helcimPayload.invoiceNumber,
-                amount: totals.total,
+                // Return server-calculated totals for display verification
+                serverCalculatedTotals: {
+                    subtotal: subtotalCents / 100,
+                    shipping: shippingCents / 100,
+                    tax: taxCents / 100,
+                    total: totalCents / 100
+                },
+                amount: totalCents / 100,
                 currency: 'USD'
             })
         };

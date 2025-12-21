@@ -184,8 +184,8 @@
             
             const shippingMethod = formData.get('shipping');
             
-            // Calculate totals
-            const totals = updateTotals();
+            // Calculate client-side totals (for reference only, server will recalculate)
+            const clientTotals = updateTotals();
             
             // Call Netlify Function to create Helcim checkout session
             console.log('📡 Creating Helcim checkout session...');
@@ -199,13 +199,13 @@
                     customer,
                     shipping,
                     shippingMethod,
-                    totals
+                    totals: clientTotals  // Sent for reference, but server will recalculate
                 })
             });
             
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to create checkout session');
+                throw new Error(errorData.message || errorData.error || 'Failed to create checkout session');
             }
             
             const sessionData = await response.json();
@@ -216,6 +216,25 @@
             
             console.log('✅ Checkout session created:', sessionData.invoiceNumber);
             
+            // Update display with server-calculated totals (if different)
+            if (sessionData.serverCalculatedTotals) {
+                console.log('Server-calculated totals:', sessionData.serverCalculatedTotals);
+                
+                // Update UI with authoritative server totals
+                document.getElementById('subtotal').textContent = `$${sessionData.serverCalculatedTotals.subtotal.toFixed(2)}`;
+                document.getElementById('shippingCost').textContent = `$${sessionData.serverCalculatedTotals.shipping.toFixed(2)}`;
+                document.getElementById('tax').textContent = `$${sessionData.serverCalculatedTotals.tax.toFixed(2)}`;
+                document.getElementById('total').textContent = `$${sessionData.serverCalculatedTotals.total.toFixed(2)}`;
+                
+                // Warn if there's a mismatch (shouldn't happen unless there's a bug)
+                if (Math.abs(clientTotals.total - sessionData.serverCalculatedTotals.total) > 0.01) {
+                    console.warn('⚠️ Client/server total mismatch:', {
+                        client: clientTotals.total,
+                        server: sessionData.serverCalculatedTotals.total
+                    });
+                }
+            }
+            
             checkoutToken = sessionData.checkoutToken;
             
             // Initialize Helcim payment form
@@ -223,7 +242,7 @@
             
         } catch (error) {
             console.error('❌ Checkout error:', error);
-            showError('Checkout failed: ' + error.message);
+            showInlineError('Checkout failed: ' + error.message);
             
             // Re-enable submit button
             submitBtn.disabled = false;
@@ -241,13 +260,22 @@
             
             // Check if HelcimPay is loaded
             if (typeof HelcimPay === 'undefined') {
-                throw new Error('Helcim payment library not loaded');
+                throw new Error('Helcim payment library not loaded. Please refresh the page.');
+            }
+            
+            // Create container for Helcim payment form if it doesn't exist
+            let helcimContainer = document.getElementById('helcim-payment-container');
+            if (!helcimContainer) {
+                helcimContainer = document.createElement('div');
+                helcimContainer.id = 'helcim-payment-container';
+                helcimContainer.style.marginTop = '20px';
+                checkoutForm.appendChild(helcimContainer);
             }
             
             // Initialize HelcimPay.js
             helcimInstance = new HelcimPay(token);
             
-            // Configure payment options
+            // Configure payment event handlers
             helcimInstance.on('success', handlePaymentSuccess);
             helcimInstance.on('error', handlePaymentError);
             helcimInstance.on('cancel', handlePaymentCancel);
@@ -259,7 +287,7 @@
             
         } catch (error) {
             console.error('❌ Failed to initialize Helcim payment:', error);
-            throw new Error('Payment system initialization failed');
+            throw new Error('Payment system initialization failed: ' + error.message);
         }
     }
 
@@ -281,7 +309,7 @@
      */
     function handlePaymentError(error) {
         console.error('❌ Payment error:', error);
-        showError('Payment failed: ' + (error.message || 'Please try again'));
+        showInlineError('Payment failed: ' + (error.message || 'Please try again or contact support'));
         
         // Re-enable submit button
         submitBtn.disabled = false;
@@ -294,14 +322,50 @@
      */
     function handlePaymentCancel() {
         console.log('⚠️ Payment cancelled by user');
+        showInlineError('Payment was cancelled. You can try again when ready.');
         
         // Re-enable submit button
         submitBtn.disabled = false;
         btnText.classList.remove('hidden');
         btnLoading.classList.add('hidden');
+    }
+
+    /**
+     * Show inline error message (non-intrusive)
+     */
+    function showInlineError(message) {
+        // Remove any existing error messages
+        const existingError = document.querySelector('.inline-error-message');
+        if (existingError) {
+            existingError.remove();
+        }
         
-        // Optionally redirect to cancel page
-        // window.location.href = 'cancel.html';
+        // Create error message element
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'inline-error-message';
+        errorDiv.style.cssText = `
+            background-color: #fee;
+            border: 1px solid #fcc;
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin: 16px 0;
+            color: #c00;
+            font-size: 14px;
+        `;
+        errorDiv.textContent = message;
+        
+        // Insert at top of form
+        checkoutForm.insertBefore(errorDiv, checkoutForm.firstChild);
+        
+        // Scroll to error
+        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.remove();
+            }
+        }, 10000);
     }
 
     /**
