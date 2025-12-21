@@ -187,7 +187,27 @@ To verify webhooks are genuinely from Helcim, you can set up signature verificat
 **Important Note**: The current implementation provides **basic protection** by requiring the signature header to be present when `HELCIM_WEBHOOK_SECRET` is configured, but it does not cryptographically verify the signature value itself. This means:
 - If no secret is set, all webhooks are accepted (development mode)
 - If a secret is set, requests must include the `X-Helcim-Signature` header (basic filtering)
-- Full HMAC-SHA256 signature verification can be added when Helcim's signature algorithm is fully documented
+- Full HMAC-SHA256 signature verification should be implemented for production use
+
+**Implementation Note**: Most webhook providers (including Stripe, GitHub, etc.) use HMAC-SHA256 for signature verification. While the exact header format and payload construction method for Helcim signatures should be verified in their official documentation, a typical implementation would look like:
+
+```javascript
+const crypto = require('crypto');
+
+function verifyHelcimSignature(payload, signature, secret) {
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+}
+```
+
+Consult Helcim's developer documentation for the exact signature format, payload encoding, and header name they use.
 
 ⚠️ **Security Warning**: Without full signature verification, malicious actors who know your webhook URL could potentially send fake webhook events. For production use, you should:
 1. Implement full HMAC-SHA256 signature verification based on Helcim's documentation
