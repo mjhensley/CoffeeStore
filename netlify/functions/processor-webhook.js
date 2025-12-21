@@ -16,9 +16,23 @@
 const { confirmPayment, markPaymentFailed } = require('./lib/snipcart');
 const paymentAdapter = require('./payfac/mock'); // Import the payment adapter
 
-// In-memory store for processed webhooks (for idempotency)
-// In production, use a database or cache like Redis
-const processedWebhooks = new Set();
+/**
+ * In-memory store for processed webhooks (for idempotency)
+ * 
+ * **IMPORTANT FOR PRODUCTION**: This in-memory approach is suitable for the mock adapter
+ * and light testing, but for production environments you should use a persistent store:
+ * - Redis with TTL (recommended)
+ * - Database with timestamp-based cleanup
+ * - Distributed cache like Memcached
+ * 
+ * The serverless nature of Netlify Functions means each invocation might get a fresh
+ * instance, so this in-memory approach provides basic deduplication within a function's
+ * lifecycle but is not guaranteed across all invocations.
+ * 
+ * Most payment processors handle webhook retries intelligently and Snipcart's API is
+ * idempotent, so the risk of duplicate processing is low even without perfect deduplication.
+ */
+const processedWebhooks = new Map(); // Using Map to store timestamp for optional cleanup
 
 /**
  * Checks if a webhook has already been processed (idempotent handling)
@@ -27,7 +41,20 @@ const processedWebhooks = new Set();
  * @returns {boolean} True if already processed
  */
 function isWebhookProcessed(webhookId) {
-  return processedWebhooks.has(webhookId);
+  const processed = processedWebhooks.has(webhookId);
+  
+  // Simple time-based cleanup: Remove entries older than 10 minutes
+  // This is safe in serverless as it only cleans within this function instance
+  if (!processed) {
+    const now = Date.now();
+    for (const [id, timestamp] of processedWebhooks.entries()) {
+      if (now - timestamp > 10 * 60 * 1000) { // 10 minutes
+        processedWebhooks.delete(id);
+      }
+    }
+  }
+  
+  return processed;
 }
 
 /**
@@ -36,13 +63,7 @@ function isWebhookProcessed(webhookId) {
  * @param {string} webhookId - Unique identifier for the webhook
  */
 function markWebhookProcessed(webhookId) {
-  processedWebhooks.add(webhookId);
-  
-  // Clear old webhooks after 1 hour to prevent memory leak
-  // In production, use TTL in Redis or database
-  setTimeout(() => {
-    processedWebhooks.delete(webhookId);
-  }, 60 * 60 * 1000); // 1 hour
+  processedWebhooks.set(webhookId, Date.now());
 }
 
 /**

@@ -3,8 +3,8 @@
  * Test script for payment gateway components
  */
 
-const { PaymentAdapter } = require('./payfac/adapter.js');
-const mockAdapter = require('./payfac/mock.js');
+const { PaymentAdapter } = require('../netlify/functions/payfac/adapter.js');
+const mockAdapter = require('../netlify/functions/payfac/mock.js');
 
 console.log('\n--- Testing Payment Gateway Components ---\n');
 

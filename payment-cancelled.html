@@ -110,7 +110,7 @@
         <p>Your payment was cancelled. No charges have been made to your account.</p>
         
         <div style="margin: 24px 0;">
-            <a href="/cart.html" class="button">Return to Cart</a>
+            <button onclick="openCart()" class="button">Return to Cart</button>
             <a href="/" class="button button-secondary">Go to Home</a>
         </div>
         
@@ -120,7 +120,17 @@
     </div>
 
     <script>
-        // Optional: Reopen Snipcart cart so user can try again
+        // Function to open the cart
+        function openCart() {
+            if (window.Snipcart) {
+                window.Snipcart.api.modal.show();
+            } else {
+                // Fallback if Snipcart isn't loaded - go to home
+                window.location.href = '/';
+            }
+        }
+
+        // Optional: Auto-reopen cart after a delay
         window.addEventListener('load', function() {
             if (window.Snipcart) {
                 // Give user a moment to read the message

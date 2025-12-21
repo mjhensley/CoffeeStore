@@ -159,9 +159,10 @@
     </div>
 
     <script>
-        // Extract session ID from URL
+        // Extract parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session');
+        const publicToken = urlParams.get('token');
 
         // Display session ID
         if (sessionId) {
@@ -182,20 +183,24 @@
             try {
                 // In a real implementation, this would be handled by the payment processor
                 // For mock, we'll trigger the webhook directly
+                // Note: In production, the publicToken would be in the checkout session metadata
+                const webhookPayload = {
+                    type: 'payment.succeeded',
+                    sessionId: sessionId,
+                    status: 'succeeded',
+                    // Use publicToken from URL if available, otherwise use placeholder
+                    publicToken: publicToken || 'mock_token_for_testing',
+                    metadata: {
+                        publicToken: publicToken || 'mock_token_for_testing'
+                    }
+                };
+
                 const response = await fetch('/.netlify/functions/processor-webhook', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        type: 'payment.succeeded',
-                        sessionId: sessionId,
-                        status: 'succeeded',
-                        publicToken: 'mock_token', // In real flow, this comes from metadata
-                        metadata: {
-                            publicToken: 'mock_token'
-                        }
-                    })
+                    body: JSON.stringify(webhookPayload)
                 });
 
                 if (response.ok) {
@@ -203,7 +208,10 @@
                     
                     // Redirect to success page
                     setTimeout(() => {
-                        window.location.href = '/payment-success.html';
+                        const successUrl = publicToken 
+                            ? `/payment-success.html?token=${publicToken}`
+                            : '/payment-success.html';
+                        window.location.href = successUrl;
                     }, 1000);
                 } else {
                     throw new Error('Webhook failed');
@@ -221,7 +229,10 @@
             
             // Redirect to cancel page
             setTimeout(() => {
-                window.location.href = '/payment-cancelled.html';
+                const cancelUrl = publicToken 
+                    ? `/payment-cancelled.html?token=${publicToken}`
+                    : '/payment-cancelled.html';
+                window.location.href = cancelUrl;
             }, 500);
         }
     </script>
