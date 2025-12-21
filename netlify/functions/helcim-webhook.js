@@ -3,7 +3,8 @@
  * 
  * Handles payment event webhooks from Helcim payment gateway.
  * 
- * Endpoint: POST /.netlify/functions/helcim-webhook
+ * Endpoint: /.netlify/functions/helcim-webhook
+ * Supported methods: HEAD, GET, POST, OPTIONS
  * 
  * Events handled:
  * - payment.success / transaction.approved - Payment completed
@@ -13,7 +14,8 @@
  * Setup:
  * 1. In Helcim Dashboard → Integrations → Webhooks
  * 2. Add webhook URL: https://your-site.netlify.app/.netlify/functions/helcim-webhook
- * 3. (Optional) Set HELCIM_WEBHOOK_SECRET environment variable for signature verification
+ * 3. Helcim will validate the URL with a HEAD request
+ * 4. (Optional) Set HELCIM_WEBHOOK_SECRET for signature verification (not yet implemented)
  */
 
 exports.handler = async (event, context) => {
@@ -77,10 +79,13 @@ exports.handler = async (event, context) => {
                 })
             };
         }
-        
+
         try {
-            
+
             // Optional: Verify webhook signature if HELCIM_WEBHOOK_SECRET is set
+            // NOTE: Signature verification algorithm is not yet implemented.
+            // When secret is configured, we require a signature header to be present
+            // (providing basic protection), but do not verify its correctness yet.
             const webhookSecret = process.env.HELCIM_WEBHOOK_SECRET;
             if (webhookSecret) {
                 const signature = event.headers['x-helcim-signature'] || event.headers['X-Helcim-Signature'];
@@ -98,8 +103,8 @@ exports.handler = async (event, context) => {
                 }
                 
                 // TODO: Implement actual signature verification based on Helcim's documentation
-                // For now, reject if secret is set but no proper verification is implemented
-                console.warn('Webhook signature verification not yet implemented - configure once Helcim signature algorithm is documented');
+                // The signature algorithm/format needs to be obtained from Helcim docs
+                console.warn('Webhook signature verification not yet implemented - signature presence checked but not verified');
             }
 
             // Log only non-sensitive webhook metadata
