@@ -74,6 +74,20 @@ else
 fi
 echo ""
 
+# Test 5: GET request with check parameter (URL verification)
+echo -e "${YELLOW}Test 5: GET Request with check parameter (URL Verification)${NC}"
+CHECK_VALUE="test.value+123"
+CHECK_RESPONSE=$(curl -s "$WEBHOOK_URL?check=$CHECK_VALUE")
+if [ "$CHECK_RESPONSE" = "$CHECK_VALUE" ]; then
+    echo -e "${GREEN}✅ Check parameter echoed correctly${NC}"
+    echo "   Response: $CHECK_RESPONSE"
+else
+    echo -e "${RED}❌ Check parameter not echoed correctly${NC}"
+    echo "   Expected: $CHECK_VALUE"
+    echo "   Got: $CHECK_RESPONSE"
+fi
+echo ""
+
 # Summary
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo -e "${GREEN}✓ Testing Complete${NC}"

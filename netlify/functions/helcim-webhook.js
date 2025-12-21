@@ -52,10 +52,9 @@ exports.handler = async (event, context) => {
         // Helcim sends a GET request with ?check=<random_string> and expects the value echoed back
         const checkValue = event.queryStringParameters && event.queryStringParameters.check;
         if (checkValue) {
-            // Validate check parameter: allow alphanumeric, hyphens, underscores, max 256 chars
-            if (typeof checkValue === 'string' && 
-                checkValue.length <= 256 && 
-                /^[a-zA-Z0-9_-]+$/.test(checkValue)) {
+            // Validate check parameter: only limit by length for safety (max 256 chars)
+            // Allow any characters since Helcim may include dots, plus signs, or other URL-safe characters
+            if (typeof checkValue === 'string' && checkValue.length <= 256) {
                 return {
                     statusCode: 200,
                     headers: {
@@ -65,7 +64,7 @@ exports.handler = async (event, context) => {
                     body: checkValue
                 };
             }
-            // Invalid check parameter, return 400
+            // Invalid check parameter (too long or not a string), return 400
             return {
                 statusCode: 400,
                 headers,
