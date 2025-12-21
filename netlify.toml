@@ -12,7 +12,7 @@
 [[edge_functions]]
   path = "/*"
   function = "bot-protection"
-  excludedPath = ["/.netlify/functions/*"]
+  excludedPath = ["/.netlify/functions/*", "/webhooks/*"]
 
 [[edge_functions]]
   path = "/.netlify/functions/*"
@@ -133,6 +133,14 @@
 # ============================================
 # REDIRECTS - Defined in netlify.toml for priority
 # ============================================
+
+# Rewrite webhooks to Helcim webhook function
+# This MUST be placed before HTTPS redirects since Netlify processes rules in order
+[[redirects]]
+  from = "/webhooks/*"
+  to = "/.netlify/functions/helcim-webhook"
+  status = 200
+  force = true
 
 # Force HTTPS
 [[redirects]]
