@@ -59,23 +59,50 @@ exports.handler = async (event, context) => {
 
     // Handle POST request - Actual webhook events from Helcim
     if (event.httpMethod === 'POST') {
+        let payload;
+        
         try {
-            // Parse the webhook payload
-            const payload = JSON.parse(event.body || '{}');
+            // Safely parse the webhook payload
+            payload = JSON.parse(event.body || '{}');
+        } catch (parseError) {
+            console.error('Invalid JSON in webhook payload');
+            // Return 200 to prevent retries of malformed payloads
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                    received: true,
+                    error: 'Invalid JSON payload',
+                    timestamp: new Date().toISOString()
+                })
+            };
+        }
+        
+        try {
             
             // Optional: Verify webhook signature if HELCIM_WEBHOOK_SECRET is set
             const webhookSecret = process.env.HELCIM_WEBHOOK_SECRET;
             if (webhookSecret) {
                 const signature = event.headers['x-helcim-signature'] || event.headers['X-Helcim-Signature'];
                 
-                // TODO: Implement signature verification based on Helcim's documentation
-                // For now, we log a warning if secret is set but signature is missing
                 if (!signature) {
-                    console.warn('Webhook secret is configured but no signature found in request');
+                    console.warn('Webhook secret configured but no signature found - rejecting request');
+                    return {
+                        statusCode: 401,
+                        headers,
+                        body: JSON.stringify({
+                            error: 'Signature verification required',
+                            timestamp: new Date().toISOString()
+                        })
+                    };
                 }
+                
+                // TODO: Implement actual signature verification based on Helcim's documentation
+                // For now, reject if secret is set but no proper verification is implemented
+                console.warn('Webhook signature verification not yet implemented - configure once Helcim signature algorithm is documented');
             }
 
-            // Log the webhook event for debugging
+            // Log only non-sensitive webhook metadata
             console.log('Helcim webhook received:', {
                 type: payload.type || payload.event,
                 transactionId: payload.transactionId || payload.id,
@@ -88,18 +115,18 @@ exports.handler = async (event, context) => {
             switch (eventType) {
                 case 'payment.success':
                 case 'transaction.approved':
-                    console.log('Payment successful:', payload);
+                    console.log('Payment successful - Transaction ID:', payload.transactionId || payload.id);
                     // TODO: Update order status, send confirmation email, etc.
                     break;
 
                 case 'payment.failed':
                 case 'transaction.declined':
-                    console.log('Payment failed:', payload);
+                    console.log('Payment failed - Transaction ID:', payload.transactionId || payload.id);
                     // TODO: Update order status, notify customer, etc.
                     break;
 
                 case 'payment.refunded':
-                    console.log('Payment refunded:', payload);
+                    console.log('Payment refunded - Transaction ID:', payload.transactionId || payload.id);
                     // TODO: Update order status, notify customer, etc.
                     break;
 
