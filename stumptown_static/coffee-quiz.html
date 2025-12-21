@@ -61,7 +61,9 @@
     <link rel="preconnect" href="https://cdn.snipcart.com">
     <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.css" />
     
-    <style>
+    
+    <!-- Snipcart Overrides - Consolidated styles -->
+    <link rel="stylesheet" href="snipcart-overrides.css"><style>
         .quiz-container {
             min-height: calc(100vh - 200px);
             background: linear-gradient(135deg, #f8f6f3 0%, #ebe6df 100%);
@@ -664,6 +666,9 @@
 
     <div hidden id="snipcart" data-api-key="ODMwYTIxNjQtMjkxYy00YjNlLWI0NTAtYTkyNWFkNTdlNzNhNjM5MDE1ODA5OTIzMjEyMTUw" data-config-modal-style="side"></div>
     <script async src="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.js"></script>
+    
+    <!-- SITE CONFIGURATION: Load FIRST - single source of truth -->
+    <script src="site-config.js"></script>
     
     <!-- Snipcart Checkout Customizations -->
     <style>

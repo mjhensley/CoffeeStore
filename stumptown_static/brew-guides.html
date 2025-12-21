@@ -171,7 +171,10 @@
     <link rel="preconnect" href="https://app.snipcart.com">
     <link rel="preconnect" href="https://cdn.snipcart.com">
     <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.css" />
-</head>
+    
+    
+    <!-- Snipcart Overrides - Consolidated styles -->
+    <link rel="stylesheet" href="snipcart-overrides.css"></head>
 <body>
     <!-- Skip Navigation -->
     <a href="#main-content" class="skip-nav">Skip to main content</a>
@@ -588,6 +591,9 @@
     <div hidden id="snipcart" data-api-key="ODMwYTIxNjQtMjkxYy00YjNlLWI0NTAtYTkyNWFkNTdlNzNhNjM5MDE1ODA5OTIzMjEyMTUw" data-config-modal-style="side"></div>
     <script async src="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.js"></script>
     
+    <!-- SITE CONFIGURATION: Load FIRST - single source of truth -->
+    <script src="site-config.js"></script>
+    
     <!-- Snipcart Checkout Customizations -->
     <style>
         .snipcart-cart-summary-side .snipcart-cart-summary-item { display: flex !important; align-items: flex-start !important; gap: 16px !important; padding: 16px 0 !important; border-bottom: 1px solid #eee !important; }
@@ -611,6 +617,16 @@
     
     <!-- CENTRALIZED PRICING - Must load before other scripts -->
     <script src="product-pricing.js"></script>
+    
+    <!-- SHIPPING CONFIGURATION -->
+    <script src="shipping-config.js"></script>
+    
+    <!-- TAX & PRICING MODULES -->
+    <script src="lib/tax.js"></script>
+    <script src="lib/pricing.js"></script>
+    
+    <!-- DISCOUNT CONFIGURATION -->
+    <script src="discount-config.js"></script>
     
     <!-- PERFORMANCE: Load fingerprinting for bot protection -->
     <script src="fingerprint.js" defer></script>

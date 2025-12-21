@@ -79,7 +79,10 @@
     <link rel="preconnect" href="https://app.snipcart.com">
     <link rel="preconnect" href="https://cdn.snipcart.com">
     <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.css" />
-</head>
+    
+    
+    <!-- Snipcart Overrides - Consolidated styles -->
+    <link rel="stylesheet" href="snipcart-overrides.css"></head>
 <body>
     <!-- Skip Navigation -->
     <a href="#main-content" class="skip-nav">Skip to main content</a>
@@ -235,6 +238,9 @@
     <!-- Snipcart - Replace YOUR_PUBLIC_API_KEY with your Snipcart public API key -->
     <div hidden id="snipcart" data-api-key="ODMwYTIxNjQtMjkxYy00YjNlLWI0NTAtYTkyNWFkNTdlNzNhNjM5MDE1ODA5OTIzMjEyMTUw" data-config-modal-style="side"></div>
     <script async src="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.js"></script>
+    
+    <!-- SITE CONFIGURATION: Load FIRST - single source of truth -->
+    <script src="site-config.js"></script>
     
     <!-- Snipcart Checkout Customizations -->
     <style>
