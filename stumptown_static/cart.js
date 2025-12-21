@@ -6,6 +6,7 @@
     let cart = [];
     let isCartOpen = false;
     let isCheckoutOpen = false;
+    let isNavigatingToCheckout = false; // Debounce checkout navigation
 
     // Initialize cart from localStorage
     function initCart() {
@@ -1475,11 +1476,18 @@
                 removeItem(index);
             }
 
-            // Checkout button - redirects to checkout page
+            // Checkout button - redirects to checkout page (with debounce)
             if (e.target.id === 'cart-checkout-btn' || e.target.closest('#cart-checkout-btn')) {
                 e.preventDefault();
                 e.stopPropagation();
+                
+                // Debounce: prevent multiple rapid clicks
+                if (isNavigatingToCheckout) {
+                    return false;
+                }
+                
                 if (cart.length > 0) {
+                    isNavigatingToCheckout = true;
                     // Close cart first
                     closeCart();
                     // Navigate to checkout page
