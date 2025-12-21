@@ -8,14 +8,6 @@
 
 const SITE_CONFIG = {
     // ============================================
-    // SNIPCART CONFIGURATION
-    // ============================================
-    snipcart: {
-        apiKey: 'ODMwYTIxNjQtMjkxYy00YjNlLWI0NTAtYTkyNWFkNTdlNzNhNjM5MDE1ODA5OTIzMjEyMTUw',
-        modalStyle: 'side'
-    },
-    
-    // ============================================
     // TAX CONFIGURATION
     // ============================================
     tax: {
@@ -27,8 +19,9 @@ const SITE_CONFIG = {
     // SHIPPING CONFIGURATION
     // ============================================
     shipping: {
-        defaultMethod: 'ups-ground',
-        defaultPrice: 15.54 // UPS Ground default price
+        defaultMethod: 'standard',
+        defaultPrice: 5.99, // Standard shipping default price
+        expeditedPrice: 12.99 // Expedited shipping price
     },
     
     // ============================================

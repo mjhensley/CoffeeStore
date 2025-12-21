@@ -18,6 +18,7 @@ Thumbs.db
 # Secrets
 .env
 .env.*
+!.env.example
 # Huge downloaded assets (do not commit)
 stumpstown_smart/videos.ctfassets.net/
 stumpstown_smart/images.ctfassets.net/
