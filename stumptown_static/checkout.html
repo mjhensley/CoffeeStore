@@ -540,8 +540,17 @@
             }
             
             try {
-                const customCartJson = localStorage.getItem('grainhouse_cart');
+                let customCartJson = null;
                 let customCart = [];
+                
+                // Safe localStorage access with fallback
+                try {
+                    customCartJson = localStorage.getItem('grainhouse_cart');
+                } catch (storageError) {
+                    log('localStorage unavailable: ' + storageError.message, 'warn');
+                    // Continue without custom cart - Snipcart will work standalone
+                    return;
+                }
                 
                 if (customCartJson) {
                     try {

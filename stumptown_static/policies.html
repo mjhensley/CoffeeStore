@@ -19,10 +19,159 @@
     <meta property="og:image" content="https://grainhousecoffee.com/images/coffee.jpg">
     
     <!-- Shared Head Content (Performance, Fonts, Styles) -->
-    <!--#include virtual="shared/head-standard.html"-->
+    <!-- PERFORMANCE: Preconnect to critical origins FIRST -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.snipcart.com" crossorigin>
+    <link rel="preconnect" href="https://app.snipcart.com" crossorigin>
+    <link rel="dns-prefetch" href="https://api.snipcart.com">
+    <link rel="dns-prefetch" href="https://api.resend.com">
+
+    <!-- PERFORMANCE: Preload critical resources -->
+    <link rel="preload" href="styles.css" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" as="style" crossorigin>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon.svg">
+
+    <!-- Fonts - display swap for faster text visibility -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
+
+    <!-- CRITICAL INLINE CSS for instant first paint -->
+    <style>*{margin:0;padding:0;box-sizing:border-box}:root{--brown:#4a3728;--cream:#f5f0e8;--gold:#c9a96e;--dark:#1a1a1a;--white:#fff;--green:#2d5a3d}html{scroll-behavior:smooth}body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:var(--cream);color:var(--dark);line-height:1.6;opacity:1}.top-banner{background:var(--brown);color:var(--white);padding:12px 20px;font-size:13px;text-align:center}nav{background:var(--white);padding:20px 40px;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.05)}.logo{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--brown);text-decoration:none}.nav-links{display:flex;gap:35px;list-style:none}.nav-links a{text-decoration:none;color:var(--dark);font-weight:500;font-size:14px;text-transform:uppercase;letter-spacing:1px}.cart-btn{background:var(--brown);color:var(--white);border:none;padding:10px 18px;border-radius:25px;cursor:pointer;font-size:13px}@media(max-width:768px){nav{padding:12px 16px}.nav-links{display:none}}</style>
+
+    <!-- Styles - Load asynchronously for speed -->
+    <link rel="stylesheet" href="styles.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="styles.css"></noscript>
+    <link rel="stylesheet" href="enhanced-ui.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="enhanced-ui.css"></noscript>
+
+    <!-- Snipcart - Load asynchronously for better performance -->
+    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.css"></noscript>
     
     <!-- Snipcart Styles -->
-    <!--#include virtual="shared/snipcart-styles.html"-->
+    <!-- Snipcart Checkout Customizations - Standardized across all pages -->
+    <style>
+        /* ===== FORCE PRODUCT IMAGES IN ALL SNIPCART VIEWS ===== */
+        
+        /* Cart sidebar items */
+        .snipcart-item-line {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+        }
+        
+        .snipcart-item-line__image,
+        .snipcart-item-line__media {
+            display: block !important;
+            width: 80px !important;
+            height: 80px !important;
+            min-width: 80px !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            background: #f8f6f3 !important;
+            flex-shrink: 0 !important;
+        }
+        
+        .snipcart-item-line__image img,
+        .snipcart-item-line__media img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            display: block !important;
+        }
+        
+        /* Checkout order summary - right side panel */
+        .snipcart-order-summary .snipcart-cart-summary-item,
+        .snipcart-cart-summary .snipcart-cart-summary-item,
+        .snipcart-cart-summary-side .snipcart-cart-summary-item,
+        [class*="order-summary"] [class*="summary-item"],
+        [class*="cart-summary"] [class*="item"] {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 14px !important;
+            padding: 14px 0 !important;
+            border-bottom: 1px solid #eee !important;
+        }
+        
+        .snipcart-order-summary .snipcart-cart-summary-item:last-child,
+        .snipcart-cart-summary .snipcart-cart-summary-item:last-child,
+        .snipcart-cart-summary-side .snipcart-cart-summary-item:last-child {
+            border-bottom: none !important;
+        }
+        
+        /* Force image visibility in order summary */
+        .snipcart-cart-summary-item__image,
+        .snipcart-order-summary [class*="image"],
+        .snipcart-cart-summary [class*="item__image"],
+        [class*="summary-item"] [class*="image"] {
+            display: block !important;
+            width: 64px !important;
+            height: 64px !important;
+            min-width: 64px !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            background: #f8f6f3 !important;
+            flex-shrink: 0 !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+        }
+        
+        .snipcart-cart-summary-item__image img,
+        .snipcart-order-summary [class*="image"] img,
+        .snipcart-cart-summary [class*="item__image"] img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            display: block !important;
+        }
+        
+        /* Product details in summary */
+        .snipcart-cart-summary-item__name {
+            font-weight: 600 !important;
+            color: #333 !important;
+            font-size: 15px !important;
+            line-height: 1.3 !important;
+            margin-bottom: 4px !important;
+        }
+        
+        .snipcart-cart-summary-item__quantity {
+            color: #666 !important;
+            font-size: 14px !important;
+        }
+        
+        .snipcart-cart-summary-item__price {
+            font-weight: 600 !important;
+            color: #333 !important;
+            font-size: 15px !important;
+        }
+        
+        /* Order summary spacing */
+        #snipcart .snipcart-cart-summary-fees__notice,
+        #snipcart [class*="fees__notice"],
+        .snipcart-modal [class*="fees__notice"],
+        .snipcart-checkout [class*="fees__notice"] {
+            margin-bottom: 24px !important;
+        }
+        
+        #snipcart .snipcart-cart-summary__total,
+        #snipcart [class*="summary__total"],
+        .snipcart-modal [class*="summary__total"],
+        .snipcart-checkout [class*="summary__total"] {
+            margin-top: 16px !important;
+            padding-top: 16px !important;
+        }
+        
+        /* Edit link styling */
+        .snipcart-cart-summary__edit,
+        [class*="summary__edit"] {
+            color: #1a73e8 !important;
+            text-decoration: underline !important;
+            font-size: 14px !important;
+        }
+    </style>
     
     <style>
         /* Policies Page Styles */
@@ -355,7 +504,76 @@
     <a href="#main-content" class="skip-nav">Skip to main content</a>
 
     <!-- Shared Navigation -->
-    <!--#include virtual="shared/navigation.html"-->
+    <!-- Top Banner -->
+    <div class="top-banner" role="banner">
+        <div class="banner-scroll">
+            <span class="banner-item">Save 15% on orders $75+ with code <strong>HOLIDAY15</strong></span>
+            <span class="banner-item">☕ Free shipping on all orders over $45</span>
+            <span class="banner-item">Save 30% on first subscription with code <strong>SAVE30</strong></span>
+            <span class="banner-item">Save 15% on orders $75+ with code <strong>HOLIDAY15</strong></span>
+            <span class="banner-item">☕ Free shipping on all orders over $45</span>
+            <span class="banner-item">Save 30% on first subscription with code <strong>SAVE30</strong></span>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav role="navigation" aria-label="Main navigation">
+        <a href="index.html" class="logo">Grainhouse Coffee</a>
+        
+        <ul class="nav-links">
+            <li><a href="collections.html">Shop</a></li>
+            <li><a href="cold-brew.html">Cold Brew</a></li>
+            <li><a href="subscribe.html">Subscribe</a></li>
+            <li><a href="gift-guide.html" class="nav-gift-link">🎁 Gift Guide</a></li>
+            <li><a href="locations.html">Locations</a></li>
+            <li><a href="our-story.html">Our Story</a></li>
+        </ul>
+        
+        <div class="nav-right">
+            <a href="account.html" class="account-link" aria-label="Sign in to your account">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </a>
+            <button class="snipcart-checkout cart-btn" aria-label="Shopping cart">
+                <svg class="cart-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="9" cy="21" r="1"/>
+                    <circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span class="cart-text">Cart</span>
+                <span class="cart-count-badge snipcart-items-count" aria-live="polite"></span>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle mobile menu" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+    <div class="mobile-nav" id="mobileNav" role="navigation" aria-label="Mobile navigation">
+        <ul class="mobile-nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="collections.html">Shop Coffee</a></li>
+            <li><a href="cold-brew.html">Cold Brew</a></li>
+            <li><a href="subscribe.html">Subscribe</a></li>
+            <li><a href="gift-guide.html" class="nav-gift-link">🎁 Gift Guide</a></li>
+            <li><a href="coffee-quiz.html">Coffee Quiz</a></li>
+            <li><a href="brew-guides.html">Brew Guides</a></li>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="impact.html">Our Impact</a></li>
+            <li><a href="locations.html">Locations</a></li>
+            <li><a href="our-story.html">Our Story</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="policies.html">Policies</a></li>
+        </ul>
+    </div>
 
     <main id="main-content">
         <!-- Hero Section -->
@@ -686,10 +904,300 @@
     </main>
 
     <!-- Shared Footer -->
-    <!--#include virtual="shared/footer.html"-->
+    <!-- Footer -->
+    <footer role="contentinfo">
+        <div class="footer-grid">
+            <div class="footer-brand-col">
+                <div class="footer-brand">Grainhouse Coffee</div>
+                <p class="footer-desc">Independent small batch coffee roasters. Hand roasted, ethically sourced specialty coffee delivered fresh to your door.</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Shop</h4>
+                <ul class="footer-links">
+                    <li><a href="collections.html">All Coffee</a></li>
+                    <li><a href="cold-brew.html">Cold Brew</a></li>
+                    <li><a href="subscribe.html">Subscriptions</a></li>
+                    <li><a href="gift-guide.html">Gift Guide</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Learn</h4>
+                <ul class="footer-links">
+                    <li><a href="brew-guides.html">Brew Guides</a></li>
+                    <li><a href="our-story.html">Our Story</a></li>
+                    <li><a href="locations.html">Locations</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Support</h4>
+                <ul class="footer-links">
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="policies.html">Policies</a></li>
+                    <li><a href="account.html">My Account</a></li>
+                </ul>
+            </div>
+            <div class="footer-newsletter">
+                <h4 class="footer-title">Join the Community</h4>
+                <p class="newsletter-desc">Get 10% off your first order plus early access to new coffees.</p>
+                <form class="newsletter-form" onsubmit="handleNewsletterSubmit(event)">
+                    <input type="email" placeholder="Enter your email" required aria-label="Email address">
+                    <button type="submit">Subscribe</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Trust Badges -->
+        <div class="trust-badges">
+            <div class="trust-badge">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <span>Secure Checkout</span>
+            </div>
+            <div class="trust-badge">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                <span>Satisfaction Guaranteed</span>
+            </div>
+            <div class="trust-badge">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>Roasted Fresh Daily</span>
+            </div>
+            <div class="trust-badge">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                <span>Free Shipping $45+</span>
+            </div>
+        </div>
+        
+        <div class="footer-payment-methods">
+            <h4 class="footer-payment-title">Accepted Payment Methods</h4>
+            <div class="payment-logo-container">
+                <img src="https://www.shift4shop.com/images/credit-card-logos/cc-lg-4.png" alt="Accepted payment methods: Visa, Mastercard, American Express, Discover" class="payment-logo-combined" loading="lazy" decoding="async" fetchpriority="low" width="180" height="40">
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <span>© 2025 Grainhouse Coffee Roasters. All rights reserved.</span>
+            <div class="footer-legal">
+                <a href="policies.html#privacy">Privacy Policy</a>
+                <a href="policies.html#terms">Terms of Service</a>
+                <a href="accessibility.html">Accessibility</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="18 15 12 9 6 15"/>
+        </svg>
+    </button>
     
     <!-- Shared Scripts -->
-    <!--#include virtual="shared/scripts.html"-->
+    <!-- INSTANT LOAD: Ultra-fast page transitions - load FIRST -->
+    <script src="instant-load.js"></script>
+
+    <!-- CENTRALIZED PRICING - Must load before other scripts -->
+    <script src="product-pricing.js"></script>
+
+    <!-- PERFORMANCE: Load fingerprinting for bot protection -->
+    <script src="fingerprint.js" defer></script>
+
+    <!-- PERFORMANCE: Load optimization module -->
+    <script src="performance.js" defer></script>
+
+    <!-- Snipcart - Replace YOUR_PUBLIC_API_KEY with your Snipcart public API key -->
+    <div hidden id="snipcart" data-api-key="ODMwYTIxNjQtMjkxYy00YjNlLWI0NTAtYTkyNWFkNTdlNzNhNjM5MDE1ODA5OTIzMjEyMTUw" data-config-modal-style="side">
+        <!-- Custom template for order summary items with images -->
+        <order-summary-item-custom section="cart-summary-items">
+            <li class="snipcart-cart-summary-item">
+                <div class="snipcart-cart-summary-item__image" style="width:64px;height:64px;min-width:64px;border-radius:8px;overflow:hidden;background:#f8f6f3;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+                    <img :src="item.image" :alt="item.name" style="width:100%;height:100%;object-fit:cover;">
+                </div>
+                <div class="snipcart-cart-summary-item__content" style="flex:1;min-width:0;">
+                    <div class="snipcart-cart-summary-item__name" style="font-weight:600;color:#333;font-size:14px;line-height:1.3;">{{ item.name }}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                        <span class="snipcart-cart-summary-item__quantity" style="color:#666;font-size:13px;">x{{ item.quantity }}</span>
+                        <span class="snipcart-cart-summary-item__price" style="font-weight:600;color:#333;font-size:14px;">{{ item.totalPrice | money }}</span>
+                    </div>
+                </div>
+            </li>
+        </order-summary-item-custom>
+    </div>
+    <script src="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.js" async defer></script>
+
+    <!-- Shipping Configuration -->
+    <script src="shipping-config.js"></script>
+
+    <!-- Account & Cart Scripts -->
+    <script src="account.js" defer></script>
+    <script src="cart.js" defer></script>
+    <script src="enhanced-products.js" defer></script>
+
+    <!-- Shared Mobile Menu & Cart Badge Script -->
+    <script>
+        // Mobile Menu Toggle - Standardized across all pages
+        (function() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileNav = document.getElementById('mobileNav');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+
+            if (!mobileMenuBtn || !mobileNav || !mobileNavOverlay) return;
+
+            function toggleMobileMenu() {
+                const isOpen = mobileNav.classList.contains('active');
+                mobileMenuBtn.classList.toggle('active');
+                mobileNav.classList.toggle('active');
+                mobileNavOverlay.classList.toggle('active');
+                mobileMenuBtn.setAttribute('aria-expanded', !isOpen);
+                document.body.style.overflow = isOpen ? '' : 'hidden';
+            }
+
+            mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            mobileNavOverlay.addEventListener('click', toggleMobileMenu);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileNav.classList.contains('active')) {
+                    toggleMobileMenu();
+                }
+            });
+        })();
+
+        // Cart Badge Visibility - Standardized across all pages
+        document.addEventListener('DOMContentLoaded', function() {
+            function updateCartBadge() {
+                const badge = document.querySelector('.cart-count-badge');
+                if (badge) {
+                    const count = parseInt(badge.textContent) || 0;
+                    badge.classList.toggle('hidden', count === 0);
+                }
+            }
+            updateCartBadge();
+            const badge = document.querySelector('.cart-count-badge');
+            if (badge) {
+                const observer = new MutationObserver(updateCartBadge);
+                observer.observe(badge, { childList: true, characterData: true, subtree: true });
+            }
+        });
+
+        // Back to Top Button - Standardized across all pages
+        (function() {
+            const backToTopBtn = document.getElementById('backToTop');
+            if (!backToTopBtn) return;
+            
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 500) {
+                    backToTopBtn.classList.add('visible');
+                } else {
+                    backToTopBtn.classList.remove('visible');
+                }
+            });
+            
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        })();
+
+        // Newsletter Form Handler - Standardized across all pages
+        function handleNewsletterSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const email = form.querySelector('input').value;
+            const button = form.querySelector('button');
+            const originalText = button.textContent;
+            
+            button.textContent = 'Subscribing...';
+            button.disabled = true;
+            
+            // Simulate API call
+            setTimeout(function() {
+                button.textContent = '✓ Subscribed!';
+                button.style.background = '#2d5a3d';
+                button.style.color = '#fff';
+                form.querySelector('input').value = '';
+                
+                setTimeout(function() {
+                    button.textContent = originalText;
+                    button.style.background = '';
+                    button.style.color = '';
+                    button.disabled = false;
+                }, 3000);
+            }, 1000);
+        }
+
+        // Banner scroll animation fallback - Standardized across all pages
+        (function() {
+            const bannerScroll = document.querySelector('.banner-scroll');
+            if (!bannerScroll) return;
+            
+            let animationRunning = false;
+            
+            const checkAnimation = function() {
+                const style = window.getComputedStyle(bannerScroll);
+                const animName = style.animationName || style.webkitAnimationName;
+                const animDuration = parseFloat(style.animationDuration) || parseFloat(style.webkitAnimationDuration);
+                
+                if (!animName || animName === 'none' || !animDuration) {
+                    if (!animationRunning) {
+                        startJSAnimation();
+                    }
+                }
+            };
+            
+            function startJSAnimation() {
+                if (animationRunning) return;
+                animationRunning = true;
+                
+                let position = 0;
+                const speed = 1;
+                const scrollWidth = bannerScroll.scrollWidth / 2;
+                
+                function animate() {
+                    if (!bannerScroll || !bannerScroll.parentElement) {
+                        animationRunning = false;
+                        return;
+                    }
+                    
+                    position -= speed;
+                    if (position <= -scrollWidth) {
+                        position = 0;
+                    }
+                    bannerScroll.style.transform = 'translateX(' + position + 'px)';
+                    requestAnimationFrame(animate);
+                }
+                
+                bannerScroll.style.animation = 'none';
+                bannerScroll.style.webkitAnimation = 'none';
+                animate();
+            }
+            
+            setTimeout(checkAnimation, 500);
+        })();
+
+        // Site Sanity Check - Debug mode (only on localhost)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            window.addEventListener('DOMContentLoaded', function() {
+                const checks = {
+                    'Global JS': typeof handleNewsletterSubmit !== 'undefined',
+                    'Snipcart': typeof window.Snipcart !== 'undefined',
+                    'Product Pricing': typeof getProductConfig !== 'undefined',
+                    'Cart System': typeof window.GrainhouseCart !== 'undefined' || typeof window.Snipcart !== 'undefined'
+                };
+                
+                console.log('🔍 Site Sanity Check:');
+                Object.entries(checks).forEach(([name, passed]) => {
+                    console.log(`  ${passed ? '✅' : '❌'} ${name}: ${passed ? 'Loaded' : 'Missing'}`);
+                });
+                
+                // Check for Snipcart errors
+                window.addEventListener('error', function(e) {
+                    if (e.target && e.target.src && e.target.src.includes('snipcart')) {
+                        console.error('❌ Snipcart script failed to load:', e.target.src);
+                    }
+                }, true);
+            });
+        }
+    </script>
     
     <!-- Page-specific scripts for policy navigation -->
     <script>
