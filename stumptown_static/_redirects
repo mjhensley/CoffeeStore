@@ -178,8 +178,6 @@ http://grainhousecoffee.com/*       https://grainhousecoffee.com/:splat  301!
 /blogs/*            /blog.html           301
 /cart               /collections.html    200
 /cart/              /collections.html    301
-/checkout           /checkout.html       200
-/checkout/          /checkout.html       301
 /search             /collections.html    200
 /search/*           /collections.html    200
 

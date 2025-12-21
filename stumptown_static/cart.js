@@ -5,10 +5,6 @@
     // Cart state
     let cart = [];
     let isCartOpen = false;
-    let isCheckoutOpen = false;
-    // Debounce checkout navigation - prevents double-clicks before page navigation completes
-    // This flag doesn't need resetting as navigation causes full page reload
-    let isNavigatingToCheckout = false;
 
     // Initialize cart from localStorage
     function initCart() {
@@ -88,8 +84,8 @@
                     <span>Subtotal</span>
                     <span id="cart-subtotal">$0.00</span>
                 </div>
-                <p class="cart-shipping-note">Shipping calculated at checkout</p>
-                <button type="button" class="cart-checkout-btn" id="cart-checkout-btn">Checkout</button>
+                <p class="cart-shipping-note">View your items below</p>
+                <button type="button" class="cart-checkout-btn" id="cart-checkout-btn" disabled>Checkout coming soon</button>
             </div>
         `;
         document.body.appendChild(sidebar);
@@ -896,13 +892,10 @@
         }, 2500);
     }
 
-    // Open checkout modal is removed - redirect to checkout page instead
+    // Checkout functionality has been removed - coming soon
     function openCheckout() {
-        if (cart.length === 0) return;
-        
-        // Cart is saved in localStorage, checkout page will read it
-        // Redirect to checkout page
-        window.location.href = 'checkout.html';
+        // Checkout is disabled - coming soon
+        showToast('Checkout coming soon! We\'re building a new checkout experience.');
     }
 
 
@@ -956,22 +949,14 @@
                 removeItem(index);
             }
 
-            // Checkout button - redirects to checkout page (with debounce)
+            // Checkout button - disabled, coming soon
             if (e.target.id === 'cart-checkout-btn' || e.target.closest('#cart-checkout-btn')) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                // Debounce: prevent multiple rapid clicks
-                if (isNavigatingToCheckout) {
-                    return false;
-                }
-                
+                // Checkout is disabled - show message
                 if (cart.length > 0) {
-                    isNavigatingToCheckout = true;
-                    // Close cart first
-                    closeCart();
-                    // Navigate to checkout page
-                    window.location.href = 'checkout.html';
+                    openCheckout();
                 }
                 return false;
             }
