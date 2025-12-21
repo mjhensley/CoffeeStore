@@ -14,6 +14,12 @@
     let checkoutToken = null;
     let shippingAutocomplete = null;
     let billingAutocomplete = null;
+    
+    // Configuration
+    const AUTOCOMPLETE_CONFIG = {
+        types: ['address'],
+        componentRestrictions: { country: ['us', 'ca'] }
+    };
 
     // DOM Elements
     const loadingState = document.getElementById('loadingState');
@@ -212,9 +218,16 @@
         
         console.log('🗺️ Initializing address autocomplete...');
         
+        // Validate and encode API key
+        if (!apiKey || typeof apiKey !== 'string') {
+            console.error('Invalid API key format');
+            return;
+        }
+        
         // Load Google Places API script
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGrainhouseCheckoutAutocomplete`;
+        const encodedApiKey = encodeURIComponent(apiKey);
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodedApiKey}&libraries=places&callback=initGrainhouseCheckoutAutocomplete`;
         script.async = true;
         script.defer = true;
         
@@ -245,10 +258,7 @@
         // Setup shipping address autocomplete
         const shippingAddressInput = document.getElementById('address');
         if (shippingAddressInput) {
-            shippingAutocomplete = new google.maps.places.Autocomplete(shippingAddressInput, {
-                types: ['address'],
-                componentRestrictions: { country: ['us', 'ca'] }
-            });
+            shippingAutocomplete = new google.maps.places.Autocomplete(shippingAddressInput, AUTOCOMPLETE_CONFIG);
             
             shippingAutocomplete.addListener('place_changed', function() {
                 fillInAddress(shippingAutocomplete, 'shipping');
@@ -258,10 +268,7 @@
         // Setup billing address autocomplete
         const billingAddressInput = document.getElementById('billingAddress');
         if (billingAddressInput) {
-            billingAutocomplete = new google.maps.places.Autocomplete(billingAddressInput, {
-                types: ['address'],
-                componentRestrictions: { country: ['us', 'ca'] }
-            });
+            billingAutocomplete = new google.maps.places.Autocomplete(billingAddressInput, AUTOCOMPLETE_CONFIG);
             
             billingAutocomplete.addListener('place_changed', function() {
                 fillInAddress(billingAutocomplete, 'billing');
@@ -454,9 +461,8 @@
                 showInlineError('Please provide an email address to subscribe to our newsletter, or uncheck the newsletter option.');
                 return;
             }
-            // Basic email format validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
+            // Use browser's built-in email validation
+            if (!emailField.checkValidity()) {
                 showInlineError('Please provide a valid email address.');
                 return;
             }
