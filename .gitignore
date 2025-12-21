@@ -2,6 +2,9 @@
 .vscode/
 .cursor/
 
+# Netlify CLI state files
+.netlify/
+
 # Python
 __pycache__/
 *.pyc
