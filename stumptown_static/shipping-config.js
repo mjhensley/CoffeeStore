@@ -22,10 +22,10 @@ const SHIPPING_CONFIG = {
     allowedRecurringMethods: ['recurring-standard'],
     
     // ============================================
-    // FREE SHIPPING THRESHOLD (disabled - no free shipping on one-time)
+    // FREE SHIPPING THRESHOLD ($45+ gets free UPS Ground)
     // ============================================
-    freeShippingThreshold: null,
-    freeShippingMethod: null,
+    freeShippingThreshold: 45,
+    freeShippingMethod: 'ups-ground',
     
     // ============================================
     // ONE-TIME SHIPMENT METHODS (UPS Only)
@@ -39,7 +39,7 @@ const SHIPPING_CONFIG = {
             deliveryTime: '3 to 5 business days',
             deliveryTimeShort: '3-5 days',
             price: 15.54,
-            freeOverThreshold: false
+            freeOverThreshold: true
         },
         'ups-2day': {
             id: 'ups-2day',
@@ -152,8 +152,8 @@ function isAllowedShippingMethod(methodId, isRecurring = false) {
 /**
  * Get shipping rate for a method
  * @param {string} methodId - The shipping method ID
- * @param {number} cartTotal - The cart subtotal (unused, no free shipping)
- * @returns {number} - The shipping cost
+ * @param {number} cartTotal - The cart subtotal
+ * @returns {number} - The shipping cost (0 if free shipping applies)
  */
 function getShippingRate(methodId, cartTotal = 0) {
     // Check allowlist first
@@ -168,6 +168,14 @@ function getShippingRate(methodId, cartTotal = 0) {
     
     const method = SHIPPING_CONFIG.methods[methodId];
     if (!method) return 0;
+    
+    // Check if free shipping applies
+    if (SHIPPING_CONFIG.freeShippingThreshold && 
+        cartTotal >= SHIPPING_CONFIG.freeShippingThreshold &&
+        method.freeOverThreshold &&
+        methodId === SHIPPING_CONFIG.freeShippingMethod) {
+        return 0;
+    }
     
     return method.price;
 }
@@ -184,12 +192,19 @@ function getShippingOptions(cartTotal = 0) {
     for (const methodId of SHIPPING_CONFIG.allowedMethods) {
         const method = SHIPPING_CONFIG.methods[methodId];
         if (method) {
-            const price = method.price;
+            // Check if free shipping applies to this method
+            const isFree = SHIPPING_CONFIG.freeShippingThreshold && 
+                          cartTotal >= SHIPPING_CONFIG.freeShippingThreshold &&
+                          method.freeOverThreshold &&
+                          methodId === SHIPPING_CONFIG.freeShippingMethod;
+            
+            const price = isFree ? 0 : method.price;
+            
             options.push({
                 ...method,
                 currentPrice: price,
-                isFree: false,
-                displayPrice: `$${price.toFixed(2)}`
+                isFree: isFree,
+                displayPrice: isFree ? 'FREE' : `$${price.toFixed(2)}`
             });
         }
     }
@@ -258,13 +273,20 @@ function getAllShippingOptions(cartTotal = 0, hasSubscription = false) {
 }
 
 /**
- * Calculate how much more to spend for free shipping (DISABLED)
+ * Calculate how much more to spend for free shipping
  * @param {number} cartTotal - The cart subtotal
- * @returns {null} - Always null, no free shipping available
+ * @returns {number|null} - Amount needed for free shipping, or null if already qualified
  */
 function getAmountForFreeShipping(cartTotal) {
-    // Free shipping is disabled
-    return null;
+    if (!SHIPPING_CONFIG.freeShippingThreshold) {
+        return null;
+    }
+    
+    if (cartTotal >= SHIPPING_CONFIG.freeShippingThreshold) {
+        return null; // Already qualified
+    }
+    
+    return SHIPPING_CONFIG.freeShippingThreshold - cartTotal;
 }
 
 /**

@@ -718,29 +718,38 @@
         const mobileBadge = document.getElementById('mobileCartBadge');
         if (!mobileBadge) return;
         
-        // Try to get count from local storage
-        const cartData = localStorage.getItem('grainhouse_cart');
-        if (cartData) {
-            try {
-                const cart = JSON.parse(cartData);
-                const count = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-                if (count > 0) {
-                    mobileBadge.textContent = count;
-                    mobileBadge.style.display = 'flex';
-                } else {
+        // Try to get count from local storage with safe fallback
+        try {
+            const cartData = localStorage.getItem('grainhouse_cart');
+            if (cartData) {
+                try {
+                    const cart = JSON.parse(cartData);
+                    const count = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+                    if (count > 0) {
+                        mobileBadge.textContent = count;
+                        mobileBadge.style.display = 'flex';
+                    } else {
+                        mobileBadge.style.display = 'none';
+                    }
+                } catch (e) {
                     mobileBadge.style.display = 'none';
                 }
-            } catch (e) {
-                mobileBadge.style.display = 'none';
             }
+        } catch (storageError) {
+            // localStorage unavailable, hide badge
+            mobileBadge.style.display = 'none';
         }
         
         // Watch for changes
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'grainhouse_cart') {
-                syncMobileCartBadge();
-            }
-        });
+        try {
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'grainhouse_cart') {
+                    syncMobileCartBadge();
+                }
+            });
+        } catch (e) {
+            // Storage events not available
+        }
         
         // Also watch for custom events
         document.addEventListener('cartUpdated', syncMobileCartBadge);

@@ -12,14 +12,22 @@
 
     // Initialize cart from localStorage
     function initCart() {
-        const savedCart = localStorage.getItem('grainhouse_cart');
-        if (savedCart) {
-            try {
-                cart = JSON.parse(savedCart);
-            } catch (e) {
-                cart = [];
+        // Safe localStorage access with fallback
+        try {
+            const savedCart = localStorage.getItem('grainhouse_cart');
+            if (savedCart) {
+                try {
+                    cart = JSON.parse(savedCart);
+                } catch (e) {
+                    console.error('Failed to parse cart from localStorage:', e);
+                    cart = [];
+                }
             }
+        } catch (storageError) {
+            console.warn('localStorage unavailable, cart will not persist:', storageError);
+            cart = [];
         }
+        
         updateCartBadge();
         createCartUI();
         bindEvents();
@@ -62,7 +70,13 @@
 
     // Save cart to localStorage
     function saveCart() {
-        localStorage.setItem('grainhouse_cart', JSON.stringify(cart));
+        // Safe localStorage access with fallback
+        try {
+            localStorage.setItem('grainhouse_cart', JSON.stringify(cart));
+        } catch (storageError) {
+            console.warn('Failed to save cart to localStorage:', storageError);
+            // Cart will still work in memory, just won't persist
+        }
         updateCartBadge();
     }
 
