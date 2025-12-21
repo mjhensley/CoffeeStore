@@ -111,14 +111,19 @@ function verifyHelcimSignature(webhookId, timestamp, body, receivedSignature, se
 
         // Step 4: Decode the base64 secret key
         // The verifier token from Helcim is base64-encoded
+        // If the secret is not valid base64, fail early with a clear error
+        // rather than silently falling back, which could mask configuration issues
         let secretKey;
         try {
             secretKey = Buffer.from(secret, 'base64');
+            // Verify the base64 was valid by checking if re-encoding matches
+            // Buffer.from silently handles invalid base64 by ignoring invalid chars
+            if (secretKey.length === 0 && secret.length > 0) {
+                return { valid: false, error: 'Invalid webhook secret format (empty after base64 decode)' };
+            }
         } catch (decodeError) {
-            // If base64 decode fails, try using the secret as-is (raw string)
-            // This provides backwards compatibility if the secret format changes
-            secretKey = Buffer.from(secret, 'utf8');
-            console.warn('Webhook secret is not valid base64, using raw string');
+            console.error('Failed to decode webhook secret as base64:', decodeError.message);
+            return { valid: false, error: 'Invalid webhook secret format' };
         }
 
         // Step 5: Compute HMAC-SHA256 signature
@@ -127,7 +132,8 @@ function verifyHelcimSignature(webhookId, timestamp, body, receivedSignature, se
         const computedSignature = hmac.digest('base64');
 
         // Step 6: Perform timing-safe comparison to prevent timing attacks
-        // Both signatures must be the same length for timingSafeEqual to work
+        // Convert both base64 signature strings to buffers for comparison
+        // Using 'utf8' encoding treats the base64 strings as text for byte comparison
         const receivedBuffer = Buffer.from(signatureValue, 'utf8');
         const computedBuffer = Buffer.from(computedSignature, 'utf8');
 
@@ -281,6 +287,102 @@ exports.handler = async (event, context) => {
         const contentType = event.headers['content-type'] || event.headers['Content-Type'] || 'not provided';
         console.log('Webhook POST received - Content-Type:', contentType);
         
+        // ============================================================
+        // SIGNATURE VERIFICATION (must be done BEFORE JSON parsing)
+        // ============================================================
+        // Helcim webhook signature verification using HMAC SHA-256.
+        // This MUST be performed BEFORE parsing the JSON body to ensure
+        // we use the exact raw body for signature computation.
+        // JSON.parse() could modify whitespace/formatting which would
+        // invalidate the signature.
+        // ============================================================
+        const webhookSecret = process.env.HELCIM_WEBHOOK_SECRET;
+        
+        if (webhookSecret) {
+            // Extract Helcim webhook headers (case-insensitive lookup)
+            // Helcim uses these headers per their documentation at devdocs.helcim.com:
+            // - webhook-signature: The HMAC-SHA256 signature (format: "v1,<base64_sig>")
+            // - webhook-timestamp: Unix timestamp in seconds
+            // - webhook-id: Unique identifier for this webhook message
+            const signature = event.headers['webhook-signature'] || event.headers['Webhook-Signature'];
+            const timestamp = event.headers['webhook-timestamp'] || event.headers['Webhook-Timestamp'];
+            const webhookId = event.headers['webhook-id'] || event.headers['Webhook-Id'];
+
+            // Log which headers were received (helpful for debugging)
+            console.log('Webhook signature verification - Headers received:', {
+                hasSignature: !!signature,
+                hasTimestamp: !!timestamp,
+                hasWebhookId: !!webhookId
+            });
+
+            // Validate that all required headers are present
+            if (!signature || !timestamp || !webhookId) {
+                console.warn('Webhook signature verification failed - Missing required headers', {
+                    signature: !!signature,
+                    timestamp: !!timestamp,
+                    webhookId: !!webhookId
+                });
+                return {
+                    statusCode: 401,
+                    headers,
+                    body: JSON.stringify({
+                        error: 'Missing required signature headers',
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            }
+
+            // Step 1: Validate timestamp to prevent replay attacks
+            // Reject requests where the timestamp is older than 5 minutes
+            const timestampValidation = validateTimestamp(timestamp);
+            if (!timestampValidation.valid) {
+                console.warn('Webhook timestamp validation failed:', timestampValidation.error);
+                return {
+                    statusCode: 401,
+                    headers,
+                    body: JSON.stringify({
+                        error: 'Timestamp validation failed',
+                        message: timestampValidation.error,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            }
+
+            // Step 2: Verify the HMAC-SHA256 signature
+            // Use the raw request body (event.body) - not parsed JSON
+            const rawBody = event.body || '';
+            const signatureValidation = verifyHelcimSignature(
+                webhookId,
+                timestamp,
+                rawBody,
+                signature,
+                webhookSecret
+            );
+
+            if (!signatureValidation.valid) {
+                console.warn('Webhook signature verification failed:', signatureValidation.error);
+                return {
+                    statusCode: 401,
+                    headers,
+                    body: JSON.stringify({
+                        error: 'Signature verification failed',
+                        message: signatureValidation.error,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+            }
+
+            console.log('Webhook signature verified successfully', {
+                webhookId: webhookId,
+                timestamp: timestamp
+            });
+        } else {
+            // Warn if signature verification is not configured
+            // In production, this should always be configured for security
+            console.warn('HELCIM_WEBHOOK_SECRET not configured - skipping signature verification');
+        }
+
+        // Now parse the JSON payload after signature verification
         let payload;
         
         try {
@@ -301,99 +403,6 @@ exports.handler = async (event, context) => {
         }
 
         try {
-            // ============================================================
-            // SIGNATURE VERIFICATION
-            // ============================================================
-            // Helcim webhook signature verification using HMAC SHA-256.
-            // This must be performed BEFORE parsing the JSON body to ensure
-            // we use the exact raw body for signature computation.
-            // ============================================================
-            const webhookSecret = process.env.HELCIM_WEBHOOK_SECRET;
-            
-            if (webhookSecret) {
-                // Extract Helcim webhook headers (case-insensitive lookup)
-                // Helcim uses these headers per their documentation at devdocs.helcim.com:
-                // - webhook-signature: The HMAC-SHA256 signature (format: "v1,<base64_sig>")
-                // - webhook-timestamp: Unix timestamp in seconds
-                // - webhook-id: Unique identifier for this webhook message
-                const signature = event.headers['webhook-signature'] || event.headers['Webhook-Signature'];
-                const timestamp = event.headers['webhook-timestamp'] || event.headers['Webhook-Timestamp'];
-                const webhookId = event.headers['webhook-id'] || event.headers['Webhook-Id'];
-
-                // Log which headers were received (helpful for debugging)
-                console.log('Webhook signature verification - Headers received:', {
-                    hasSignature: !!signature,
-                    hasTimestamp: !!timestamp,
-                    hasWebhookId: !!webhookId
-                });
-
-                // Validate that all required headers are present
-                if (!signature || !timestamp || !webhookId) {
-                    console.warn('Webhook signature verification failed - Missing required headers', {
-                        signature: !!signature,
-                        timestamp: !!timestamp,
-                        webhookId: !!webhookId
-                    });
-                    return {
-                        statusCode: 401,
-                        headers,
-                        body: JSON.stringify({
-                            error: 'Missing required signature headers',
-                            timestamp: new Date().toISOString()
-                        })
-                    };
-                }
-
-                // Step 1: Validate timestamp to prevent replay attacks
-                // Reject requests where the timestamp is older than 5 minutes
-                const timestampValidation = validateTimestamp(timestamp);
-                if (!timestampValidation.valid) {
-                    console.warn('Webhook timestamp validation failed:', timestampValidation.error);
-                    return {
-                        statusCode: 401,
-                        headers,
-                        body: JSON.stringify({
-                            error: 'Timestamp validation failed',
-                            message: timestampValidation.error,
-                            timestamp: new Date().toISOString()
-                        })
-                    };
-                }
-
-                // Step 2: Verify the HMAC-SHA256 signature
-                // Use the raw request body (event.body) - not the parsed JSON
-                const rawBody = event.body || '';
-                const signatureValidation = verifyHelcimSignature(
-                    webhookId,
-                    timestamp,
-                    rawBody,
-                    signature,
-                    webhookSecret
-                );
-
-                if (!signatureValidation.valid) {
-                    console.warn('Webhook signature verification failed:', signatureValidation.error);
-                    return {
-                        statusCode: 401,
-                        headers,
-                        body: JSON.stringify({
-                            error: 'Signature verification failed',
-                            message: signatureValidation.error,
-                            timestamp: new Date().toISOString()
-                        })
-                    };
-                }
-
-                console.log('Webhook signature verified successfully', {
-                    webhookId: webhookId,
-                    timestamp: timestamp
-                });
-            } else {
-                // Warn if signature verification is not configured
-                // In production, this should always be configured for security
-                console.warn('HELCIM_WEBHOOK_SECRET not configured - skipping signature verification');
-            }
-
             // ============================================================
             // IDEMPOTENCY PROTECTION
             // ============================================================
