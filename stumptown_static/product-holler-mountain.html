@@ -87,7 +87,9 @@
     <link rel="preconnect" href="https://cdn.snipcart.com">
     <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.css" />
     
-    <style>
+    
+    <!-- Snipcart Overrides - Consolidated styles -->
+    <link rel="stylesheet" href="snipcart-overrides.css"><style>
         /* Quantity Selector Styles */
         .quantity-selector { margin-bottom: 0; }
         .quantity-controls { display: inline-flex; align-items: center; border: 2px solid #e8e4de; border-radius: 50px; background: #fff; overflow: hidden; transition: border-color 0.3s, box-shadow 0.3s; height: 52px; }
@@ -413,19 +415,8 @@
     </div>
     <script async src="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.js"></script>
     
-    <!-- Snipcart Checkout Customizations -->
-    <style>
-        .snipcart-item-line { display: flex !important; align-items: flex-start !important; gap: 16px !important; }
-        .snipcart-item-line__image, .snipcart-item-line__media { display: block !important; width: 80px !important; height: 80px !important; min-width: 80px !important; border-radius: 8px !important; overflow: hidden !important; background: #f8f6f3 !important; flex-shrink: 0 !important; }
-        .snipcart-item-line__image img, .snipcart-item-line__media img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
-        .snipcart-cart-summary-item { display: flex !important; align-items: flex-start !important; gap: 14px !important; padding: 14px 0 !important; border-bottom: 1px solid #eee !important; }
-        .snipcart-cart-summary-item:last-child { border-bottom: none !important; }
-        .snipcart-cart-summary-item__image { display: block !important; width: 64px !important; height: 64px !important; min-width: 64px !important; border-radius: 8px !important; overflow: hidden !important; background: #f8f6f3 !important; flex-shrink: 0 !important; box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important; }
-        .snipcart-cart-summary-item__image img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
-        #snipcart [class*="fees__notice"] { margin-bottom: 24px !important; }
-        #snipcart [class*="summary__total"] { margin-top: 16px !important; padding-top: 16px !important; }
-    </style>
-    <!-- INSTANT LOAD: Ultra-fast page transitions -->
+    <!-- SITE CONFIGURATION: Load FIRST - single source of truth -->
+    <script src="site-config.js"></script><!-- INSTANT LOAD: Ultra-fast page transitions -->
     <script src="instant-load.js"></script>
     
     <!-- PERFORMANCE: Load fingerprinting for bot protection -->
@@ -435,7 +426,18 @@
     <script src="performance.js" defer></script>
     
     <script src="product-pricing.js"></script>
+    
+    <!-- SHIPPING CONFIGURATION -->
     <script src="shipping-config.js"></script>
+    
+    <!-- TAX & PRICING MODULES -->
+    <script src="lib/tax.js"></script>
+    <script src="lib/pricing.js"></script>
+    
+    <!-- DISCOUNT CONFIGURATION -->
+    <script src="discount-config.js"></script>
+    
+    <!-- Account & Cart Scripts -->
     <script src="account.js" defer></script>
     <script src="cart.js" defer></script>
     <script src="enhanced-products.js" defer></script>

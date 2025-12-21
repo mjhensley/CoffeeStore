@@ -7,12 +7,16 @@
  */
 
 const TAX_CONFIG = {
-    // Default tax rate (typical online coffee purchase range)
+    // Default tax rate - references SITE_CONFIG with fallback
     // TODO: Configure per-state rates as needed
-    defaultRate: 0.07, // 7% - typical US online sales tax
+    defaultRate: (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.tax) 
+        ? SITE_CONFIG.tax.defaultRate 
+        : 0.07, // 7% fallback if SITE_CONFIG not loaded
     
-    // Tax is applied to subtotal only (not shipping)
-    appliesToShipping: false,
+    // Tax is applied to subtotal only (not shipping) - references SITE_CONFIG with fallback
+    appliesToShipping: (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.tax) 
+        ? SITE_CONFIG.tax.appliesToShipping 
+        : false,
     appliesToSubtotal: true,
     
     // Per-state rates (structure for easy extension)

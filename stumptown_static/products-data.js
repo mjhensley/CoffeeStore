@@ -45,10 +45,12 @@ const GROUND_SIZE_OPTIONS = {
     "12oz": { label: "12 oz Ground", multiplier: 1, weight: 12 }
 };
 
-// Subscription discount - synced with product-pricing.js
-const SUBSCRIPTION_DISCOUNT = (typeof PRICING_CONFIG !== 'undefined') 
-    ? PRICING_CONFIG.subscriptionDiscount 
-    : 0.10;
+// Subscription discount - synced with product-pricing.js and SITE_CONFIG
+const SUBSCRIPTION_DISCOUNT = (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.subscription) 
+    ? SITE_CONFIG.subscription.discount 
+    : (typeof PRICING_CONFIG !== 'undefined') 
+        ? PRICING_CONFIG.subscriptionDiscount 
+        : 0.10;
 
 // Subscription frequency options
 const SUBSCRIPTION_FREQUENCIES = [

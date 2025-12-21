@@ -13,8 +13,12 @@
     // Initialize cart from localStorage
     function initCart() {
         // Safe localStorage access with fallback
+        const storageKey = (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.cart) 
+            ? SITE_CONFIG.cart.storageKey 
+            : 'grainhouse_cart';
+        
         try {
-            const savedCart = localStorage.getItem('grainhouse_cart');
+            const savedCart = localStorage.getItem(storageKey);
             if (savedCart) {
                 try {
                     cart = JSON.parse(savedCart);
@@ -71,8 +75,12 @@
     // Save cart to localStorage
     function saveCart() {
         // Safe localStorage access with fallback
+        const storageKey = (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.cart) 
+            ? SITE_CONFIG.cart.storageKey 
+            : 'grainhouse_cart';
+        
         try {
-            localStorage.setItem('grainhouse_cart', JSON.stringify(cart));
+            localStorage.setItem(storageKey, JSON.stringify(cart));
         } catch (storageError) {
             console.warn('Failed to save cart to localStorage:', storageError);
             // Cart will still work in memory, just won't persist
@@ -1241,11 +1249,13 @@
         if (selectedShipping) {
             shippingCost = parseFloat(selectedShipping.dataset.price) || 0;
         } else {
-            // Fallback calculation - use UPS Ground price
+            // Fallback calculation - use SITE_CONFIG or default UPS Ground price
             if (typeof window.getShippingRate !== 'undefined') {
                 shippingCost = window.getShippingRate('ups-ground', subtotal);
             } else {
-                shippingCost = 15.54;  // UPS Ground default price
+                shippingCost = (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.shipping) 
+                    ? SITE_CONFIG.shipping.defaultPrice 
+                    : 15.54;
             }
         }
         

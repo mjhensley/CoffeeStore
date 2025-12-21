@@ -24,12 +24,16 @@ function calculateOrderPricing(subtotal, shippingMethodId = 'ups-ground', addres
     if (typeof window.getShippingRate === 'function') {
         shippingCost = window.getShippingRate(shippingMethodId, subtotal);
     } else {
-        // Fallback if shipping-config not loaded - use UPS Ground price
+        // Fallback if shipping-config not loaded - use SITE_CONFIG or UPS Ground default
         const method = window.SHIPPING_CONFIG?.methods?.[shippingMethodId];
+        const defaultPrice = (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.shipping) 
+            ? SITE_CONFIG.shipping.defaultPrice 
+            : 15.54;
+        
         if (method) {
-            shippingCost = method.price || 15.54; // UPS Ground default
+            shippingCost = method.price || defaultPrice;
         } else {
-            shippingCost = 15.54; // UPS Ground default price
+            shippingCost = defaultPrice;
         }
     }
     
@@ -38,8 +42,10 @@ function calculateOrderPricing(subtotal, shippingMethodId = 'ups-ground', addres
     if (typeof window.calculateTax === 'function') {
         taxAmount = window.calculateTax(subtotal, shippingCost, address);
     } else {
-        // Fallback if tax module not loaded
-        const taxRate = window.TAX_CONFIG?.defaultRate || 0.07;
+        // Fallback if tax module not loaded - use SITE_CONFIG or default
+        const taxRate = (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.tax) 
+            ? SITE_CONFIG.tax.defaultRate 
+            : (window.TAX_CONFIG?.defaultRate || 0.07);
         taxAmount = Math.round(subtotal * taxRate * 100) / 100;
     }
     

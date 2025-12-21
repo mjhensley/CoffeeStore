@@ -93,7 +93,9 @@ const SHIPPING_CONFIG = {
     // SALES TAX CONFIGURATION
     // ============================================
     tax: {
-        rate: 0.07, // 7% sales tax
+        rate: (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.tax) 
+            ? SITE_CONFIG.tax.defaultRate 
+            : 0.07, // 7% sales tax fallback
         appliesToShipping: false, // Tax only on product subtotal
         appliesToSubtotal: true
     },
