@@ -322,12 +322,13 @@
      */
     function handlePaymentCancel() {
         console.log('⚠️ Payment cancelled by user');
-        showInlineError('Payment was cancelled. You can try again when ready.');
         
-        // Re-enable submit button
+        // Re-enable submit button - user may want to try again
         submitBtn.disabled = false;
         btnText.classList.remove('hidden');
         btnLoading.classList.add('hidden');
+        
+        // Note: Not showing an error since cancellation is a normal user action
     }
 
     /**

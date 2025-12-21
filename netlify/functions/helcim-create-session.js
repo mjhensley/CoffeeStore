@@ -177,12 +177,12 @@ exports.handler = async (event, context) => {
             }
 
             // Validate quantity (1-99)
-            if (!item.quantity || item.quantity < 1 || item.quantity > 99 || !Number.isInteger(item.quantity)) {
+            if (typeof item.quantity !== 'number' || item.quantity < 1 || item.quantity > 99 || !Number.isInteger(item.quantity)) {
                 return {
                     statusCode: 400,
                     body: JSON.stringify({ 
                         error: 'Invalid quantity',
-                        message: 'Quantity must be between 1 and 99'
+                        message: 'Quantity must be a whole number between 1 and 99'
                     })
                 };
             }
@@ -236,9 +236,15 @@ exports.handler = async (event, context) => {
             subtotalCents += itemPrice * item.quantity;
         }
         
-        // Get shipping cost (default to standard if not specified)
+        // Get shipping cost (default to ups-ground if not specified or invalid)
         const shippingMethodKey = shippingMethod || 'ups-ground';
-        const shippingCents = SHIPPING_RATES[shippingMethodKey] || SHIPPING_RATES['ups-ground'];
+        let shippingCents = SHIPPING_RATES[shippingMethodKey];
+        
+        // Validate shipping method exists
+        if (!shippingCents) {
+            console.warn('Invalid shipping method:', shippingMethodKey, '- using ups-ground');
+            shippingCents = SHIPPING_RATES['ups-ground'];
+        }
         
         // Calculate tax (7% of subtotal only, not shipping)
         const taxCents = Math.round(subtotalCents * TAX_RATE);
