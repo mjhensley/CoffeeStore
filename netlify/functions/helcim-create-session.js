@@ -126,10 +126,28 @@ const SHIPPING_RATES = {
 const TAX_RATE = 0.07;
 
 exports.handler = async (event, context) => {
+    // CORS headers
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json'
+    };
+
+    // Handle OPTIONS request for CORS preflight
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 204,
+            headers,
+            body: ''
+        };
+    }
+
     // Only allow POST requests
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
+            headers,
             body: JSON.stringify({ error: 'Method not allowed' })
         };
     }
@@ -140,6 +158,7 @@ exports.handler = async (event, context) => {
         console.error('HELCIM_API_TOKEN not configured');
         return {
             statusCode: 500,
+            headers,
             body: JSON.stringify({ 
                 error: 'Payment system not configured',
                 message: 'Server configuration error. Please contact support.'
@@ -158,6 +177,7 @@ exports.handler = async (event, context) => {
         if (!cart || !Array.isArray(cart) || cart.length === 0) {
             return {
                 statusCode: 400,
+                headers,
                 body: JSON.stringify({ error: 'Cart is empty or invalid' })
             };
         }
@@ -169,6 +189,7 @@ exports.handler = async (event, context) => {
                 console.error('Invalid product ID:', item.id);
                 return {
                     statusCode: 400,
+                    headers,
                     body: JSON.stringify({ 
                         error: 'Invalid product in cart',
                         message: `Product "${item.id}" not found in catalog`
@@ -180,6 +201,7 @@ exports.handler = async (event, context) => {
             if (typeof item.quantity !== 'number' || item.quantity < 1 || item.quantity > 99 || !Number.isInteger(item.quantity)) {
                 return {
                     statusCode: 400,
+                    headers,
                     body: JSON.stringify({ 
                         error: 'Invalid quantity',
                         message: 'Quantity must be a whole number between 1 and 99'
@@ -191,20 +213,24 @@ exports.handler = async (event, context) => {
         // ============================================
         // VALIDATION STEP 2: Customer Information
         // ============================================
-        if (!customer || !customer.email || !customer.firstName || !customer.lastName) {
+        if (!customer || !customer.firstName || !customer.lastName) {
             return {
                 statusCode: 400,
+                headers,
                 body: JSON.stringify({ error: 'Customer information is incomplete' })
             };
         }
 
-        // Basic email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(customer.email)) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: 'Invalid email address' })
-            };
+        // Email validation (optional field, but if provided must be valid)
+        if (customer.email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(customer.email)) {
+                return {
+                    statusCode: 400,
+                    headers,
+                    body: JSON.stringify({ error: 'Invalid email address' })
+                };
+            }
         }
 
         // ============================================
@@ -213,6 +239,7 @@ exports.handler = async (event, context) => {
         if (!shipping || !shipping.address || !shipping.city || !shipping.state || !shipping.zip) {
             return {
                 statusCode: 400,
+                headers,
                 body: JSON.stringify({ error: 'Shipping address is incomplete' })
             };
         }
@@ -259,6 +286,7 @@ exports.handler = async (event, context) => {
         if (totalCents < 100 || totalCents > 1000000) {
             return {
                 statusCode: 400,
+                headers,
                 body: JSON.stringify({ 
                     error: 'Invalid order total',
                     message: 'Order total must be between $1.00 and $10,000.00'
@@ -279,11 +307,10 @@ exports.handler = async (event, context) => {
             paymentType: 'purchase',
             amount: totalCents,  // Use server-calculated total
             currency: 'USD',
-            customerCode: customer.email, // Use email as customer identifier
+            customerCode: customer.email || `GUEST-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
             invoiceNumber: `GH-${Date.now()}`, // Generate unique invoice number
             itemDescription: cart.map(item => `${item.name} (x${item.quantity})`).join(', '),
             billingName: `${customer.firstName} ${customer.lastName}`,
-            billingEmail: customer.email,
             billingPhone: customer.phone || '',
             shippingName: `${customer.firstName} ${customer.lastName}`,
             shippingStreet1: shipping.address,
@@ -296,6 +323,11 @@ exports.handler = async (event, context) => {
             checkoutSuccessUrl: `${process.env.SITE_URL || 'https://grainhousecoffee.com'}/success.html`,
             checkoutCancelUrl: `${process.env.SITE_URL || 'https://grainhousecoffee.com'}/cancel.html`
         };
+        
+        // Only add billingEmail if provided
+        if (customer.email) {
+            helcimPayload.billingEmail = customer.email;
+        }
 
         console.log('Creating Helcim checkout session:', {
             amount: totalCents,
@@ -304,13 +336,14 @@ exports.handler = async (event, context) => {
             itemCount: cart.length
         });
 
-        // Call Helcim API to create checkout session
+        // Call Helcim API to create checkout session with timeout
         const helcimResponse = await callHelcimAPI('/helcim-pay/initialize', helcimPayload, apiToken);
 
         if (!helcimResponse || !helcimResponse.checkoutToken) {
             console.error('Helcim API response missing checkout token:', helcimResponse);
             return {
                 statusCode: 500,
+                headers,
                 body: JSON.stringify({ 
                     error: 'Failed to create checkout session',
                     message: 'Unable to initialize payment. Please try again.'
@@ -321,6 +354,7 @@ exports.handler = async (event, context) => {
         // Return client-safe data ONLY (no API token, no sensitive data)
         return {
             statusCode: 200,
+            headers,
             body: JSON.stringify({
                 success: true,
                 checkoutToken: helcimResponse.checkoutToken,
@@ -342,6 +376,7 @@ exports.handler = async (event, context) => {
         console.error('Error creating Helcim checkout session:', error);
         return {
             statusCode: 500,
+            headers,
             body: JSON.stringify({ 
                 error: 'Internal server error',
                 message: 'An unexpected error occurred. Please try again.'
@@ -351,9 +386,9 @@ exports.handler = async (event, context) => {
 };
 
 /**
- * Call Helcim API with secure authentication
+ * Call Helcim API with secure authentication and timeout
  */
-function callHelcimAPI(endpoint, payload, apiToken) {
+function callHelcimAPI(endpoint, payload, apiToken, timeoutMs = 30000) {
     return new Promise((resolve, reject) => {
         const data = JSON.stringify(payload);
 
@@ -367,7 +402,8 @@ function callHelcimAPI(endpoint, payload, apiToken) {
                 'Content-Length': data.length,
                 'api-token': apiToken,
                 'Accept': 'application/json'
-            }
+            },
+            timeout: timeoutMs
         };
 
         const req = https.request(options, (res) => {
@@ -397,6 +433,11 @@ function callHelcimAPI(endpoint, payload, apiToken) {
         req.on('error', (error) => {
             console.error('Helcim API request failed:', error);
             reject(error);
+        });
+
+        req.on('timeout', () => {
+            req.destroy();
+            reject(new Error('Helcim API request timeout'));
         });
 
         req.write(data);
