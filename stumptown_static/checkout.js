@@ -214,12 +214,12 @@
         
         // Load Google Places API script
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGooglePlaces`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGrainhouseCheckoutAutocomplete`;
         script.async = true;
         script.defer = true;
         
-        // Define global callback
-        window.initGooglePlaces = function() {
+        // Define global callback with unique name
+        window.initGrainhouseCheckoutAutocomplete = function() {
             setupAutocomplete();
         };
         
@@ -443,6 +443,25 @@
         
         console.log('🔄 Processing checkout...');
         
+        // Client-side validation
+        const emailField = document.getElementById('email');
+        const newsletterCheckbox = document.getElementById('subscribeNewsletter');
+        
+        // Validate: if newsletter is checked, email must be provided
+        if (newsletterCheckbox && newsletterCheckbox.checked && emailField) {
+            const email = emailField.value.trim();
+            if (!email) {
+                showInlineError('Please provide an email address to subscribe to our newsletter, or uncheck the newsletter option.');
+                return;
+            }
+            // Basic email format validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showInlineError('Please provide a valid email address.');
+                return;
+            }
+        }
+        
         // Disable submit button
         submitBtn.disabled = true;
         btnText.classList.add('hidden');
@@ -489,13 +508,9 @@
             // Calculate client-side totals (for reference only, server will recalculate)
             const clientTotals = updateTotals();
             
-            // If payment form already initialized, we don't need to create a new session
-            // Just trigger the payment with existing token
-            if (helcimInstance && checkoutToken) {
-                console.log('✅ Using existing Helcim session for payment');
-                // The Helcim form will handle the payment submission
-                return;
-            }
+            // Note: Even if payment form is already initialized, we still need to validate
+            // and potentially update the checkout session with latest form data
+            // The Helcim form will handle the actual payment submission
             
             // Call Netlify Function to create Helcim checkout session
             console.log('📡 Creating Helcim checkout session...');
