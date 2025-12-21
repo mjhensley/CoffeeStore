@@ -28,7 +28,9 @@ const PRICING_CONFIG = {
     // ============================================
     // SUBSCRIPTION DISCOUNT (10% off)
     // ============================================
-    subscriptionDiscount: 0.10,
+    subscriptionDiscount: (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.subscription) 
+        ? SITE_CONFIG.subscription.discount 
+        : 0.10,
     
     // ============================================
     // ALL PRODUCT PRICES 
