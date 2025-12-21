@@ -494,8 +494,8 @@
                 logError('Snipcart failed to load after ' + CHECK_DELAY + 'ms');
                 logError('Possible causes: CSP, ad-blocker, network issue, or script URL 404');
                 hideLoader();
-                if (errorPanel) {
-                    errorPanel.classList.add('show');
+                if (errorPanelEl) {
+                    errorPanelEl.classList.add('show');
                 }
             } else {
                 logSuccess('Snipcart script loaded');
@@ -507,6 +507,27 @@
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : '🔵';
                 console.log(prefix + ' [Checkout]', message);
+            }
+        }
+        
+        // Helper logging functions that delegate to log()
+        function logError(message) {
+            log(message, 'error');
+        }
+        
+        function logSuccess(message) {
+            log(message, 'success');
+        }
+        
+        function logInfo(message) {
+            log(message);
+        }
+        
+        // Show error panel
+        function showError() {
+            hideLoader();
+            if (errorPanelEl) {
+                errorPanelEl.classList.add('show');
             }
         }
         
