@@ -12,6 +12,14 @@
     let cart = [];
     let helcimInstance = null;
     let checkoutToken = null;
+    let shippingAutocomplete = null;
+    let billingAutocomplete = null;
+    
+    // Configuration
+    const AUTOCOMPLETE_CONFIG = {
+        types: ['address'],
+        componentRestrictions: { country: ['us', 'ca'] }
+    };
 
     // DOM Elements
     const loadingState = document.getElementById('loadingState');
@@ -51,8 +59,17 @@
         // Setup event listeners
         setupEventListeners();
         
+        // Initialize billing address toggle
+        initBillingAddressToggle();
+        
+        // Initialize address autocomplete (if API key is available)
+        initAddressAutocomplete();
+        
         // Show checkout form
         showCheckout();
+        
+        // Initialize Helcim payment form on page load
+        initializeHelcimPaymentOnLoad();
         
         console.log('✅ Checkout initialized with', cart.length, 'items');
     }
@@ -128,6 +145,290 @@
     }
 
     /**
+     * Initialize billing address toggle functionality
+     */
+    function initBillingAddressToggle() {
+        const sameBillingCheckbox = document.getElementById('sameBillingAddress');
+        const billingSection = document.getElementById('billingAddressSection');
+        
+        if (!sameBillingCheckbox || !billingSection) {
+            console.warn('Billing address toggle elements not found');
+            return;
+        }
+        
+        // Handle checkbox change
+        sameBillingCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                // Hide billing section
+                billingSection.classList.add('hidden');
+                // Clear billing required attributes
+                setBillingFieldsRequired(false);
+            } else {
+                // Show billing section
+                billingSection.classList.remove('hidden');
+                // Set billing required attributes
+                setBillingFieldsRequired(true);
+            }
+        });
+        
+        // Initialize: billing section hidden by default
+        billingSection.classList.add('hidden');
+        setBillingFieldsRequired(false);
+    }
+    
+    /**
+     * Set required attribute on billing fields
+     */
+    function setBillingFieldsRequired(required) {
+        const billingFields = [
+            'billingFirstName',
+            'billingLastName',
+            'billingAddress',
+            'billingCity',
+            'billingState',
+            'billingZip',
+            'billingCountry'
+        ];
+        
+        billingFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                if (required) {
+                    field.setAttribute('required', 'required');
+                } else {
+                    field.removeAttribute('required');
+                }
+            }
+        });
+    }
+
+    /**
+     * Initialize address autocomplete with Google Places API
+     */
+    function initAddressAutocomplete() {
+        // Check if Google Places API key is configured
+        const apiKey = (typeof SITE_CONFIG !== 'undefined' && SITE_CONFIG.googlePlaces) 
+            ? SITE_CONFIG.googlePlaces.apiKey 
+            : '';
+        
+        if (!apiKey) {
+            console.log('ℹ️ Google Places API key not configured. Address autocomplete disabled.');
+            return;
+        }
+        
+        console.log('🗺️ Initializing address autocomplete...');
+        
+        // Validate and encode API key
+        if (!apiKey || typeof apiKey !== 'string') {
+            console.error('Invalid API key format');
+            return;
+        }
+        
+        // Load Google Places API script
+        const script = document.createElement('script');
+        const encodedApiKey = encodeURIComponent(apiKey);
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodedApiKey}&libraries=places&callback=initGrainhouseCheckoutAutocomplete`;
+        script.async = true;
+        script.defer = true;
+        
+        // Define global callback with unique name
+        window.initGrainhouseCheckoutAutocomplete = function() {
+            setupAutocomplete();
+        };
+        
+        // Handle script load errors
+        script.onerror = function() {
+            console.error('❌ Failed to load Google Places API');
+        };
+        
+        document.head.appendChild(script);
+    }
+    
+    /**
+     * Setup autocomplete for address fields
+     */
+    function setupAutocomplete() {
+        if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+            console.error('Google Places library not loaded');
+            return;
+        }
+        
+        console.log('✅ Setting up address autocomplete fields');
+        
+        // Setup shipping address autocomplete
+        const shippingAddressInput = document.getElementById('address');
+        if (shippingAddressInput) {
+            shippingAutocomplete = new google.maps.places.Autocomplete(shippingAddressInput, AUTOCOMPLETE_CONFIG);
+            
+            shippingAutocomplete.addListener('place_changed', function() {
+                fillInAddress(shippingAutocomplete, 'shipping');
+            });
+        }
+        
+        // Setup billing address autocomplete
+        const billingAddressInput = document.getElementById('billingAddress');
+        if (billingAddressInput) {
+            billingAutocomplete = new google.maps.places.Autocomplete(billingAddressInput, AUTOCOMPLETE_CONFIG);
+            
+            billingAutocomplete.addListener('place_changed', function() {
+                fillInAddress(billingAutocomplete, 'billing');
+            });
+        }
+    }
+    
+    /**
+     * Fill in address fields from Google Places autocomplete
+     */
+    function fillInAddress(autocomplete, type) {
+        const place = autocomplete.getPlace();
+        
+        if (!place.address_components) {
+            console.log('No address details available');
+            return;
+        }
+        
+        // Initialize address parts
+        let streetNumber = '';
+        let route = '';
+        let city = '';
+        let state = '';
+        let zip = '';
+        let country = '';
+        
+        // Extract address components
+        for (const component of place.address_components) {
+            const componentType = component.types[0];
+            
+            switch (componentType) {
+                case 'street_number':
+                    streetNumber = component.long_name;
+                    break;
+                case 'route':
+                    route = component.short_name;
+                    break;
+                case 'locality':
+                    city = component.long_name;
+                    break;
+                case 'administrative_area_level_1':
+                    state = component.short_name;
+                    break;
+                case 'postal_code':
+                    zip = component.long_name;
+                    break;
+                case 'country':
+                    country = component.short_name;
+                    break;
+            }
+        }
+        
+        // Construct full address
+        const fullAddress = `${streetNumber} ${route}`.trim();
+        
+        // Get field prefix based on type
+        const prefix = type === 'billing' ? 'billing' : '';
+        const cityId = prefix ? `${prefix}City` : 'city';
+        const stateId = prefix ? `${prefix}State` : 'state';
+        const zipId = prefix ? `${prefix}Zip` : 'zip';
+        const countryId = prefix ? `${prefix}Country` : 'country';
+        
+        // Fill in the fields
+        if (city) {
+            const cityField = document.getElementById(cityId);
+            if (cityField) cityField.value = city;
+        }
+        
+        if (state) {
+            const stateField = document.getElementById(stateId);
+            if (stateField) stateField.value = state;
+        }
+        
+        if (zip) {
+            const zipField = document.getElementById(zipId);
+            if (zipField) zipField.value = zip;
+        }
+        
+        if (country) {
+            const countryField = document.getElementById(countryId);
+            if (countryField) countryField.value = country;
+        }
+        
+        console.log(`✅ Auto-filled ${type} address fields`);
+    }
+
+    /**
+     * Initialize Helcim payment form on page load
+     * Creates a preliminary checkout session so payment fields are visible immediately
+     */
+    async function initializeHelcimPaymentOnLoad() {
+        try {
+            console.log('💳 Initializing Helcim payment form on page load...');
+            
+            // Calculate totals for preliminary session
+            const totals = updateTotals();
+            
+            // Create preliminary checkout session with cart data only
+            // User details will be updated when form is submitted
+            const response = await fetch('/.netlify/functions/helcim-create-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    cart,
+                    customer: {
+                        email: '',
+                        firstName: '',
+                        lastName: '',
+                        phone: ''
+                    },
+                    shipping: {
+                        address: '',
+                        address2: '',
+                        city: '',
+                        state: '',
+                        zip: '',
+                        country: 'US'
+                    },
+                    shippingMethod: 'standard',
+                    totals: totals,
+                    preliminary: true // Flag to indicate this is a preliminary session
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to create preliminary checkout session');
+            }
+            
+            const sessionData = await response.json();
+            
+            if (!sessionData.success || !sessionData.checkoutToken) {
+                throw new Error('Invalid checkout session response');
+            }
+            
+            checkoutToken = sessionData.checkoutToken;
+            
+            // Initialize Helcim payment form with the token
+            await initializeHelcimPayment(sessionData.checkoutToken);
+            
+            console.log('✅ Helcim payment form initialized on page load');
+            
+        } catch (error) {
+            console.warn('⚠️ Could not initialize payment form on page load:', error.message);
+            console.log('Payment form will be initialized after form submission');
+            
+            // Show error state (with preview), hide loading state
+            const loadingState = document.getElementById('payment-loading-state');
+            const errorState = document.getElementById('payment-error-state');
+            if (loadingState) loadingState.style.display = 'none';
+            if (errorState) {
+                errorState.classList.remove('hidden');
+            }
+            
+            // Don't show error to user - payment form will be initialized on submit
+        }
+    }
+
+    /**
      * Setup event listeners
      */
     function setupEventListeners() {
@@ -158,6 +459,24 @@
         
         console.log('🔄 Processing checkout...');
         
+        // Client-side validation
+        const emailField = document.getElementById('email');
+        const newsletterCheckbox = document.getElementById('subscribeNewsletter');
+        
+        // Validate: if newsletter is checked, email must be provided
+        if (newsletterCheckbox && newsletterCheckbox.checked && emailField) {
+            const email = emailField.value.trim();
+            if (!email) {
+                showInlineError('Please provide an email address to subscribe to our newsletter, or uncheck the newsletter option.');
+                return;
+            }
+            // Use browser's built-in email validation
+            if (!emailField.checkValidity()) {
+                showInlineError('Please provide a valid email address.');
+                return;
+            }
+        }
+        
         // Disable submit button
         submitBtn.disabled = true;
         btnText.classList.add('hidden');
@@ -182,10 +501,31 @@
                 country: formData.get('country')
             };
             
+            // Get billing address (use shipping if "same as shipping" is checked)
+            const sameBilling = formData.get('sameBillingAddress') === 'on';
+            const billing = sameBilling ? {
+                ...shipping,
+                firstName: customer.firstName,
+                lastName: customer.lastName
+            } : {
+                firstName: formData.get('billingFirstName'),
+                lastName: formData.get('billingLastName'),
+                address: formData.get('billingAddress'),
+                address2: formData.get('billingAddress2') || '',
+                city: formData.get('billingCity'),
+                state: formData.get('billingState'),
+                zip: formData.get('billingZip'),
+                country: formData.get('billingCountry')
+            };
+            
             const shippingMethod = formData.get('shipping');
             
             // Calculate client-side totals (for reference only, server will recalculate)
             const clientTotals = updateTotals();
+            
+            // Note: Even if payment form is already initialized, we still need to validate
+            // and potentially update the checkout session with latest form data
+            // The Helcim form will handle the actual payment submission
             
             // Call Netlify Function to create Helcim checkout session
             console.log('📡 Creating Helcim checkout session...');
@@ -198,6 +538,7 @@
                     cart,
                     customer,
                     shipping,
+                    billing,
                     shippingMethod,
                     totals: clientTotals  // Sent for reference, but server will recalculate
                 })
@@ -263,7 +604,7 @@
                 throw new Error('Helcim payment library not loaded. Please refresh the page.');
             }
             
-            // Create container for Helcim payment form if it doesn't exist
+            // Get container
             let helcimContainer = document.getElementById('helcim-payment-container');
             if (!helcimContainer) {
                 helcimContainer = document.createElement('div');
@@ -271,6 +612,12 @@
                 helcimContainer.style.marginTop = '20px';
                 checkoutForm.appendChild(helcimContainer);
             }
+            
+            // Hide loading state, show error state hidden
+            const loadingState = document.getElementById('payment-loading-state');
+            const errorState = document.getElementById('payment-error-state');
+            if (loadingState) loadingState.style.display = 'none';
+            if (errorState) errorState.classList.add('hidden');
             
             // Initialize HelcimPay.js
             helcimInstance = new HelcimPay(token);
@@ -280,13 +627,20 @@
             helcimInstance.on('error', handlePaymentError);
             helcimInstance.on('cancel', handlePaymentCancel);
             
-            // Mount the payment form
+            // Mount the payment form (this will replace the container content)
             helcimInstance.mount('#helcim-payment-container');
             
             console.log('✅ Helcim payment form initialized');
             
         } catch (error) {
             console.error('❌ Failed to initialize Helcim payment:', error);
+            
+            // Show error state, hide loading state
+            const loadingState = document.getElementById('payment-loading-state');
+            const errorState = document.getElementById('payment-error-state');
+            if (loadingState) loadingState.style.display = 'none';
+            if (errorState) errorState.classList.remove('hidden');
+            
             throw new Error('Payment system initialization failed: ' + error.message);
         }
     }
