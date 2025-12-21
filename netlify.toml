@@ -134,6 +134,13 @@
 # REDIRECTS - Defined in netlify.toml for priority
 # ============================================
 
+# Payment webhook rewrite - NO redirect, internal proxy only
+[[redirects]]
+  from = "/webhooks/payment"
+  to = "/.netlify/functions/payment-webhook"
+  status = 200
+  force = true
+
 # Force HTTPS
 [[redirects]]
   from = "http://grainhousecoffee.com/*"
