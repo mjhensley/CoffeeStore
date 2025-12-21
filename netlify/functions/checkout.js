@@ -1,0 +1,474 @@
+/**
+ * Checkout Function - Helcim Payment Integration
+ * 
+ * Creates a secure checkout session with Helcim API.
+ * Implements PCI-compliant payment processing with server-side price validation.
+ * 
+ * Endpoint: POST /.netlify/functions/checkout
+ * 
+ * Security Features:
+ * - Server-side product catalog with price verification
+ * - Input validation and sanitization
+ * - Payload size limits (6MB max via Netlify)
+ * - Token-based authentication with Helcim API
+ * - No sensitive credit card details logged
+ * - CORS headers for cross-origin requests
+ */
+
+// =============================================================================
+// PRODUCT CATALOG - Server-side source of truth for pricing
+// =============================================================================
+const PRODUCT_CATALOG = {
+  'hair-bender': { name: 'Hair Bender', basePrice: 37.00 },
+  'holler-mountain': { name: 'Holler Mountain', basePrice: 38.75 },
+  'french-roast': { name: 'French Roast', basePrice: 33.25 },
+  'founders-blend': { name: "Founder's Blend", basePrice: 35.00 },
+  'trapper-creek': { name: 'Trapper Creek', basePrice: 39.00 },
+  'ethiopia-duromina': { name: 'Ethiopia Duromina', basePrice: 42.00 },
+  // Add more products as needed
+};
+
+// Size multipliers for calculating final price
+const SIZE_MULTIPLIERS = {
+  '12oz': 1.0,
+  '2lb': 2.35,
+  '5lb': 5.25,
+};
+
+// Subscription discount (10%)
+const SUBSCRIPTION_DISCOUNT = 0.10;
+
+// Shipping rates (in USD)
+const SHIPPING_RATES = {
+  'standard': 5.99,
+  'express': 12.99,
+  'free': 0.00,
+};
+
+// Tax rate (example: 7% - adjust based on location)
+const TAX_RATE = 0.07;
+
+// Maximum payload size (Netlify limit is 6MB, we'll use 1MB for safety)
+const MAX_PAYLOAD_SIZE = 1024 * 1024; // 1MB
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+/**
+ * Validate and sanitize cart items
+ */
+function validateCart(cart) {
+  if (!Array.isArray(cart) || cart.length === 0) {
+    throw new Error('Cart must be a non-empty array');
+  }
+
+  if (cart.length > 100) {
+    throw new Error('Cart cannot contain more than 100 items');
+  }
+
+  return cart.map(item => {
+    // Validate required fields
+    if (!item.id || !item.quantity) {
+      throw new Error('Invalid cart item: missing id or quantity');
+    }
+
+    // Sanitize product ID (alphanumeric and dashes only)
+    const sanitizedId = String(item.id).replace(/[^a-z0-9-]/gi, '');
+    
+    // Validate product exists in catalog
+    if (!PRODUCT_CATALOG[sanitizedId]) {
+      throw new Error(`Invalid product: ${sanitizedId}`);
+    }
+
+    // Validate quantity
+    const quantity = parseInt(item.quantity, 10);
+    if (isNaN(quantity) || quantity < 1 || quantity > 1000) {
+      throw new Error('Invalid quantity: must be between 1 and 1000');
+    }
+
+    // Validate size (optional)
+    const size = item.size || '12oz';
+    if (!SIZE_MULTIPLIERS[size]) {
+      throw new Error(`Invalid size: ${size}`);
+    }
+
+    // Validate subscription flag
+    const isSubscription = item.isSubscription === true;
+
+    return {
+      id: sanitizedId,
+      name: PRODUCT_CATALOG[sanitizedId].name,
+      quantity,
+      size,
+      isSubscription,
+    };
+  });
+}
+
+/**
+ * Validate customer information
+ */
+function validateCustomer(customer) {
+  if (!customer || typeof customer !== 'object') {
+    throw new Error('Customer information is required');
+  }
+
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!customer.email || !emailRegex.test(customer.email)) {
+    throw new Error('Valid email is required');
+  }
+
+  // Name validation (alphanumeric, spaces, and common punctuation)
+  const nameRegex = /^[a-zA-Z\s'-]{1,100}$/;
+  if (!customer.firstName || !nameRegex.test(customer.firstName)) {
+    throw new Error('Valid first name is required');
+  }
+  if (!customer.lastName || !nameRegex.test(customer.lastName)) {
+    throw new Error('Valid last name is required');
+  }
+
+  // Phone validation (optional, if provided)
+  if (customer.phone) {
+    const phoneRegex = /^[\d\s()+-]{7,20}$/;
+    if (!phoneRegex.test(customer.phone)) {
+      throw new Error('Invalid phone number format');
+    }
+  }
+
+  return {
+    email: customer.email.trim().toLowerCase(),
+    firstName: customer.firstName.trim(),
+    lastName: customer.lastName.trim(),
+    phone: customer.phone ? customer.phone.trim() : null,
+  };
+}
+
+/**
+ * Validate shipping information
+ */
+function validateShipping(shipping) {
+  if (!shipping || typeof shipping !== 'object') {
+    throw new Error('Shipping information is required');
+  }
+
+  // Address validation
+  if (!shipping.address || shipping.address.length < 5 || shipping.address.length > 200) {
+    throw new Error('Valid address is required (5-200 characters)');
+  }
+
+  // City validation
+  if (!shipping.city || shipping.city.length < 2 || shipping.city.length > 100) {
+    throw new Error('Valid city is required');
+  }
+
+  // State validation (2 characters for US states)
+  if (!shipping.state || shipping.state.length !== 2) {
+    throw new Error('Valid state code is required (2 characters)');
+  }
+
+  // Zip code validation (US format)
+  const zipRegex = /^\d{5}(-\d{4})?$/;
+  if (!shipping.zip || !zipRegex.test(shipping.zip)) {
+    throw new Error('Valid zip code is required');
+  }
+
+  // Country validation (default to US)
+  const country = shipping.country || 'US';
+  if (country !== 'US') {
+    throw new Error('Currently only shipping to US addresses');
+  }
+
+  return {
+    address: shipping.address.trim(),
+    city: shipping.city.trim(),
+    state: shipping.state.trim().toUpperCase(),
+    zip: shipping.zip.trim(),
+    country,
+  };
+}
+
+/**
+ * Calculate order totals from validated cart
+ */
+function calculateTotals(validatedCart, shippingMethod = 'standard') {
+  let subtotal = 0;
+
+  // Calculate subtotal with server-side prices
+  for (const item of validatedCart) {
+    const product = PRODUCT_CATALOG[item.id];
+    const sizeMultiplier = SIZE_MULTIPLIERS[item.size] || 1.0;
+    let itemPrice = product.basePrice * sizeMultiplier;
+
+    // Apply subscription discount if applicable
+    if (item.isSubscription) {
+      itemPrice = itemPrice * (1 - SUBSCRIPTION_DISCOUNT);
+    }
+
+    subtotal += itemPrice * item.quantity;
+  }
+
+  // Calculate shipping
+  const shipping = SHIPPING_RATES[shippingMethod] || SHIPPING_RATES.standard;
+
+  // Calculate tax (on subtotal only, not shipping)
+  const tax = subtotal * TAX_RATE;
+
+  // Calculate total
+  const total = subtotal + shipping + tax;
+
+  return {
+    subtotal: Math.round(subtotal * 100) / 100,
+    shipping: Math.round(shipping * 100) / 100,
+    tax: Math.round(tax * 100) / 100,
+    total: Math.round(total * 100) / 100,
+  };
+}
+
+/**
+ * Create Helcim checkout session
+ */
+async function createHelcimSession(validatedCart, customer, shipping, totals) {
+  const helcimApiToken = process.env.HELCIM_API_TOKEN;
+  
+  if (!helcimApiToken) {
+    throw new Error('Payment gateway not configured');
+  }
+
+  // Prepare line items for Helcim
+  const lineItems = validatedCart.map((item, index) => {
+    const product = PRODUCT_CATALOG[item.id];
+    const sizeMultiplier = SIZE_MULTIPLIERS[item.size] || 1.0;
+    let itemPrice = product.basePrice * sizeMultiplier;
+
+    if (item.isSubscription) {
+      itemPrice = itemPrice * (1 - SUBSCRIPTION_DISCOUNT);
+    }
+
+    return {
+      description: `${item.name} (${item.size})${item.isSubscription ? ' - Subscription' : ''}`,
+      quantity: item.quantity,
+      price: Math.round(itemPrice * 100) / 100,
+      total: Math.round(itemPrice * item.quantity * 100) / 100,
+    };
+  });
+
+  // Add shipping as line item
+  if (totals.shipping > 0) {
+    lineItems.push({
+      description: 'Shipping',
+      quantity: 1,
+      price: totals.shipping,
+      total: totals.shipping,
+    });
+  }
+
+  // Generate unique invoice number
+  const invoiceNumber = `GH-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  // Prepare Helcim API request
+  const helcimRequest = {
+    paymentType: 'purchase',
+    amount: totals.total,
+    currency: 'USD',
+    invoiceNumber,
+    customerCode: customer.email,
+    billingContactName: `${customer.firstName} ${customer.lastName}`,
+    billingEmail: customer.email,
+    billingPhone: customer.phone || '',
+    billingAddress: {
+      street: shipping.address,
+      city: shipping.city,
+      province: shipping.state,
+      postalCode: shipping.zip,
+      country: shipping.country,
+    },
+    lineItems,
+    taxAmount: totals.tax,
+  };
+
+  // Call Helcim API
+  const response = await fetch('https://api.helcim.com/v2/payment/purchase', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${helcimApiToken}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify(helcimRequest),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error('Helcim API error:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: errorData,
+    });
+    throw new Error('Payment gateway request failed');
+  }
+
+  const helcimResponse = await response.json();
+  
+  return {
+    checkoutToken: helcimResponse.checkoutToken || helcimResponse.token,
+    sessionId: helcimResponse.transactionId || helcimResponse.id,
+    invoiceNumber,
+    helcimResponse,
+  };
+}
+
+/**
+ * Log sanitized request (no sensitive data)
+ */
+function logRequest(request, validatedCart, totals) {
+  // Only log in development or when debugging is enabled
+  if (process.env.CONTEXT !== 'dev' && !process.env.DEBUG_CHECKOUT) {
+    return;
+  }
+
+  console.log('Checkout request:', {
+    timestamp: new Date().toISOString(),
+    itemCount: validatedCart.length,
+    totals,
+    // DO NOT LOG: customer PII, payment details, or any sensitive information
+  });
+}
+
+// =============================================================================
+// MAIN HANDLER
+// =============================================================================
+
+exports.handler = async (event, context) => {
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+  };
+
+  // Handle OPTIONS request for CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers,
+      body: '',
+    };
+  }
+
+  // Only allow POST requests
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ 
+        success: false,
+        error: 'Method not allowed. Use POST.' 
+      }),
+    };
+  }
+
+  try {
+    // Check payload size
+    const contentLength = parseInt(event.headers['content-length'] || '0', 10);
+    if (contentLength > MAX_PAYLOAD_SIZE) {
+      return {
+        statusCode: 413,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Payload too large',
+        }),
+      };
+    }
+
+    // Parse request body
+    let requestBody;
+    try {
+      requestBody = JSON.parse(event.body || '{}');
+    } catch (parseError) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Invalid JSON in request body',
+        }),
+      };
+    }
+
+    // Validate and sanitize inputs
+    const validatedCart = validateCart(requestBody.cart);
+    const validatedCustomer = validateCustomer(requestBody.customer);
+    const validatedShipping = validateShipping(requestBody.shipping);
+    const shippingMethod = requestBody.shippingMethod || 'standard';
+
+    // Validate shipping method
+    if (!SHIPPING_RATES[shippingMethod]) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Invalid shipping method',
+        }),
+      };
+    }
+
+    // Calculate totals with server-side prices
+    const totals = calculateTotals(validatedCart, shippingMethod);
+
+    // Log sanitized request (development only)
+    logRequest(event, validatedCart, totals);
+
+    // Create Helcim checkout session
+    const helcimSession = await createHelcimSession(
+      validatedCart,
+      validatedCustomer,
+      validatedShipping,
+      totals
+    );
+
+    // Return success response with checkout token
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success: true,
+        checkoutToken: helcimSession.checkoutToken,
+        sessionId: helcimSession.sessionId,
+        invoiceNumber: helcimSession.invoiceNumber,
+        serverCalculatedTotals: totals,
+      }),
+    };
+
+  } catch (error) {
+    // Log error (but not sensitive data)
+    console.error('Checkout error:', {
+      message: error.message,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Determine appropriate status code
+    let statusCode = 500;
+    if (error.message.includes('Invalid') || 
+        error.message.includes('required') ||
+        error.message.includes('must be')) {
+      statusCode = 400;
+    } else if (error.message.includes('not configured')) {
+      statusCode = 503;
+    }
+
+    return {
+      statusCode,
+      headers,
+      body: JSON.stringify({
+        success: false,
+        error: error.message || 'An error occurred during checkout',
+      }),
+    };
+  }
+};
