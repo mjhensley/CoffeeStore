@@ -189,13 +189,20 @@ To verify webhooks are genuinely from Helcim, you can set up signature verificat
 - If a secret is set, requests must include the `X-Helcim-Signature` header (basic filtering)
 - Full HMAC-SHA256 signature verification can be added when Helcim's signature algorithm is fully documented
 
-For production use, consider implementing full signature verification or restricting webhook access via IP allowlisting.
+⚠️ **Security Warning**: Without full signature verification, malicious actors who know your webhook URL could potentially send fake webhook events. For production use, you should:
+1. Implement full HMAC-SHA256 signature verification based on Helcim's documentation
+2. Use IP allowlisting to restrict access to Helcim's IP addresses only
+3. Monitor webhook logs for suspicious activity
+4. Never expose sensitive business logic based solely on webhook data without additional validation
 
 ### CORS Configuration
-The webhook handler allows cross-origin requests from any origin (`*`). This is safe for webhooks since:
-- POST requests from Helcim don't originate from browsers
-- The signature verification protects against unauthorized requests
+The webhook handler allows cross-origin requests from any origin (`*`). This is acceptable for webhooks because:
+- POST requests from Helcim's servers don't originate from browsers (no CORS preflight needed)
+- The endpoint only accepts POST requests for actual webhook processing
 - GET requests only return non-sensitive health check data
+- HEAD requests are used for URL validation only
+
+However, note that without full signature verification, the endpoint is vulnerable to unauthorized POST requests from any source.
 
 ## Troubleshooting Checklist
 

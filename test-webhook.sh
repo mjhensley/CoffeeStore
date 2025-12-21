@@ -3,6 +3,7 @@
 # Tests the deployed helcim-webhook endpoint
 
 set -e
+set -o pipefail
 
 # Color codes for output
 GREEN='\033[0;32m'
@@ -25,11 +26,12 @@ echo ""
 
 # Test 1: HEAD request (Critical for Helcim validation)
 echo -e "${YELLOW}Test 1: HEAD Request (Webhook Validation)${NC}"
-if curl -I -s "$WEBHOOK_URL" | grep -q "HTTP.*200"; then
+HTTP_STATUS=$(curl -I -s -o /dev/null -w "%{http_code}" "$WEBHOOK_URL" || echo "000")
+if [ "$HTTP_STATUS" = "200" ]; then
     echo -e "${GREEN}✅ HEAD request successful - Returns 200 OK${NC}"
     echo "   This is what Helcim uses to validate the webhook URL"
 else
-    echo -e "${RED}❌ HEAD request failed${NC}"
+    echo -e "${RED}❌ HEAD request failed (Status: $HTTP_STATUS)${NC}"
     echo "   Helcim won't be able to validate this webhook URL"
 fi
 echo ""
@@ -63,11 +65,12 @@ echo ""
 
 # Test 4: OPTIONS request (CORS)
 echo -e "${YELLOW}Test 4: OPTIONS Request (CORS Preflight)${NC}"
-if curl -I -s -X OPTIONS "$WEBHOOK_URL" | grep -q "HTTP.*204"; then
+HTTP_STATUS=$(curl -I -s -X OPTIONS -o /dev/null -w "%{http_code}" "$WEBHOOK_URL" || echo "000")
+if [ "$HTTP_STATUS" = "204" ]; then
     echo -e "${GREEN}✅ OPTIONS request successful - Returns 204${NC}"
     echo "   CORS is properly configured"
 else
-    echo -e "${RED}❌ OPTIONS request failed${NC}"
+    echo -e "${RED}❌ OPTIONS request failed (Status: $HTTP_STATUS)${NC}"
 fi
 echo ""
 
