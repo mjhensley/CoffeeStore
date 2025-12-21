@@ -5,44 +5,32 @@
  * Update all shipping prices in ONE place!
  * Changes here automatically apply to checkout and policies page.
  * 
- * PRICING MODEL: Competitive rates based on market research
+ * SHIPPING METHODS ALLOWLIST:
+ * - ONE-TIME SHIPMENT: UPS® Ground, UPS 2nd Day Air®, UPS Next Day Air®
+ * - RECURRING SHIPMENTS: Standard - $6.00 every week
+ * 
+ * NO OTHER SHIPPING METHODS ARE ALLOWED.
  */
 
 const SHIPPING_CONFIG = {
     
     // ============================================
-    // FREE SHIPPING THRESHOLD
+    // ALLOWED SHIPPING METHOD IDS (STRICT ALLOWLIST)
+    // Only these methods will be shown in checkout
     // ============================================
-    freeShippingThreshold: 45.00,
-    freeShippingMethod: 'usps-priority', // Which method becomes free over threshold
+    allowedMethods: ['ups-ground', 'ups-2day', 'ups-overnight'],
+    allowedRecurringMethods: ['recurring-standard'],
     
     // ============================================
-    // SHIPPING METHODS - Organized by Carrier
+    // FREE SHIPPING THRESHOLD (disabled - no free shipping on one-time)
     // ============================================
-    // All prices have been increased by 10% from original rates
+    freeShippingThreshold: null,
+    freeShippingMethod: null,
+    
+    // ============================================
+    // ONE-TIME SHIPMENT METHODS (UPS Only)
+    // ============================================
     methods: {
-        // USPS Options
-        'usps-priority': {
-            id: 'usps-priority',
-            name: 'USPS Priority Mail',
-            carrier: 'USPS',
-            description: 'USPS Priority Mail shipping',
-            deliveryTime: '2 to 3 business days',
-            deliveryTimeShort: '2-3 days',
-            price: 7.26,  // +10% from $6.60
-            freeOverThreshold: true
-        },
-        'usps-priority-express': {
-            id: 'usps-priority-express',
-            name: 'USPS Priority Mail Express',
-            carrier: 'USPS',
-            description: 'USPS Express shipping',
-            deliveryTime: '1 to 2 business days',
-            deliveryTimeShort: '1-2 days',
-            price: 27.50,  // +10% from $25.00
-            freeOverThreshold: false
-        },
-        // UPS Options
         'ups-ground': {
             id: 'ups-ground',
             name: 'UPS® Ground',
@@ -50,59 +38,45 @@ const SHIPPING_CONFIG = {
             description: 'UPS Ground shipping',
             deliveryTime: '3 to 5 business days',
             deliveryTimeShort: '3-5 days',
-            price: 15.54,  // +10% from $14.13
+            price: 15.54,
             freeOverThreshold: false
         },
         'ups-2day': {
             id: 'ups-2day',
             name: 'UPS 2nd Day Air®',
             carrier: 'UPS',
-            description: 'UPS 2-Day Air shipping',
+            description: '2 business days',
             deliveryTime: '2 business days',
             deliveryTimeShort: '2 days',
-            price: 23.97,  // +10% from $21.79
+            price: 23.97,
             freeOverThreshold: false
         },
         'ups-overnight': {
             id: 'ups-overnight',
             name: 'UPS Next Day Air®',
             carrier: 'UPS',
-            description: 'Next business day delivery',
+            description: '1 business day',
             deliveryTime: '1 business day',
             deliveryTimeShort: 'Next day',
-            price: 31.53,  // +10% from $28.66
+            price: 31.53,
             freeOverThreshold: false
-        },
-        // FedEx Options
-        'fedex-ground': {
-            id: 'fedex-ground',
-            name: 'FedEx Ground',
-            carrier: 'FedEx',
-            description: 'FedEx Ground shipping',
-            deliveryTime: '3 to 5 business days',
-            deliveryTimeShort: '3-5 days',
-            price: 16.50,  // +10% from $15.00
-            freeOverThreshold: false
-        },
-        'fedex-2day': {
-            id: 'fedex-2day',
-            name: 'FedEx 2Day®',
-            carrier: 'FedEx',
-            description: 'FedEx 2-Day shipping',
-            deliveryTime: '2 business days',
-            deliveryTimeShort: '2 days',
-            price: 24.20,  // +10% from $22.00
-            freeOverThreshold: false
-        },
-        'fedex-overnight': {
-            id: 'fedex-overnight',
-            name: 'FedEx Standard Overnight®',
-            carrier: 'FedEx',
-            description: 'FedEx Overnight shipping',
-            deliveryTime: '1 business day',
-            deliveryTimeShort: 'Next day',
-            price: 33.00,  // +10% from $30.00
-            freeOverThreshold: false
+        }
+    },
+    
+    // ============================================
+    // RECURRING SHIPMENT METHODS
+    // ============================================
+    recurringMethods: {
+        'recurring-standard': {
+            id: 'recurring-standard',
+            name: 'Standard - $6.00 every week',
+            carrier: 'Standard',
+            description: 'Weekly recurring shipment',
+            deliveryTime: 'Every week',
+            deliveryTimeShort: 'Weekly',
+            price: 6.00,
+            isRecurring: true,
+            frequency: 'weekly'
         }
     },
     
@@ -110,8 +84,9 @@ const SHIPPING_CONFIG = {
     // SUBSCRIPTION SHIPPING
     // ============================================
     subscription: {
-        freeShipping: true,
-        method: 'usps-priority'
+        freeShipping: false,
+        method: 'recurring-standard',
+        price: 6.00
     },
     
     // ============================================
@@ -162,64 +137,107 @@ const SHIPPING_CONFIG = {
 // ============================================
 
 /**
- * Get shipping rate for a method, considering cart total
+ * Check if a shipping method is in the allowlist
  * @param {string} methodId - The shipping method ID
- * @param {number} cartTotal - The cart subtotal
- * @returns {number} - The shipping cost (0 if free)
+ * @param {boolean} isRecurring - Whether this is a recurring shipment
+ * @returns {boolean} - True if method is allowed
+ */
+function isAllowedShippingMethod(methodId, isRecurring = false) {
+    if (isRecurring) {
+        return SHIPPING_CONFIG.allowedRecurringMethods.includes(methodId);
+    }
+    return SHIPPING_CONFIG.allowedMethods.includes(methodId);
+}
+
+/**
+ * Get shipping rate for a method
+ * @param {string} methodId - The shipping method ID
+ * @param {number} cartTotal - The cart subtotal (unused, no free shipping)
+ * @returns {number} - The shipping cost
  */
 function getShippingRate(methodId, cartTotal = 0) {
-    const method = SHIPPING_CONFIG.methods[methodId];
-    if (!method) return 0;
-    
-    // Check if free shipping applies
-    if (method.freeOverThreshold && cartTotal >= SHIPPING_CONFIG.freeShippingThreshold) {
+    // Check allowlist first
+    if (!isAllowedShippingMethod(methodId)) {
+        // Check recurring methods
+        const recurringMethod = SHIPPING_CONFIG.recurringMethods[methodId];
+        if (recurringMethod && isAllowedShippingMethod(methodId, true)) {
+            return recurringMethod.price;
+        }
         return 0;
     }
+    
+    const method = SHIPPING_CONFIG.methods[methodId];
+    if (!method) return 0;
     
     return method.price;
 }
 
 /**
- * Get all available shipping methods with calculated prices
+ * Get all available ONE-TIME shipping methods (UPS only)
  * @param {number} cartTotal - The cart subtotal
  * @returns {Array} - Array of shipping options with current prices
  */
 function getShippingOptions(cartTotal = 0) {
     const options = [];
     
-    for (const [id, method] of Object.entries(SHIPPING_CONFIG.methods)) {
-        const price = getShippingRate(id, cartTotal);
-        const isFree = price === 0 && method.price > 0;
-        
-        options.push({
-            ...method,
-            currentPrice: price,
-            isFree: isFree,
-            displayPrice: isFree ? 'FREE' : `$${price.toFixed(2)}`
-        });
+    // Only return methods in the allowlist
+    for (const methodId of SHIPPING_CONFIG.allowedMethods) {
+        const method = SHIPPING_CONFIG.methods[methodId];
+        if (method) {
+            const price = method.price;
+            options.push({
+                ...method,
+                currentPrice: price,
+                isFree: false,
+                displayPrice: `$${price.toFixed(2)}`
+            });
+        }
     }
     
     return options;
 }
 
 /**
- * Get shipping options grouped by carrier
- * @param {number} cartTotal - The cart subtotal
- * @returns {Object} - Object with carrier keys and arrays of options
+ * Get recurring shipping methods
+ * @returns {Array} - Array of recurring shipping options
  */
-function getShippingOptionsByCarrier(cartTotal = 0) {
+function getRecurringShippingOptions() {
+    const options = [];
+    
+    for (const methodId of SHIPPING_CONFIG.allowedRecurringMethods) {
+        const method = SHIPPING_CONFIG.recurringMethods[methodId];
+        if (method) {
+            options.push({
+                ...method,
+                currentPrice: method.price,
+                isFree: false,
+                displayPrice: `$${method.price.toFixed(2)}`
+            });
+        }
+    }
+    
+    return options;
+}
+
+/**
+ * Get shipping options grouped by type (one-time vs recurring)
+ * @param {number} cartTotal - The cart subtotal
+ * @param {boolean} isSubscription - Whether cart contains subscription items
+ * @returns {Object} - Object with shipping type keys and arrays of options
+ */
+function getShippingOptionsByCarrier(cartTotal = 0, isSubscription = false) {
+    // IMPORTANT: Only return UPS for one-time shipments
+    // USPS and FedEx are NOT allowed
     const grouped = {
-        USPS: [],
-        UPS: [],
-        FedEx: []
+        UPS: []
     };
     
+    // Get only UPS options from the allowlist
     const options = getShippingOptions(cartTotal);
     
     options.forEach(option => {
-        const carrier = option.carrier || 'USPS';
-        if (grouped[carrier]) {
-            grouped[carrier].push(option);
+        if (option.carrier === 'UPS') {
+            grouped.UPS.push(option);
         }
     });
     
@@ -227,23 +245,43 @@ function getShippingOptionsByCarrier(cartTotal = 0) {
 }
 
 /**
- * Calculate how much more to spend for free shipping
+ * Get all shipping options for checkout display
  * @param {number} cartTotal - The cart subtotal
- * @returns {number|null} - Amount needed, or null if already qualifies
+ * @param {boolean} hasSubscription - Whether cart has subscription items
+ * @returns {Object} - Object with oneTime and recurring shipping options
  */
-function getAmountForFreeShipping(cartTotal) {
-    const threshold = SHIPPING_CONFIG.freeShippingThreshold;
-    if (cartTotal >= threshold) return null;
-    return Math.ceil((threshold - cartTotal) * 100) / 100;
+function getAllShippingOptions(cartTotal = 0, hasSubscription = false) {
+    return {
+        oneTime: getShippingOptions(cartTotal),
+        recurring: hasSubscription ? getRecurringShippingOptions() : []
+    };
 }
 
 /**
- * Get shipping method by ID
+ * Calculate how much more to spend for free shipping (DISABLED)
+ * @param {number} cartTotal - The cart subtotal
+ * @returns {null} - Always null, no free shipping available
+ */
+function getAmountForFreeShipping(cartTotal) {
+    // Free shipping is disabled
+    return null;
+}
+
+/**
+ * Get shipping method by ID (with allowlist check)
  * @param {string} methodId - The shipping method ID
- * @returns {Object|null} - The shipping method config
+ * @returns {Object|null} - The shipping method config or null if not allowed
  */
 function getShippingMethod(methodId) {
-    return SHIPPING_CONFIG.methods[methodId] || null;
+    // Check one-time methods
+    if (isAllowedShippingMethod(methodId)) {
+        return SHIPPING_CONFIG.methods[methodId] || null;
+    }
+    // Check recurring methods
+    if (isAllowedShippingMethod(methodId, true)) {
+        return SHIPPING_CONFIG.recurringMethods[methodId] || null;
+    }
+    return null;
 }
 
 /**
@@ -253,58 +291,36 @@ function getShippingMethod(methodId) {
 function getShippingTableData() {
     const data = [];
     
-    // USPS
-    data.push({
-        method: 'USPS Priority Mail',
-        carrier: 'USPS',
-        delivery: '2-3 business days',
-        cost: `$${SHIPPING_CONFIG.methods['usps-priority'].price.toFixed(2)} (Free over $${SHIPPING_CONFIG.freeShippingThreshold})`
-    });
-    data.push({
-        method: 'USPS Priority Mail Express',
-        carrier: 'USPS',
-        delivery: '1-2 business days',
-        cost: `$${SHIPPING_CONFIG.methods['usps-priority-express'].price.toFixed(2)}`
-    });
-    
-    // UPS
+    // ONE-TIME SHIPMENT - UPS Only (from allowlist)
     data.push({
         method: 'UPS® Ground',
         carrier: 'UPS',
         delivery: '3-5 business days',
-        cost: `$${SHIPPING_CONFIG.methods['ups-ground'].price.toFixed(2)}`
+        cost: `$${SHIPPING_CONFIG.methods['ups-ground'].price.toFixed(2)}`,
+        type: 'one-time'
     });
     data.push({
         method: 'UPS 2nd Day Air®',
         carrier: 'UPS',
         delivery: '2 business days',
-        cost: `$${SHIPPING_CONFIG.methods['ups-2day'].price.toFixed(2)}`
+        cost: `$${SHIPPING_CONFIG.methods['ups-2day'].price.toFixed(2)}`,
+        type: 'one-time'
     });
     data.push({
         method: 'UPS Next Day Air®',
         carrier: 'UPS',
-        delivery: 'Next business day',
-        cost: `$${SHIPPING_CONFIG.methods['ups-overnight'].price.toFixed(2)}`
+        delivery: '1 business day',
+        cost: `$${SHIPPING_CONFIG.methods['ups-overnight'].price.toFixed(2)}`,
+        type: 'one-time'
     });
     
-    // FedEx
+    // RECURRING SHIPMENT - Standard only
     data.push({
-        method: 'FedEx Ground',
-        carrier: 'FedEx',
-        delivery: '3-5 business days',
-        cost: `$${SHIPPING_CONFIG.methods['fedex-ground'].price.toFixed(2)}`
-    });
-    data.push({
-        method: 'FedEx 2Day®',
-        carrier: 'FedEx',
-        delivery: '2 business days',
-        cost: `$${SHIPPING_CONFIG.methods['fedex-2day'].price.toFixed(2)}`
-    });
-    data.push({
-        method: 'FedEx Standard Overnight®',
-        carrier: 'FedEx',
-        delivery: 'Next business day',
-        cost: `$${SHIPPING_CONFIG.methods['fedex-overnight'].price.toFixed(2)}`
+        method: 'Standard - $6.00 every week',
+        carrier: 'Standard',
+        delivery: 'Every week',
+        cost: '$6.00',
+        type: 'recurring'
     });
     
     return data;
@@ -350,9 +366,12 @@ function checkShippingEligibility(country, state) {
 // Export for use in other scripts
 if (typeof window !== 'undefined') {
     window.SHIPPING_CONFIG = SHIPPING_CONFIG;
+    window.isAllowedShippingMethod = isAllowedShippingMethod;
     window.getShippingRate = getShippingRate;
     window.getShippingOptions = getShippingOptions;
+    window.getRecurringShippingOptions = getRecurringShippingOptions;
     window.getShippingOptionsByCarrier = getShippingOptionsByCarrier;
+    window.getAllShippingOptions = getAllShippingOptions;
     window.getAmountForFreeShipping = getAmountForFreeShipping;
     window.getShippingMethod = getShippingMethod;
     window.getShippingTableData = getShippingTableData;
@@ -363,9 +382,12 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         SHIPPING_CONFIG,
+        isAllowedShippingMethod,
         getShippingRate,
         getShippingOptions,
+        getRecurringShippingOptions,
         getShippingOptionsByCarrier,
+        getAllShippingOptions,
         getAmountForFreeShipping,
         getShippingMethod,
         getShippingTableData,

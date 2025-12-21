@@ -1138,51 +1138,38 @@
         
         // Check if shipping config is available
         if (typeof window.getShippingOptionsByCarrier === 'undefined') {
-            // Fallback if shipping-config.js not loaded (updated price: +10%)
-            const shippingPrice = cartTotal >= 45 ? 0 : 7.26;
+            // Fallback if shipping-config.js not loaded - use UPS Ground as default
+            const shippingPrice = 15.54; // UPS Ground price
             container.innerHTML = `
-                <div class="shipping-option selected">
-                    <input type="radio" name="shipping-method" value="usps-priority" checked data-price="${shippingPrice}">
-                    <div class="shipping-option-details">
-                        <div class="shipping-option-name">USPS Priority Mail</div>
-                        <div class="shipping-option-description">2 to 3 business days</div>
+                <div class="shipping-carrier-group">
+                    <div class="shipping-carrier-header">ONE-TIME SHIPMENT</div>
+                    <div class="shipping-option selected">
+                        <input type="radio" name="shipping-method" value="ups-ground" checked data-price="${shippingPrice}">
+                        <div class="shipping-option-details">
+                            <div class="shipping-option-name">UPS® Ground</div>
+                            <div class="shipping-option-description">3 to 5 business days</div>
+                        </div>
+                        <div class="shipping-option-price">$${shippingPrice.toFixed(2)}</div>
                     </div>
-                    <div class="shipping-option-price">${shippingPrice === 0 ? 'FREE' : '$' + shippingPrice.toFixed(2)}</div>
                 </div>
             `;
             updateCheckoutTotal(cartTotal);
             return;
         }
         
-        // Use grouped shipping options by carrier
+        // Use grouped shipping options - UPS ONLY (USPS and FedEx removed)
         const grouped = window.getShippingOptionsByCarrier(cartTotal);
         let html = '';
+        let isFirstOption = true;
         
-        // USPS
-        if (grouped.USPS && grouped.USPS.length > 0) {
-            html += '<div class="shipping-carrier-group"><div class="shipping-carrier-header">USPS</div>';
-            grouped.USPS.forEach((option, index) => {
-                html += `
-                <div class="shipping-option ${index === 0 ? 'selected' : ''}">
-                    <input type="radio" name="shipping-method" value="${option.id}" ${index === 0 ? 'checked' : ''} data-price="${option.currentPrice}">
-                    <div class="shipping-option-details">
-                        <div class="shipping-option-name">${option.name}</div>
-                        <div class="shipping-option-description">${option.deliveryTime}</div>
-                    </div>
-                    <div class="shipping-option-price">${option.displayPrice}</div>
-                </div>
-                `;
-            });
-            html += '</div>';
-        }
-        
-        // UPS
+        // ONE-TIME SHIPMENT SECTION - UPS Only
         if (grouped.UPS && grouped.UPS.length > 0) {
-            html += '<div class="shipping-carrier-group"><div class="shipping-carrier-header">UPS</div>';
+            html += '<div class="shipping-carrier-group"><div class="shipping-carrier-header">ONE-TIME SHIPMENT</div>';
             grouped.UPS.forEach(option => {
+                const isSelected = isFirstOption;
                 html += `
-                <div class="shipping-option">
-                    <input type="radio" name="shipping-method" value="${option.id}" data-price="${option.currentPrice}">
+                <div class="shipping-option ${isSelected ? 'selected' : ''}">
+                    <input type="radio" name="shipping-method" value="${option.id}" ${isSelected ? 'checked' : ''} data-price="${option.currentPrice}">
                     <div class="shipping-option-details">
                         <div class="shipping-option-name">${option.name}</div>
                         <div class="shipping-option-description">${option.deliveryTime}</div>
@@ -1190,26 +1177,30 @@
                     <div class="shipping-option-price">${option.displayPrice}</div>
                 </div>
                 `;
+                isFirstOption = false;
             });
             html += '</div>';
         }
         
-        // FedEx
-        if (grouped.FedEx && grouped.FedEx.length > 0) {
-            html += '<div class="shipping-carrier-group"><div class="shipping-carrier-header">FedEx</div>';
-            grouped.FedEx.forEach(option => {
-                html += `
-                <div class="shipping-option">
-                    <input type="radio" name="shipping-method" value="${option.id}" data-price="${option.currentPrice}">
-                    <div class="shipping-option-details">
-                        <div class="shipping-option-name">${option.name}</div>
-                        <div class="shipping-option-description">${option.deliveryTime}</div>
+        // RECURRING SHIPMENTS SECTION
+        if (typeof window.getRecurringShippingOptions === 'function') {
+            const recurringOptions = window.getRecurringShippingOptions();
+            if (recurringOptions && recurringOptions.length > 0) {
+                html += '<div class="shipping-carrier-group" style="margin-top: 20px;"><div class="shipping-carrier-header">RECURRING SHIPMENTS</div>';
+                recurringOptions.forEach(option => {
+                    html += `
+                    <div class="shipping-option">
+                        <input type="radio" name="shipping-method" value="${option.id}" data-price="${option.currentPrice}">
+                        <div class="shipping-option-details">
+                            <div class="shipping-option-name">${option.name}</div>
+                            <div class="shipping-option-description">${option.deliveryTime}</div>
+                        </div>
+                        <div class="shipping-option-price">${option.displayPrice}</div>
                     </div>
-                    <div class="shipping-option-price">${option.displayPrice}</div>
-                </div>
-                `;
-            });
-            html += '</div>';
+                    `;
+                });
+                html += '</div>';
+            }
         }
         
         container.innerHTML = html;
@@ -1236,11 +1227,11 @@
         if (selectedShipping) {
             shippingCost = parseFloat(selectedShipping.dataset.price) || 0;
         } else {
-            // Fallback calculation
+            // Fallback calculation - use UPS Ground price
             if (typeof window.getShippingRate !== 'undefined') {
-                shippingCost = window.getShippingRate('usps-priority', subtotal);
+                shippingCost = window.getShippingRate('ups-ground', subtotal);
             } else {
-                shippingCost = subtotal >= 45 ? 0 : 7.26;  // +10% markup applied
+                shippingCost = 15.54;  // UPS Ground default price
             }
         }
         
