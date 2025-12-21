@@ -367,6 +367,8 @@
         const checkoutLoader = document.getElementById('checkoutLoader');
         
         // Track initialization state to prevent double-init
+        // These flags don't need resetting as this is a dedicated checkout page
+        // Navigation away causes full page reload which resets all state
         let snipcartInitialized = false;
         let checkoutOpened = false;
         

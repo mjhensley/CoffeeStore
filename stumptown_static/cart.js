@@ -6,7 +6,9 @@
     let cart = [];
     let isCartOpen = false;
     let isCheckoutOpen = false;
-    let isNavigatingToCheckout = false; // Debounce checkout navigation
+    // Debounce checkout navigation - prevents double-clicks before page navigation completes
+    // This flag doesn't need resetting as navigation causes full page reload
+    let isNavigatingToCheckout = false;
 
     // Initialize cart from localStorage
     function initCart() {
