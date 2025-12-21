@@ -146,7 +146,7 @@ Check your `netlify.toml` configuration:
   function = "security-check"
 ```
 
-The bot protection edge function should exclude webhook endpoints:
+The bot protection edge function (in `netlify/edge-functions/bot-protection.js`) should exclude webhook endpoints to prevent blocking Helcim's requests:
 
 ```javascript
 // Skip for all Netlify functions
@@ -154,6 +154,8 @@ if (path.startsWith('/.netlify/')) {
   return context.next();
 }
 ```
+
+This configuration is already in place in the repository.
 
 ## Monitoring Webhook Events
 
@@ -180,9 +182,14 @@ To verify webhooks are genuinely from Helcim, you can set up signature verificat
 
 1. Get your webhook secret from Helcim Dashboard
 2. Set environment variable: `HELCIM_WEBHOOK_SECRET=your_secret_here`
-3. The handler will verify the `X-Helcim-Signature` header
+3. The handler will require the `X-Helcim-Signature` header to be present
 
-**Note**: Currently, the signature verification checks for the presence of the signature header but doesn't verify the signature itself. Full verification can be implemented when Helcim's signature algorithm is documented.
+**Important Note**: The current implementation provides **basic protection** by requiring the signature header to be present when `HELCIM_WEBHOOK_SECRET` is configured, but it does not cryptographically verify the signature value itself. This means:
+- If no secret is set, all webhooks are accepted (development mode)
+- If a secret is set, requests must include the `X-Helcim-Signature` header (basic filtering)
+- Full HMAC-SHA256 signature verification can be added when Helcim's signature algorithm is fully documented
+
+For production use, consider implementing full signature verification or restricting webhook access via IP allowlisting.
 
 ### CORS Configuration
 The webhook handler allows cross-origin requests from any origin (`*`). This is safe for webhooks since:
