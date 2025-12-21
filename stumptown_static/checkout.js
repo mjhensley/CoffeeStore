@@ -620,11 +620,13 @@
                 console.log(`✅ Helcim payment form initialized (total: ${totalTime.toFixed(2)}ms)`);
             }
             
-            // Hide loading state after iframe appended
+            // Hide loading state after iframe has had time to render
+            // Using a reasonable timeout as Helcim iframe doesn't expose load events
             if (loadingStateEl) {
+                const IFRAME_LOAD_TIMEOUT = 2000; // 2 seconds for slower connections
                 setTimeout(() => {
                     loadingStateEl.style.display = 'none';
-                }, 1000); // Give iframe a moment to render
+                }, IFRAME_LOAD_TIMEOUT);
             }
             
             // Keep submit button disabled - user will submit via Helcim iframe
@@ -792,10 +794,10 @@
         // Insert at top of form
         checkoutForm.insertBefore(errorDiv, checkoutForm.firstChild);
         
-        // Gently scroll to error only if not visible (avoid layout jumping during payment)
+        // Gently scroll to error only if not visible (use 'nearest' to minimize layout jumping)
         const errorRect = errorDiv.getBoundingClientRect();
         const isVisible = errorRect.top >= 0 && errorRect.bottom <= window.innerHeight;
-        if (!isVisible && !paymentFormInitialized) {
+        if (!isVisible) {
             errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
         
