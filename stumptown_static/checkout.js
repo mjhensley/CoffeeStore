@@ -574,12 +574,20 @@
      * Initialize Helcim payment form
      */
     async function initializeHelcimPayment(token) {
+        // Guard against multiple initializations
+        if (paymentFormInitialized) {
+            if (isDev) console.log('⚠️ Payment form already initialized, skipping');
+            return;
+        }
+        
         try {
             if (isDev) console.log('💳 Initializing Helcim payment form...');
             
-            // Hide loading state
+            // Show loading state, hide instructions
             const loadingStateEl = document.getElementById('payment-loading-state');
-            if (loadingStateEl) loadingStateEl.style.display = 'none';
+            const instructionsEl = document.getElementById('payment-instructions');
+            if (loadingStateEl) loadingStateEl.style.display = 'block';
+            if (instructionsEl) instructionsEl.style.display = 'none';
             
             // Load Helcim script if not already loaded
             await loadHelcimScript();
@@ -595,7 +603,7 @@
                 throw new Error('Payment container not found');
             }
             
-            // Clear container
+            // Clear container content but maintain structure
             helcimContainer.innerHTML = '';
             
             // Setup window message listener for Helcim events
@@ -610,6 +618,13 @@
             if (isDev) {
                 const totalTime = performance.now() - perfStart;
                 console.log(`✅ Helcim payment form initialized (total: ${totalTime.toFixed(2)}ms)`);
+            }
+            
+            // Hide loading state after iframe appended
+            if (loadingStateEl) {
+                setTimeout(() => {
+                    loadingStateEl.style.display = 'none';
+                }, 1000); // Give iframe a moment to render
             }
             
             // Keep submit button disabled - user will submit via Helcim iframe
@@ -682,9 +697,24 @@
         
         if (isDev) console.log('📨 Helcim message:', data);
         
-        // Handle different message types
-        if (typeof data === 'object') {
-            if (data.type === 'helcim-pay-success' || data.eventType === 'success') {
+        // Handle different message types using Helcim's documented pattern
+        if (typeof data === 'object' && checkoutToken) {
+            // Construct the Helcim identifier key using checkout token
+            const helcimPayJsIdentifierKey = 'helcim-pay-js-' + checkoutToken;
+            
+            // Check if this message matches our checkout session
+            if (data.eventName === helcimPayJsIdentifierKey) {
+                if (data.eventStatus === 'SUCCESS') {
+                    handlePaymentSuccess(data);
+                } else if (data.eventStatus === 'ABORTED') {
+                    handlePaymentCancel(data);
+                } else if (data.eventStatus === 'HIDE') {
+                    // Iframe was hidden by user, treat as cancel
+                    handlePaymentCancel(data);
+                }
+            }
+            // Fallback to legacy event types for backwards compatibility
+            else if (data.type === 'helcim-pay-success' || data.eventType === 'success') {
                 handlePaymentSuccess(data);
             } else if (data.type === 'helcim-pay-error' || data.eventType === 'error') {
                 handlePaymentError(data);
@@ -762,8 +792,12 @@
         // Insert at top of form
         checkoutForm.insertBefore(errorDiv, checkoutForm.firstChild);
         
-        // Scroll to error
-        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Gently scroll to error only if not visible (avoid layout jumping during payment)
+        const errorRect = errorDiv.getBoundingClientRect();
+        const isVisible = errorRect.top >= 0 && errorRect.bottom <= window.innerHeight;
+        if (!isVisible && !paymentFormInitialized) {
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
         
         // Auto-remove after 10 seconds
         setTimeout(() => {

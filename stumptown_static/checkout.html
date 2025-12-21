@@ -257,6 +257,7 @@
             padding: 24px;
             background: #fafafa;
             border-radius: 6px;
+            min-height: 400px;
         }
         
         /* Loading Spinner Animation */
@@ -615,10 +616,13 @@
                 <h2 class="section-title" style="margin-top: 32px;">Payment</h2>
                 <div id="helcim-payment-container">
                     <!-- Helcim secure payment form will be loaded here -->
-                    <div id="payment-loading-state" style="padding: 24px; text-align: center; background: #fafafa; border-radius: 6px; border: 1px solid #e5e5e5;">
+                    <div id="payment-loading-state" style="padding: 24px; text-align: center; background: #fafafa; border-radius: 6px; border: 1px solid #e5e5e5; display: none;">
                         <div style="width: 40px; height: 40px; border: 3px solid #e5e5e5; border-top-color: #6b5344; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
                         <p style="color: #666; margin: 0; font-weight: 500; font-size: 14px;">Loading secure payment form...</p>
-                        <p style="color: #999; margin: 8px 0 0; font-size: 13px;">Fill out your information above, then complete payment</p>
+                        <p style="color: #999; margin: 8px 0 0; font-size: 13px;">Please wait while we initialize the payment form</p>
+                    </div>
+                    <div id="payment-instructions" style="padding: 24px; text-align: center; color: #666;">
+                        <p style="margin: 0; font-size: 14px;">Complete the form above, then click "Complete Order" to proceed with secure payment.</p>
                     </div>
                 </div>
                 
