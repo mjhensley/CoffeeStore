@@ -143,6 +143,9 @@ Handles payment event webhooks from Helcim payment gateway.
 - Responds to HEAD requests for Helcim's URL validation (fixes 400 error during setup)
 - Handles CORS for cross-origin requests
 - Logs all webhook events for debugging
+
+**Troubleshooting:**
+If you encounter a 400 error during webhook setup, see [WEBHOOK_TROUBLESHOOTING.md](../../WEBHOOK_TROUBLESHOOTING.md) for detailed guidance.
 - Returns 200 OK for all events to prevent retries
 
 ### `health.js`
