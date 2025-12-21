@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Successful - Grainhouse Coffee</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #2d5a3d 0%, #48bb78 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 48px;
+            max-width: 560px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            box-shadow: 0 8px 24px rgba(72, 187, 120, 0.3);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: #1a202c;
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        p {
+            color: #718096;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .order-number {
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 32px;
+        }
+
+        .order-number-label {
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .order-number-value {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d5a3d;
+            letter-spacing: 2px;
+        }
+
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #2d5a3d 0%, #48bb78 100%);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(45, 90, 61, 0.3);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(45, 90, 61, 0.4);
+        }
+
+        .info {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 32px;
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .info strong {
+            color: #2d3748;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            p {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✓</div>
+        <h1>Order Successful!</h1>
+        <p>Thank you for your order. Your payment has been processed successfully and your fresh roasted coffee is on its way!</p>
+        
+        <div class="order-number">
+            <div class="order-number-label">Order Number</div>
+            <div class="order-number-value" id="orderNumber">Loading...</div>
+        </div>
+        
+        <a href="index.html" class="button">Continue Shopping</a>
+        
+        <div class="info">
+            <strong>What's next?</strong><br>
+            You will receive an order confirmation email shortly with your order details and tracking information. If you have any questions, please contact us at <strong>hello@grainhousecoffee.com</strong>
+        </div>
+    </div>
+
+    <script>
+        // Get order number from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderNumber = urlParams.get('order') || 'GH-' + Date.now();
+        document.getElementById('orderNumber').textContent = orderNumber;
+        
+        // Clear cart from localStorage
+        try {
+            localStorage.removeItem('grainhouse_cart');
+            console.log('✅ Cart cleared');
+        } catch (error) {
+            console.error('Failed to clear cart:', error);
+        }
+    </script>
+</body>
+</html>
