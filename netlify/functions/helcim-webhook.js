@@ -20,6 +20,20 @@
  *    OR: https://your-site.netlify.app/webhooks/payment
  * 3. Helcim will validate the URL with a HEAD request
  * 4. (Optional) Set HELCIM_WEBHOOK_SECRET for signature verification (not yet implemented)
+ * 
+ * ============================================================
+ * ENVIRONMENT VARIABLES (REQUIRED FOR SIGNATURE VERIFICATION):
+ * ============================================================
+ * HELCIM_WEBHOOK_SECRET:
+ *   - MUST be configured in Netlify Dashboard:
+ *     Site Settings → Environment Variables
+ *   - Scope MUST include "Functions" for the variable to be
+ *     available at runtime
+ *   - IMPORTANT: Environment variables defined in netlify.toml
+ *     are only available at BUILD TIME and will NOT be available
+ *     to this function at runtime. Dashboard configuration is
+ *     MANDATORY for signature verification to work.
+ * ============================================================
  */
 
 exports.handler = async (event, context) => {
@@ -96,6 +110,11 @@ exports.handler = async (event, context) => {
 
     // Handle POST request - Actual webhook events from Helcim
     if (event.httpMethod === 'POST') {
+        // Log Content-Type header for debugging payload parsing issues
+        // Helcim may send payloads with unexpected Content-Type (e.g., text/plain)
+        const contentType = event.headers['content-type'] || event.headers['Content-Type'] || 'not provided';
+        console.log('Webhook POST received - Content-Type:', contentType);
+        
         let payload;
         
         try {

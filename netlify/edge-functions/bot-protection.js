@@ -290,6 +290,14 @@ export default async (request, context) => {
   });
 };
 
+// ============================================================
+// IMPORTANT: This excludedPath array MUST be synchronized with
+// the excludedPath in netlify.toml [[edge_functions]] config.
+// Both are included as a workaround for Netlify's unreliable
+// excludedPath behavior - the runtime early-exit guard above
+// provides the primary protection, but this config serves as
+// a secondary defense layer.
+// ============================================================
 export const config = {
   path: "/*",
   excludedPath: [
@@ -307,7 +315,8 @@ export const config = {
     "/*.js", 
     "/*.woff", 
     "/*.woff2",
-    "/.netlify/functions/*"
+    "/.netlify/functions/*",
+    "/webhooks/*"
   ]
 };
 
