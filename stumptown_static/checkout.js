@@ -415,6 +415,15 @@
         } catch (error) {
             console.warn('⚠️ Could not initialize payment form on page load:', error.message);
             console.log('Payment form will be initialized after form submission');
+            
+            // Show error state (with preview), hide loading state
+            const loadingState = document.getElementById('payment-loading-state');
+            const errorState = document.getElementById('payment-error-state');
+            if (loadingState) loadingState.style.display = 'none';
+            if (errorState) {
+                errorState.classList.remove('hidden');
+            }
+            
             // Don't show error to user - payment form will be initialized on submit
         }
     }
@@ -595,7 +604,7 @@
                 throw new Error('Helcim payment library not loaded. Please refresh the page.');
             }
             
-            // Create container for Helcim payment form if it doesn't exist
+            // Get container
             let helcimContainer = document.getElementById('helcim-payment-container');
             if (!helcimContainer) {
                 helcimContainer = document.createElement('div');
@@ -603,6 +612,12 @@
                 helcimContainer.style.marginTop = '20px';
                 checkoutForm.appendChild(helcimContainer);
             }
+            
+            // Hide loading state, show error state hidden
+            const loadingState = document.getElementById('payment-loading-state');
+            const errorState = document.getElementById('payment-error-state');
+            if (loadingState) loadingState.style.display = 'none';
+            if (errorState) errorState.classList.add('hidden');
             
             // Initialize HelcimPay.js
             helcimInstance = new HelcimPay(token);
@@ -612,13 +627,20 @@
             helcimInstance.on('error', handlePaymentError);
             helcimInstance.on('cancel', handlePaymentCancel);
             
-            // Mount the payment form
+            // Mount the payment form (this will replace the container content)
             helcimInstance.mount('#helcim-payment-container');
             
             console.log('✅ Helcim payment form initialized');
             
         } catch (error) {
             console.error('❌ Failed to initialize Helcim payment:', error);
+            
+            // Show error state, hide loading state
+            const loadingState = document.getElementById('payment-loading-state');
+            const errorState = document.getElementById('payment-error-state');
+            if (loadingState) loadingState.style.display = 'none';
+            if (errorState) errorState.classList.remove('hidden');
+            
             throw new Error('Payment system initialization failed: ' + error.message);
         }
     }
