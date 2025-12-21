@@ -10,28 +10,23 @@ const blockedIPs = new Set();
 const blockedFingerprints = new Set();
 const requestCounts = new Map();
 
-// Known bot User-Agent patterns (comprehensive list)
+// Whitelisted IPs that should never be blocked
+const whitelistedIPs = new Set([
+  '104.203.14.168', // Whitelisted per user request
+]);
+
+// Known bot User-Agent patterns (reduced list - only block obvious bots)
 const BOT_PATTERNS = [
-  // Common bots
-  /bot/i, /crawler/i, /spider/i, /scraper/i, /wget/i, /curl/i, /python/i,
-  /java\/|java-http/i, /perl/i, /ruby/i, /php\//i, /go-http-client/i,
-  /httpclient/i, /libwww/i, /lwp/i, /httpunit/i, /nutch/i, /silk/i,
-  /slurp/i, /phantom/i, /headless/i, /puppeteer/i, /playwright/i,
+  // Obvious automation tools
+  /wget/i, /curl/i,
+  /httpclient/i, /libwww/i, /lwp/i, /httpunit/i,
+  /phantom/i, /headless/i, /puppeteer/i, /playwright/i,
   /selenium/i, /webdriver/i, /chromedriver/i, /geckodriver/i,
-  
-  // SEO/Marketing bots (block aggressive ones)
-  /ahrefsbot/i, /semrushbot/i, /mj12bot/i, /dotbot/i, /rogerbot/i,
-  /seokicks/i, /blexbot/i, /linkdexbot/i, /megaindex/i, /majestic/i,
-  /screaming.frog/i, /siteexplorer/i, /twitterbot/i, /facebookexternalhit/i,
   
   // Malicious patterns
   /zgrab/i, /masscan/i, /nmap/i, /nikto/i, /sqlmap/i, /wpscan/i,
   /acunetix/i, /nessus/i, /qualys/i, /burpsuite/i, /zap/i,
   /dirbuster/i, /gobuster/i, /wfuzz/i, /ffuf/i,
-  
-  // Fake browsers - only match if UA is JUST "Mozilla/X.Y" with nothing meaningful
-  // Real browsers have much more detail like "(Windows NT 10.0; Win64; x64)..."
-  /^mozilla\/[\d.]+\s*$/i,
 ];
 
 // Allow these legitimate bots (for SEO)
@@ -57,11 +52,11 @@ const SUSPICIOUS_HEADERS = [
   'via',
 ];
 
-// Rate limit config
+// Rate limit config - relaxed to avoid blocking legitimate users
 const RATE_LIMIT = {
   windowMs: 60000, // 1 minute
-  maxRequests: 100, // Max requests per minute per IP
-  blockDuration: 300000, // 5 minutes block
+  maxRequests: 300, // Max requests per minute per IP (increased from 100)
+  blockDuration: 60000, // 1 minute block (reduced from 5 minutes)
 };
 
 /**
@@ -75,9 +70,9 @@ const RATE_LIMIT = {
 function isBot(request) {
   const userAgent = request.headers.get('user-agent') || '';
   
-  // Empty or missing user agent = likely bot
-  if (!userAgent || userAgent.length < 10) {
-    return { isBot: true, reason: 'missing-ua' };
+  // Allow missing or short user agents - some legitimate browsers/devices may have them
+  if (!userAgent) {
+    return { isBot: false, reason: 'missing-ua-allowed' };
   }
   
   // Check for allowed bots first (let them through)
@@ -130,6 +125,14 @@ function checkRateLimit(ip) {
     return { blocked: true, reason: 'rate-limited' };
   }
   
+  // Clear block if duration has passed
+  if (record && record.blocked && now >= record.blockedUntil) {
+    record.blocked = false;
+    record.count = 1;
+    record.windowStart = now;
+    return { blocked: false };
+  }
+  
   // Update request count
   if (!record || now - record.windowStart > RATE_LIMIT.windowMs) {
     requestCounts.set(key, { count: 1, windowStart: now });
@@ -141,7 +144,7 @@ function checkRateLimit(ip) {
   if (record.count > RATE_LIMIT.maxRequests) {
     record.blocked = true;
     record.blockedUntil = now + RATE_LIMIT.blockDuration;
-    blockedIPs.add(ip);
+    // Don't permanently add to blockedIPs - only use temporary blocking
     return { blocked: true, reason: 'rate-limit-exceeded' };
   }
   
@@ -219,6 +222,11 @@ export default async (request, context) => {
   
   const ip = getClientIP(request);
   const fingerprint = generateFingerprint(request);
+  
+  // Skip all checks for whitelisted IPs
+  if (whitelistedIPs.has(ip)) {
+    return context.next();
+  }
   
   // Check if IP or fingerprint is blocked
   if (blockedIPs.has(ip)) {
