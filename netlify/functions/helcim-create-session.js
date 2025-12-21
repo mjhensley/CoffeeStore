@@ -305,7 +305,7 @@ exports.handler = async (event, context) => {
         });
 
         // Call Helcim API to create checkout session
-        const helcimResponse = await callHelcimAPI('/payment-sessions', helcimPayload, apiToken);
+        const helcimResponse = await callHelcimAPI('/helcim-pay/initialize', helcimPayload, apiToken);
 
         if (!helcimResponse || !helcimResponse.checkoutToken) {
             console.error('Helcim API response missing checkout token:', helcimResponse);
@@ -365,7 +365,7 @@ function callHelcimAPI(endpoint, payload, apiToken) {
             headers: {
                 'Content-Type': 'application/json',
                 'Content-Length': data.length,
-                'Authorization': `Bearer ${apiToken}`,
+                'api-token': apiToken,
                 'Accept': 'application/json'
             }
         };
