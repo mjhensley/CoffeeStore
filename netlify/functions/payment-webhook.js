@@ -1,9 +1,10 @@
 /**
- * Helcim Webhook Handler
+ * Payment Webhook Handler
  * 
  * Handles payment event webhooks from Helcim payment gateway.
  * 
- * Endpoint: /.netlify/functions/helcim-webhook
+ * Endpoint: /.netlify/functions/payment-webhook
+ * Public URL: https://grainhousecoffee.com/webhooks/payment (via rewrite)
  * Supported methods: HEAD, GET, POST, OPTIONS
  * 
  * Events handled:
@@ -13,8 +14,8 @@
  * 
  * Setup:
  * 1. In Helcim Dashboard → Integrations → Webhooks
- * 2. Add webhook URL: https://your-site.netlify.app/.netlify/functions/helcim-webhook
- * 3. Helcim will validate the URL with a HEAD request
+ * 2. Add webhook URL: https://grainhousecoffee.com/webhooks/payment
+ * 3. Helcim will validate the URL with a GET request containing ?check= parameter
  * 4. (Optional) Set HELCIM_WEBHOOK_SECRET for signature verification (not yet implemented)
  */
 

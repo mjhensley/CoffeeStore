@@ -214,7 +214,7 @@ export default async (request, context) => {
   if (path === '/checkout.html' || 
       path === '/success.html' || 
       path === '/cancel.html' ||
-      path.startsWith('/.netlify/functions/helcim-') ||
+      path.startsWith('/.netlify/functions/payment-') ||
       path.startsWith('/.netlify/functions/health')) {
     return context.next();
   }
