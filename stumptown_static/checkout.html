@@ -510,6 +510,27 @@
             }
         }
         
+        // Helper logging functions that delegate to log()
+        function logError(message) {
+            log(message, 'error');
+        }
+        
+        function logSuccess(message) {
+            log(message, 'success');
+        }
+        
+        function logInfo(message) {
+            log(message);
+        }
+        
+        // Show error panel
+        function showError() {
+            hideLoader();
+            if (errorPanelEl) {
+                errorPanelEl.classList.add('show');
+            }
+        }
+        
         // Sync custom cart to Snipcart
         function syncCartToSnipcart() {
             if (!window.Snipcart || !window.Snipcart.api) {
