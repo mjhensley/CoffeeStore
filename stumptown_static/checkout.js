@@ -461,7 +461,7 @@
             // Gather form data
             const formData = new FormData(checkoutForm);
             const customer = {
-                email: formData.get('email') || '',
+                email: formData.get('email') ? formData.get('email').trim() : null,
                 firstName: formData.get('firstName'),
                 lastName: formData.get('lastName'),
                 phone: formData.get('phone') || ''
@@ -654,8 +654,13 @@
      * Handle messages from Helcim iframe
      */
     function handleHelcimMessage(event) {
-        // Verify origin is from Helcim
-        if (!event.origin.includes('helcim.app') && !event.origin.includes('helcim.com')) {
+        // Verify origin is from Helcim (strict matching)
+        const allowedOrigins = [
+            'https://secure.helcim.app',
+            'https://js.helcim.com'
+        ];
+        
+        if (!allowedOrigins.includes(event.origin)) {
             return;
         }
         
@@ -685,7 +690,7 @@
         localStorage.removeItem('grainhouse_cart');
         
         // Redirect to success page
-        const transactionId = result.transactionId || result.transaction_id || Date.now();
+        const transactionId = result.transactionId || result.transaction_id || `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         window.location.href = 'success.html?order=' + transactionId;
     }
 

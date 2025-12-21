@@ -307,11 +307,10 @@ exports.handler = async (event, context) => {
             paymentType: 'purchase',
             amount: totalCents,  // Use server-calculated total
             currency: 'USD',
-            customerCode: customer.email || `GUEST-${Date.now()}`, // Use email or guest ID
+            customerCode: customer.email || `GUEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             invoiceNumber: `GH-${Date.now()}`, // Generate unique invoice number
             itemDescription: cart.map(item => `${item.name} (x${item.quantity})`).join(', '),
             billingName: `${customer.firstName} ${customer.lastName}`,
-            billingEmail: customer.email || '',
             billingPhone: customer.phone || '',
             shippingName: `${customer.firstName} ${customer.lastName}`,
             shippingStreet1: shipping.address,
@@ -324,6 +323,11 @@ exports.handler = async (event, context) => {
             checkoutSuccessUrl: `${process.env.SITE_URL || 'https://grainhousecoffee.com'}/success.html`,
             checkoutCancelUrl: `${process.env.SITE_URL || 'https://grainhousecoffee.com'}/cancel.html`
         };
+        
+        // Only add billingEmail if provided
+        if (customer.email) {
+            helcimPayload.billingEmail = customer.email;
+        }
 
         console.log('Creating Helcim checkout session:', {
             amount: totalCents,
