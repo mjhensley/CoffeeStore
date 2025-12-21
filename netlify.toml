@@ -12,6 +12,7 @@
 [[edge_functions]]
   path = "/*"
   function = "bot-protection"
+  excludedPath = ["/checkout.html", "/success.html", "/cancel.html", "/.netlify/functions/*"]
 
 [[edge_functions]]
   path = "/.netlify/functions/*"
@@ -83,10 +84,18 @@
   [headers.values]
     Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
     X-Content-Type-Options = "nosniff"
-    X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     # Early hints for faster loading
     Link = "</styles.css>; rel=preload; as=style, </instant-load.js>; rel=preload; as=script"
+
+# Checkout page - Allow Helcim iframes
+[[headers]]
+  for = "/checkout.html"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    X-XSS-Protection = "1; mode=block"
 
 # Root index - Short cache for quick loads
 [[headers]]
@@ -109,7 +118,7 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=(self)"
     # Content Security Policy - Allow necessary resources (Helcim payment integration)
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.helcim.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://api.helcim.com https://secure.helcim.app https://api.resend.com; frame-src https://secure.helcim.app; object-src 'none'; base-uri 'self';"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://secure.helcim.app https://fonts.googleapis.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://api.helcim.com https://secure.helcim.app https://api.resend.com https://maps.googleapis.com; frame-src https://secure.helcim.app https://js.helcim.com; object-src 'none'; base-uri 'self';"
     # Strict Transport Security
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
 

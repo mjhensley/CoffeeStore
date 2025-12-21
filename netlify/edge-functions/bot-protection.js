@@ -210,12 +210,21 @@ export default async (request, context) => {
   const url = new URL(request.url);
   const path = url.pathname;
   
+  // Fast-path: Skip bot check for checkout and payment flow
+  if (path === '/checkout.html' || 
+      path === '/success.html' || 
+      path === '/cancel.html' ||
+      path.startsWith('/.netlify/functions/helcim-') ||
+      path.startsWith('/.netlify/functions/health')) {
+    return context.next();
+  }
+  
   // Skip bot check for static assets (images, fonts, etc.)
   if (path.match(/\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|css|js|map)$/i)) {
     return context.next();
   }
   
-  // Skip for Netlify functions
+  // Skip for all Netlify functions
   if (path.startsWith('/.netlify/')) {
     return context.next();
   }
@@ -258,7 +267,14 @@ export default async (request, context) => {
   // Clone headers and add security
   const newHeaders = new Headers(response.headers);
   newHeaders.set('X-Content-Type-Options', 'nosniff');
-  newHeaders.set('X-Frame-Options', 'DENY');
+  
+  // For checkout page, allow iframes from Helcim
+  if (path === '/checkout.html') {
+    newHeaders.set('X-Frame-Options', 'SAMEORIGIN');
+  } else {
+    newHeaders.set('X-Frame-Options', 'DENY');
+  }
+  
   newHeaders.set('X-XSS-Protection', '1; mode=block');
   newHeaders.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   newHeaders.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
@@ -272,6 +288,22 @@ export default async (request, context) => {
 
 export const config = {
   path: "/*",
-  excludedPath: ["/images/*", "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg", "/*.ico", "/*.css", "/*.js", "/*.woff", "/*.woff2"]
+  excludedPath: [
+    "/checkout.html",
+    "/success.html", 
+    "/cancel.html",
+    "/images/*", 
+    "/*.png", 
+    "/*.jpg", 
+    "/*.jpeg", 
+    "/*.gif", 
+    "/*.svg", 
+    "/*.ico", 
+    "/*.css", 
+    "/*.js", 
+    "/*.woff", 
+    "/*.woff2",
+    "/.netlify/functions/*"
+  ]
 };
 

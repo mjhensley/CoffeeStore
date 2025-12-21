@@ -8,18 +8,26 @@
 (function() {
     'use strict';
 
+    // Performance tracking (dev only)
+    const perfStart = performance.now();
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
     // State
     let cart = [];
-    let helcimInstance = null;
     let checkoutToken = null;
     let shippingAutocomplete = null;
     let billingAutocomplete = null;
+    let helcimScriptLoaded = false;
+    let paymentFormInitialized = false;
     
     // Configuration
     const AUTOCOMPLETE_CONFIG = {
         types: ['address'],
         componentRestrictions: { country: ['us', 'ca'] }
     };
+
+    // Correct Helcim script URL
+    const HELCIM_SCRIPT_URL = 'https://secure.helcim.app/helcim-pay/services/start.js';
 
     // DOM Elements
     const loadingState = document.getElementById('loadingState');
@@ -39,7 +47,7 @@
      * Initialize checkout page
      */
     function init() {
-        console.log('🚀 Initializing Helcim checkout...');
+        if (isDev) console.log('🚀 Initializing Helcim checkout...');
         
         // Load cart from localStorage
         loadCart();
@@ -68,10 +76,11 @@
         // Show checkout form
         showCheckout();
         
-        // Initialize Helcim payment form on page load
-        initializeHelcimPaymentOnLoad();
-        
-        console.log('✅ Checkout initialized with', cart.length, 'items');
+        // Log performance (dev only)
+        if (isDev) {
+            const initTime = performance.now() - perfStart;
+            console.log(`✅ Checkout initialized in ${initTime.toFixed(2)}ms with ${cart.length} items`);
+        }
     }
 
     /**
@@ -356,76 +365,42 @@
     }
 
     /**
-     * Initialize Helcim payment form on page load
-     * Creates a preliminary checkout session so payment fields are visible immediately
+     * Load Helcim script dynamically
      */
-    async function initializeHelcimPaymentOnLoad() {
-        try {
-            console.log('💳 Initializing Helcim payment form on page load...');
-            
-            // Calculate totals for preliminary session
-            const totals = updateTotals();
-            
-            // Create preliminary checkout session with cart data only
-            // User details will be updated when form is submitted
-            const response = await fetch('/.netlify/functions/helcim-create-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    cart,
-                    customer: {
-                        email: '',
-                        firstName: '',
-                        lastName: '',
-                        phone: ''
-                    },
-                    shipping: {
-                        address: '',
-                        address2: '',
-                        city: '',
-                        state: '',
-                        zip: '',
-                        country: 'US'
-                    },
-                    shippingMethod: 'standard',
-                    totals: totals,
-                    preliminary: true // Flag to indicate this is a preliminary session
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to create preliminary checkout session');
+    function loadHelcimScript() {
+        return new Promise((resolve, reject) => {
+            if (helcimScriptLoaded) {
+                resolve();
+                return;
             }
             
-            const sessionData = await response.json();
-            
-            if (!sessionData.success || !sessionData.checkoutToken) {
-                throw new Error('Invalid checkout session response');
+            // Check if script already exists
+            const existingScript = document.querySelector(`script[src="${HELCIM_SCRIPT_URL}"]`);
+            if (existingScript) {
+                helcimScriptLoaded = true;
+                resolve();
+                return;
             }
             
-            checkoutToken = sessionData.checkoutToken;
+            if (isDev) console.log('📦 Loading Helcim script...');
             
-            // Initialize Helcim payment form with the token
-            await initializeHelcimPayment(sessionData.checkoutToken);
+            const script = document.createElement('script');
+            script.src = HELCIM_SCRIPT_URL;
+            script.async = true;
             
-            console.log('✅ Helcim payment form initialized on page load');
+            script.onload = () => {
+                helcimScriptLoaded = true;
+                if (isDev) console.log('✅ Helcim script loaded');
+                resolve();
+            };
             
-        } catch (error) {
-            console.warn('⚠️ Could not initialize payment form on page load:', error.message);
-            console.log('Payment form will be initialized after form submission');
+            script.onerror = () => {
+                console.error('❌ Failed to load Helcim script');
+                reject(new Error('Failed to load payment script'));
+            };
             
-            // Show error state (with preview), hide loading state
-            const loadingState = document.getElementById('payment-loading-state');
-            const errorState = document.getElementById('payment-error-state');
-            if (loadingState) loadingState.style.display = 'none';
-            if (errorState) {
-                errorState.classList.remove('hidden');
-            }
-            
-            // Don't show error to user - payment form will be initialized on submit
-        }
+            document.head.appendChild(script);
+        });
     }
 
     /**
@@ -457,7 +432,7 @@
     async function handleCheckoutSubmit(event) {
         event.preventDefault();
         
-        console.log('🔄 Processing checkout...');
+        if (isDev) console.log('🔄 Processing checkout...');
         
         // Client-side validation
         const emailField = document.getElementById('email');
@@ -486,7 +461,7 @@
             // Gather form data
             const formData = new FormData(checkoutForm);
             const customer = {
-                email: formData.get('email'),
+                email: formData.get('email') || '',
                 firstName: formData.get('firstName'),
                 lastName: formData.get('lastName'),
                 phone: formData.get('phone') || ''
@@ -523,12 +498,10 @@
             // Calculate client-side totals (for reference only, server will recalculate)
             const clientTotals = updateTotals();
             
-            // Note: Even if payment form is already initialized, we still need to validate
-            // and potentially update the checkout session with latest form data
-            // The Helcim form will handle the actual payment submission
-            
             // Call Netlify Function to create Helcim checkout session
-            console.log('📡 Creating Helcim checkout session...');
+            if (isDev) console.log('📡 Creating Helcim checkout session...');
+            
+            const sessionStartTime = performance.now();
             const response = await fetch('/.netlify/functions/helcim-create-session', {
                 method: 'POST',
                 headers: {
@@ -540,9 +513,14 @@
                     shipping,
                     billing,
                     shippingMethod,
-                    totals: clientTotals  // Sent for reference, but server will recalculate
+                    totals: clientTotals
                 })
             });
+            
+            if (isDev) {
+                const sessionTime = performance.now() - sessionStartTime;
+                console.log(`📡 Session API response in ${sessionTime.toFixed(2)}ms`);
+            }
             
             if (!response.ok) {
                 const errorData = await response.json();
@@ -555,11 +533,11 @@
                 throw new Error('Invalid checkout session response');
             }
             
-            console.log('✅ Checkout session created:', sessionData.invoiceNumber);
+            if (isDev) console.log('✅ Checkout session created:', sessionData.invoiceNumber);
             
             // Update display with server-calculated totals (if different)
             if (sessionData.serverCalculatedTotals) {
-                console.log('Server-calculated totals:', sessionData.serverCalculatedTotals);
+                if (isDev) console.log('Server-calculated totals:', sessionData.serverCalculatedTotals);
                 
                 // Update UI with authoritative server totals
                 document.getElementById('subtotal').textContent = `$${sessionData.serverCalculatedTotals.subtotal.toFixed(2)}`;
@@ -597,51 +575,103 @@
      */
     async function initializeHelcimPayment(token) {
         try {
-            console.log('💳 Initializing Helcim payment form...');
+            if (isDev) console.log('💳 Initializing Helcim payment form...');
             
-            // Check if HelcimPay is loaded
-            if (typeof HelcimPay === 'undefined') {
+            // Hide loading state
+            const loadingStateEl = document.getElementById('payment-loading-state');
+            if (loadingStateEl) loadingStateEl.style.display = 'none';
+            
+            // Load Helcim script if not already loaded
+            await loadHelcimScript();
+            
+            // Check if appendHelcimPayIframe is available
+            if (typeof appendHelcimPayIframe === 'undefined') {
                 throw new Error('Helcim payment library not loaded. Please refresh the page.');
             }
             
             // Get container
-            let helcimContainer = document.getElementById('helcim-payment-container');
+            const helcimContainer = document.getElementById('helcim-payment-container');
             if (!helcimContainer) {
-                helcimContainer = document.createElement('div');
-                helcimContainer.id = 'helcim-payment-container';
-                helcimContainer.style.marginTop = '20px';
-                checkoutForm.appendChild(helcimContainer);
+                throw new Error('Payment container not found');
             }
             
-            // Hide loading state, show error state hidden
-            const loadingState = document.getElementById('payment-loading-state');
-            const errorState = document.getElementById('payment-error-state');
-            if (loadingState) loadingState.style.display = 'none';
-            if (errorState) errorState.classList.add('hidden');
+            // Clear container
+            helcimContainer.innerHTML = '';
             
-            // Initialize HelcimPay.js
-            helcimInstance = new HelcimPay(token);
+            // Setup window message listener for Helcim events
+            setupHelcimMessageListener();
             
-            // Configure payment event handlers
-            helcimInstance.on('success', handlePaymentSuccess);
-            helcimInstance.on('error', handlePaymentError);
-            helcimInstance.on('cancel', handlePaymentCancel);
+            // Initialize Helcim iframe with correct API
+            if (isDev) console.log('📦 Appending Helcim iframe...');
+            appendHelcimPayIframe(token);
             
-            // Mount the payment form (this will replace the container content)
-            helcimInstance.mount('#helcim-payment-container');
+            paymentFormInitialized = true;
             
-            console.log('✅ Helcim payment form initialized');
+            if (isDev) {
+                const totalTime = performance.now() - perfStart;
+                console.log(`✅ Helcim payment form initialized (total: ${totalTime.toFixed(2)}ms)`);
+            }
+            
+            // Keep submit button disabled - user will submit via Helcim iframe
+            // Helcim handles the actual payment submission
             
         } catch (error) {
             console.error('❌ Failed to initialize Helcim payment:', error);
             
-            // Show error state, hide loading state
-            const loadingState = document.getElementById('payment-loading-state');
-            const errorState = document.getElementById('payment-error-state');
-            if (loadingState) loadingState.style.display = 'none';
-            if (errorState) errorState.classList.remove('hidden');
+            // Show error
+            const helcimContainer = document.getElementById('helcim-payment-container');
+            if (helcimContainer) {
+                helcimContainer.innerHTML = `
+                    <div style="padding: 24px; background: #fee; border: 2px solid #fcc; border-radius: 6px; text-align: center;">
+                        <p style="color: #c00; font-weight: 600; margin: 0 0 12px;">⚠️ Payment Form Error</p>
+                        <p style="color: #666; font-size: 14px; margin: 0;">${error.message}</p>
+                        <p style="color: #999; font-size: 13px; margin: 12px 0 0;">Please refresh the page to try again.</p>
+                    </div>
+                `;
+            }
+            
+            // Re-enable submit button
+            submitBtn.disabled = false;
+            btnText.classList.remove('hidden');
+            btnLoading.classList.add('hidden');
             
             throw new Error('Payment system initialization failed: ' + error.message);
+        }
+    }
+
+    /**
+     * Setup window message listener for Helcim events
+     */
+    function setupHelcimMessageListener() {
+        // Remove any existing listener
+        window.removeEventListener('message', handleHelcimMessage);
+        
+        // Add new listener
+        window.addEventListener('message', handleHelcimMessage);
+    }
+
+    /**
+     * Handle messages from Helcim iframe
+     */
+    function handleHelcimMessage(event) {
+        // Verify origin is from Helcim
+        if (!event.origin.includes('helcim.app') && !event.origin.includes('helcim.com')) {
+            return;
+        }
+        
+        const data = event.data;
+        
+        if (isDev) console.log('📨 Helcim message:', data);
+        
+        // Handle different message types
+        if (typeof data === 'object') {
+            if (data.type === 'helcim-pay-success' || data.eventType === 'success') {
+                handlePaymentSuccess(data);
+            } else if (data.type === 'helcim-pay-error' || data.eventType === 'error') {
+                handlePaymentError(data);
+            } else if (data.type === 'helcim-pay-cancel' || data.eventType === 'cancel') {
+                handlePaymentCancel(data);
+            }
         }
     }
 
@@ -649,13 +679,14 @@
      * Handle successful payment
      */
     function handlePaymentSuccess(result) {
-        console.log('✅ Payment successful:', result);
+        if (isDev) console.log('✅ Payment successful:', result);
         
         // Clear cart
         localStorage.removeItem('grainhouse_cart');
         
         // Redirect to success page
-        window.location.href = 'success.html?order=' + (result.transactionId || Date.now());
+        const transactionId = result.transactionId || result.transaction_id || Date.now();
+        window.location.href = 'success.html?order=' + transactionId;
     }
 
     /**
@@ -663,7 +694,7 @@
      */
     function handlePaymentError(error) {
         console.error('❌ Payment error:', error);
-        showInlineError('Payment failed: ' + (error.message || 'Please try again or contact support'));
+        showInlineError('Payment failed: ' + (error.message || error.errorMessage || 'Please try again or contact support'));
         
         // Re-enable submit button
         submitBtn.disabled = false;
@@ -674,8 +705,8 @@
     /**
      * Handle payment cancellation
      */
-    function handlePaymentCancel() {
-        console.log('⚠️ Payment cancelled by user');
+    function handlePaymentCancel(data) {
+        if (isDev) console.log('⚠️ Payment cancelled by user');
         
         // Re-enable submit button - user may want to try again
         submitBtn.disabled = false;
