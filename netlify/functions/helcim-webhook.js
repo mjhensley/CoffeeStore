@@ -3,7 +3,10 @@
  * 
  * Handles payment event webhooks from Helcim payment gateway.
  * 
- * Endpoint: /.netlify/functions/helcim-webhook
+ * Supported URLs:
+ *   - /.netlify/functions/helcim-webhook (direct function endpoint)
+ *   - /webhooks/payment (rewritten to the above via netlify.toml)
+ * 
  * Supported methods: HEAD, GET, POST, OPTIONS
  * 
  * Events handled:
@@ -14,8 +17,23 @@
  * Setup:
  * 1. In Helcim Dashboard → Integrations → Webhooks
  * 2. Add webhook URL: https://your-site.netlify.app/.netlify/functions/helcim-webhook
+ *    OR: https://your-site.netlify.app/webhooks/payment
  * 3. Helcim will validate the URL with a HEAD request
  * 4. (Optional) Set HELCIM_WEBHOOK_SECRET for signature verification (not yet implemented)
+ * 
+ * ============================================================
+ * ENVIRONMENT VARIABLES (REQUIRED FOR SIGNATURE VERIFICATION):
+ * ============================================================
+ * HELCIM_WEBHOOK_SECRET:
+ *   - MUST be configured in Netlify Dashboard:
+ *     Site Settings → Environment Variables
+ *   - Scope MUST include "Functions" for the variable to be
+ *     available at runtime
+ *   - IMPORTANT: Environment variables defined in netlify.toml
+ *     are only available at BUILD TIME and will NOT be available
+ *     to this function at runtime. Dashboard configuration is
+ *     MANDATORY for signature verification to work.
+ * ============================================================
  */
 
 exports.handler = async (event, context) => {
@@ -28,10 +46,14 @@ exports.handler = async (event, context) => {
     };
 
     // Handle OPTIONS request for CORS preflight
+    // Access-Control-Max-Age reduces unnecessary preflight requests
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 204,
-            headers,
+            headers: {
+                ...headers,
+                'Access-Control-Max-Age': '86400'
+            },
             body: ''
         };
     }
@@ -88,6 +110,11 @@ exports.handler = async (event, context) => {
 
     // Handle POST request - Actual webhook events from Helcim
     if (event.httpMethod === 'POST') {
+        // Log Content-Type header for debugging payload parsing issues
+        // Helcim may send payloads with unexpected Content-Type (e.g., text/plain)
+        const contentType = event.headers['content-type'] || event.headers['Content-Type'] || 'not provided';
+        console.log('Webhook POST received - Content-Type:', contentType);
+        
         let payload;
         
         try {
@@ -108,6 +135,18 @@ exports.handler = async (event, context) => {
         }
 
         try {
+            // ============================================================
+            // Idempotency safeguard: Extract webhook event identifier
+            // TODO: For production systems, persist processed IDs in a
+            // database or KV store to prevent duplicate event processing.
+            // ============================================================
+            const webhookEventId = payload.id || payload.transactionId || payload.eventId || null;
+            if (!webhookEventId) {
+                console.warn('Webhook received without identifiable event ID - unable to ensure idempotency', {
+                    payloadKeys: Object.keys(payload),
+                    timestamp: new Date().toISOString()
+                });
+            }
 
             // Optional: Verify webhook signature if HELCIM_WEBHOOK_SECRET is set
             // NOTE: Signature verification algorithm is not yet implemented.

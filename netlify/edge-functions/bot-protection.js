@@ -210,22 +210,26 @@ export default async (request, context) => {
   const url = new URL(request.url);
   const path = url.pathname;
   
+  // ============================================================
+  // CRITICAL: Early-exit for webhook paths
+  // This explicit bypass is required because Netlify's excludedPath
+  // configuration can be unreliable. This guard MUST remain at the
+  // TOP of this function, BEFORE any bot detection, fingerprinting,
+  // rate-limiting, or blocking logic runs.
+  // ============================================================
+  if (path.startsWith('/webhooks/') || path.startsWith('/.netlify/functions/')) {
+    return context.next();
+  }
+  
   // Fast-path: Skip bot check for checkout and payment flow
   if (path === '/checkout.html' || 
       path === '/success.html' || 
-      path === '/cancel.html' ||
-      path.startsWith('/.netlify/functions/helcim-') ||
-      path.startsWith('/.netlify/functions/health')) {
+      path === '/cancel.html') {
     return context.next();
   }
   
   // Skip bot check for static assets (images, fonts, etc.)
   if (path.match(/\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|css|js|map)$/i)) {
-    return context.next();
-  }
-  
-  // Skip for all Netlify functions
-  if (path.startsWith('/.netlify/')) {
     return context.next();
   }
   
@@ -286,6 +290,14 @@ export default async (request, context) => {
   });
 };
 
+// ============================================================
+// IMPORTANT: This excludedPath array MUST be synchronized with
+// the excludedPath in netlify.toml [[edge_functions]] config.
+// Both are included as a workaround for Netlify's unreliable
+// excludedPath behavior - the runtime early-exit guard above
+// provides the primary protection, but this config serves as
+// a secondary defense layer.
+// ============================================================
 export const config = {
   path: "/*",
   excludedPath: [
@@ -303,7 +315,8 @@ export const config = {
     "/*.js", 
     "/*.woff", 
     "/*.woff2",
-    "/.netlify/functions/*"
+    "/.netlify/functions/*",
+    "/webhooks/*"
   ]
 };
 
