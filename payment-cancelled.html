@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Cancelled - Grain House Coffee</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 48px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .cancel-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        h1 {
+            color: #1a202c;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        p {
+            color: #718096;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: transform 0.2s;
+            margin: 8px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+        }
+
+        .button-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .info {
+            background: #fffbeb;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 24px;
+            font-size: 14px;
+            color: #78350f;
+            border: 1px solid #fbbf24;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            p {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="cancel-icon">✕</div>
+        <h1>Payment Cancelled</h1>
+        <p>Your payment was cancelled. No charges have been made to your account.</p>
+        
+        <div style="margin: 24px 0;">
+            <button onclick="openCart()" class="button">Return to Cart</button>
+            <a href="/" class="button button-secondary">Go to Home</a>
+        </div>
+        
+        <div class="info">
+            Your cart items are still saved. You can complete your purchase anytime.
+        </div>
+    </div>
+
+    <script>
+        // Function to open the cart
+        function openCart() {
+            if (window.Snipcart) {
+                window.Snipcart.api.modal.show();
+            } else {
+                // Fallback if Snipcart isn't loaded - go to home
+                window.location.href = '/';
+            }
+        }
+
+        // Optional: Auto-reopen cart after a delay
+        window.addEventListener('load', function() {
+            if (window.Snipcart) {
+                // Give user a moment to read the message
+                setTimeout(function() {
+                    window.Snipcart.api.modal.show();
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
