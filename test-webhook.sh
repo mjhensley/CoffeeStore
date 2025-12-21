@@ -86,3 +86,4 @@ echo "4. Select events to receive (payment.success, payment.failed, etc.)"
 echo "5. Save and verify Helcim shows webhook as 'Active'"
 echo ""
 echo "For troubleshooting, see WEBHOOK_TROUBLESHOOTING.md"
+
