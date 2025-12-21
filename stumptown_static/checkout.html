@@ -494,8 +494,8 @@
                 logError('Snipcart failed to load after ' + CHECK_DELAY + 'ms');
                 logError('Possible causes: CSP, ad-blocker, network issue, or script URL 404');
                 hideLoader();
-                if (errorPanel) {
-                    errorPanel.classList.add('show');
+                if (errorPanelEl) {
+                    errorPanelEl.classList.add('show');
                 }
             } else {
                 logSuccess('Snipcart script loaded');
