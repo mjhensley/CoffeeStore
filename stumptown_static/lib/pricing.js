@@ -18,21 +18,18 @@
  * @param {Object} address - Shipping address (for tax calculation)
  * @returns {Object} - Complete pricing breakdown
  */
-function calculateOrderPricing(subtotal, shippingMethodId = 'usps-priority', address = {}) {
+function calculateOrderPricing(subtotal, shippingMethodId = 'ups-ground', address = {}) {
     // Get shipping cost
     let shippingCost = 0;
     if (typeof window.getShippingRate === 'function') {
         shippingCost = window.getShippingRate(shippingMethodId, subtotal);
     } else {
-        // Fallback if shipping-config not loaded
+        // Fallback if shipping-config not loaded - use UPS Ground price
         const method = window.SHIPPING_CONFIG?.methods?.[shippingMethodId];
         if (method) {
-            const threshold = window.SHIPPING_CONFIG?.freeShippingThreshold || 45;
-            if (method.freeOverThreshold && subtotal >= threshold) {
-                shippingCost = 0;
-            } else {
-                shippingCost = method.price || 0;
-            }
+            shippingCost = method.price || 15.54; // UPS Ground default
+        } else {
+            shippingCost = 15.54; // UPS Ground default price
         }
     }
     
