@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
     // CORS headers for all responses
     const headers = {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type, X-Helcim-Signature',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Helcim-Signature, webhook-signature, webhook-timestamp, webhook-id',
         'Access-Control-Allow-Methods': 'GET, POST, HEAD, OPTIONS',
         'Content-Type': 'application/json'
     };
@@ -48,6 +48,34 @@ exports.handler = async (event, context) => {
 
     // Handle GET request - Also used for validation/health check
     if (event.httpMethod === 'GET') {
+        // Check if this is a Helcim URL verification request
+        // Helcim sends a GET request with ?check=<random_string> and expects the value echoed back
+        const checkValue = event.queryStringParameters && event.queryStringParameters.check;
+        if (checkValue) {
+            // Validate check parameter: allow alphanumeric, hyphens, underscores, max 256 chars
+            if (typeof checkValue === 'string' && 
+                checkValue.length <= 256 && 
+                /^[a-zA-Z0-9_-]+$/.test(checkValue)) {
+                return {
+                    statusCode: 200,
+                    headers: {
+                        ...headers,
+                        'Content-Type': 'text/plain'
+                    },
+                    body: checkValue
+                };
+            }
+            // Invalid check parameter, return 400
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({
+                    error: 'Invalid check parameter',
+                    timestamp: new Date().toISOString()
+                })
+            };
+        }
+        
         return {
             statusCode: 200,
             headers,
