@@ -28,12 +28,24 @@ const EVENT_TYPES = {
 
 // In-memory cache for processed events (prevents duplicate processing)
 // In production, use a database or KV store
-const processedEvents = new Set();
+const processedEvents = new Map(); // Changed to Map to store timestamps
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 // =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
+
+/**
+ * Clean up old processed events (call periodically)
+ */
+function cleanupOldEvents() {
+  const now = Date.now();
+  for (const [eventId, timestamp] of processedEvents.entries()) {
+    if (now - timestamp > CACHE_TTL) {
+      processedEvents.delete(eventId);
+    }
+  }
+}
 
 /**
  * Verify webhook signature from Helcim
@@ -72,19 +84,28 @@ function verifyWebhookSignature(payload, signature, secret) {
  * Check if event has already been processed (idempotency)
  */
 function isEventProcessed(eventId) {
-  return processedEvents.has(eventId);
+  const timestamp = processedEvents.get(eventId);
+  if (!timestamp) return false;
+  
+  // Check if event is still within TTL
+  if (Date.now() - timestamp > CACHE_TTL) {
+    processedEvents.delete(eventId);
+    return false;
+  }
+  
+  return true;
 }
 
 /**
  * Mark event as processed
  */
 function markEventProcessed(eventId) {
-  processedEvents.add(eventId);
+  processedEvents.set(eventId, Date.now());
   
-  // Clean up old events after TTL
-  setTimeout(() => {
-    processedEvents.delete(eventId);
-  }, CACHE_TTL);
+  // Periodically clean up old events (every 100 events)
+  if (processedEvents.size % 100 === 0) {
+    cleanupOldEvents();
+  }
 }
 
 /**

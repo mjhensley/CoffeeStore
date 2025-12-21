@@ -9,7 +9,7 @@
  * Security Features:
  * - Server-side product catalog with price verification
  * - Input validation and sanitization
- * - Payload size limits (6MB max via Netlify)
+ * - Payload size limits (1MB max for safety, Netlify allows up to 6MB)
  * - Token-based authentication with Helcim API
  * - No sensitive credit card details logged
  * - CORS headers for cross-origin requests
@@ -264,8 +264,8 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
     });
   }
 
-  // Generate unique invoice number
-  const invoiceNumber = `GH-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  // Generate unique invoice number with cryptographically secure random component
+  const invoiceNumber = `GH-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
   // Prepare Helcim API request
   const helcimRequest = {

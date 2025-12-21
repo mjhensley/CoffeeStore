@@ -250,9 +250,18 @@ const SUBSCRIPTION_DISCOUNT = 0.10; // 10%
    ```
 
 ### Test Cards (Helcim Test Mode)
-- **Success:** `4242 4242 4242 4242`
-- **Decline:** `4000 0000 0000 0002`
-- Use any future expiry date and any 3-digit CVV
+
+Use these test card numbers in Helcim's test environment:
+
+- **Visa (Success):** `4242 4242 4242 4242`
+- **Mastercard (Success):** `5555 5555 5555 4444`
+- **Declined:** `4000 0000 0000 0002`
+- **Insufficient Funds:** `4000 0000 0000 9995`
+- **Expired Card:** `4000 0000 0000 0069`
+
+Use any future expiry date (e.g., 12/25) and any 3-digit CVV (e.g., 123).
+
+For more test cards, see: [Helcim Test Cards Documentation](https://devdocs.helcim.com/docs/test-cards)
 
 ## Deployment
 
