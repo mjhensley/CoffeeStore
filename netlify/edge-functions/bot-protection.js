@@ -29,9 +29,9 @@ const BOT_PATTERNS = [
   /acunetix/i, /nessus/i, /qualys/i, /burpsuite/i, /zap/i,
   /dirbuster/i, /gobuster/i, /wfuzz/i, /ffuf/i,
   
-  // Fake browsers (missing proper browser tokens)
-  /^mozilla\/\d/i, // Just "Mozilla/5.0" with nothing else
-  /^$/,  // Empty user agent
+  // Fake browsers - only match if UA is JUST "Mozilla/X.Y" with nothing meaningful
+  // Real browsers have much more detail like "(Windows NT 10.0; Win64; x64)..."
+  /^mozilla\/[\d.]+\s*$/i,
 ];
 
 // Allow these legitimate bots (for SEO)
@@ -66,14 +66,14 @@ const RATE_LIMIT = {
 
 /**
  * Check if the request is from a bot
+ * 
+ * This function only blocks requests that positively match known bot patterns.
+ * It does NOT block based on missing headers or browser fingerprinting to avoid
+ * blocking legitimate users on mobile browsers, privacy browsers, Samsung Internet,
+ * Opera, Brave, UC Browser, WebViews, and other legitimate browsers.
  */
 function isBot(request) {
   const userAgent = request.headers.get('user-agent') || '';
-  const acceptLanguage = request.headers.get('accept-language') || '';
-  const accept = request.headers.get('accept') || '';
-  const secChUa = request.headers.get('sec-ch-ua') || '';
-  const secFetchDest = request.headers.get('sec-fetch-dest') || '';
-  const secFetchMode = request.headers.get('sec-fetch-mode') || '';
   
   // Empty or missing user agent = likely bot
   if (!userAgent || userAgent.length < 10) {
@@ -87,48 +87,15 @@ function isBot(request) {
     }
   }
   
-  // Check for bot patterns
+  // Check for bot patterns - only block if positively matches known bot signatures
   for (const pattern of BOT_PATTERNS) {
     if (pattern.test(userAgent)) {
       return { isBot: true, reason: 'bot-ua-pattern' };
     }
   }
   
-  // Check for missing browser indicators
-  const isBrowserLike = 
-    (userAgent.includes('Chrome/') || userAgent.includes('Firefox/') || 
-     userAgent.includes('Safari/') || userAgent.includes('Edge/') || 
-     userAgent.includes('MSIE') || userAgent.includes('Trident/'));
-  
-  // Real browsers send Accept-Language and Accept headers
-  if (isBrowserLike) {
-    // Real Chrome sends sec-ch-ua
-    if (userAgent.includes('Chrome/') && !secChUa) {
-      // Could be an older Chrome or headless browser
-      // Check for other browser signals
-      if (!acceptLanguage || !accept.includes('text/html')) {
-        return { isBot: true, reason: 'missing-browser-headers' };
-      }
-    }
-    
-    // Real browsers accessing HTML pages send proper accept headers
-    if (!accept.includes('text/html') && !accept.includes('*/*') && 
-        !request.url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/i)) {
-      return { isBot: true, reason: 'suspicious-accept' };
-    }
-  } else {
-    // Not claiming to be a browser, but accessing the site
-    return { isBot: true, reason: 'non-browser-ua' };
-  }
-  
-  // Check for suspicious header combinations
-  const connection = request.headers.get('connection') || '';
-  if (connection.toLowerCase() === 'close' && !userAgent.includes('Safari/')) {
-    // Most bots use Connection: close, real browsers use keep-alive
-    // Safari sometimes uses close, so we exclude it
-    // This is a soft signal, not a hard block
-  }
-  
+  // Allow all other requests - don't block based on missing headers or
+  // browser fingerprinting as this catches too many legitimate users
   return { isBot: false, reason: 'passed' };
 }
 
@@ -271,9 +238,9 @@ export default async (request, context) => {
   // Check for bot patterns
   const botCheck = isBot(request);
   if (botCheck.isBot) {
-    // Block and record
-    blockedIPs.add(ip);
-    blockedFingerprints.add(fingerprint);
+    // Block the current request but don't permanently add to block lists
+    // Only rate limiting should add to permanent block lists to avoid
+    // blocking legitimate users who might have unusual user agents
     return blockedResponse(botCheck.reason);
   }
   
