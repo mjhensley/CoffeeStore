@@ -305,7 +305,7 @@ exports.handler = async (event, context) => {
         // Prepare Helcim checkout session request
         const helcimPayload = {
             paymentType: 'purchase',
-            amount: totalCents,  // Use server-calculated total
+            amount: (totalCents / 100).toFixed(2),  // Convert cents to dollars for Helcim API
             currency: 'USD',
             customerCode: customer.email || `GUEST-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
             invoiceNumber: `GH-${Date.now()}`, // Generate unique invoice number
@@ -330,7 +330,7 @@ exports.handler = async (event, context) => {
         }
 
         console.log('Creating Helcim checkout session:', {
-            amount: totalCents,
+            amount: helcimPayload.amount,
             currency: 'USD',
             invoiceNumber: helcimPayload.invoiceNumber,
             itemCount: cart.length
