@@ -307,7 +307,7 @@ exports.handler = async (event, context) => {
             paymentType: 'purchase',
             amount: totalCents,  // Use server-calculated total
             currency: 'USD',
-            customerCode: customer.email || `GUEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            customerCode: customer.email || `GUEST-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
             invoiceNumber: `GH-${Date.now()}`, // Generate unique invoice number
             itemDescription: cart.map(item => `${item.name} (x${item.quantity})`).join(', '),
             billingName: `${customer.firstName} ${customer.lastName}`,

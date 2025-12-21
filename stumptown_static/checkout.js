@@ -618,16 +618,30 @@
         } catch (error) {
             console.error('❌ Failed to initialize Helcim payment:', error);
             
-            // Show error
+            // Show error (sanitized)
             const helcimContainer = document.getElementById('helcim-payment-container');
             if (helcimContainer) {
-                helcimContainer.innerHTML = `
-                    <div style="padding: 24px; background: #fee; border: 2px solid #fcc; border-radius: 6px; text-align: center;">
-                        <p style="color: #c00; font-weight: 600; margin: 0 0 12px;">⚠️ Payment Form Error</p>
-                        <p style="color: #666; font-size: 14px; margin: 0;">${error.message}</p>
-                        <p style="color: #999; font-size: 13px; margin: 12px 0 0;">Please refresh the page to try again.</p>
-                    </div>
-                `;
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = 'padding: 24px; background: #fee; border: 2px solid #fcc; border-radius: 6px; text-align: center;';
+                
+                const errorTitle = document.createElement('p');
+                errorTitle.style.cssText = 'color: #c00; font-weight: 600; margin: 0 0 12px;';
+                errorTitle.textContent = '⚠️ Payment Form Error';
+                
+                const errorMsg = document.createElement('p');
+                errorMsg.style.cssText = 'color: #666; font-size: 14px; margin: 0;';
+                errorMsg.textContent = error.message;
+                
+                const errorHint = document.createElement('p');
+                errorHint.style.cssText = 'color: #999; font-size: 13px; margin: 12px 0 0;';
+                errorHint.textContent = 'Please refresh the page to try again.';
+                
+                errorDiv.appendChild(errorTitle);
+                errorDiv.appendChild(errorMsg);
+                errorDiv.appendChild(errorHint);
+                
+                helcimContainer.innerHTML = '';
+                helcimContainer.appendChild(errorDiv);
             }
             
             // Re-enable submit button
@@ -690,7 +704,7 @@
         localStorage.removeItem('grainhouse_cart');
         
         // Redirect to success page
-        const transactionId = result.transactionId || result.transaction_id || `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const transactionId = result.transactionId || result.transaction_id || `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
         window.location.href = 'success.html?order=' + transactionId;
     }
 
