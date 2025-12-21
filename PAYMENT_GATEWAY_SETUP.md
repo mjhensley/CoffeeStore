@@ -1,169 +1,264 @@
-# Payment Gateway Setup Guide
+# Payment Gateway Setup Guide - Helcim Integration
 
-This guide will help you set up a real payment gateway to receive actual money from customers.
+This guide will help you set up the Helcim payment gateway with Netlify to receive actual money from customers.
 
 ## Overview
 
-The payment gateway uses **Stripe**, a secure payment processor that handles:
-- Credit/debit card payments
-- Automatic fraud detection (minimal, built-in)
-- PCI compliance (you never handle raw card data)
-- Secure payment processing
+The payment gateway uses **Helcim**, a secure payment processor that handles:
+- Credit/debit card payments via HelcimPay.js
+- PCI compliance (card data never touches your server)
+- Secure payment processing with tokenized checkout
+- Lower interchange-plus pricing
 
-## Step 1: Create a Stripe Account
+## Architecture
 
-1. Go to [https://stripe.com](https://stripe.com)
-2. Click "Sign up" and create an account
+```
+┌─────────────────┐      ┌─────────────────────┐      ┌──────────────────┐
+│   Browser       │      │  Netlify Functions  │      │   Helcim API     │
+│   (checkout.js) │──────│  (helcim-create-    │──────│   /v2/helcim-pay │
+│                 │      │   session.js)       │      │   /initialize    │
+└─────────────────┘      └─────────────────────┘      └──────────────────┘
+        │                                                      │
+        │         ┌─────────────────────────────┐              │
+        └─────────│   HelcimPay.js Modal        │◀─────────────┘
+                  │   (secure.helcim.app)       │
+                  └─────────────────────────────┘
+```
+
+## Step 1: Create a Helcim Account
+
+1. Go to [https://www.helcim.com](https://www.helcim.com)
+2. Click "Get Started" and create a merchant account
 3. Complete the business verification process
 4. Add your bank account details to receive payments
 
-## Step 2: Get Your Stripe API Keys
+## Step 2: Get Your Helcim API Token
 
-1. Log in to your [Stripe Dashboard](https://dashboard.stripe.com)
-2. Go to **Developers** → **API keys**
-3. You'll see two keys:
-   - **Publishable key** (starts with `pk_`) - Safe to expose in frontend
-   - **Secret key** (starts with `sk_`) - **NEVER expose this!**
+1. Log in to your [Helcim Dashboard](https://secure.myhelcim.com)
+2. Navigate to **Integrations** → **API Access Configurations**
+3. Click **New API Access** to create a new configuration:
+   - **Name:** `Website Checkout` (or your preferred name)
+   - **Permissions:** Select "Admin" for full transaction abilities
+4. Click **Save** and copy your generated **API Token**
+5. **IMPORTANT:** This token is secret - never expose it in frontend code!
 
-## Step 3: Configure Your Site
+## Step 3: Configure Netlify Environment Variables
 
-### Frontend Configuration (config.js)
+The API token must be stored securely in Netlify environment variables:
 
-1. Copy `config.example.js` to `config.js`:
-   ```bash
-   cp stumptown_static/config.example.js stumptown_static/config.js
-   ```
-
-2. Open `stumptown_static/config.js` and add your Stripe publishable key:
-   ```javascript
-   const CONFIG = {
-       stripePublishableKey: 'pk_test_...', // Your publishable key
-       googlePlacesApiKey: 'YOUR_GOOGLE_PLACES_API_KEY_HERE' // Optional
-   };
-   ```
-
-### Backend Configuration (Netlify Environment Variables)
+### Via Netlify Dashboard (Recommended)
 
 1. Go to your [Netlify Dashboard](https://app.netlify.com)
 2. Select your site
 3. Go to **Site settings** → **Environment variables**
-4. Click **Add a variable**
-5. Add the following:
-   - **Key:** `STRIPE_SECRET_KEY`
-   - **Value:** Your Stripe secret key (starts with `sk_`)
-   - **Scopes:** Production, Deploy previews, Branch deploys (as needed)
+4. Click **Add a variable** and add:
 
-## Step 4: Install Stripe Package for Netlify Functions
+| Key | Value | Description |
+|-----|-------|-------------|
+| `HELCIM_API_TOKEN` | Your Helcim API token | Required for payment processing |
+| `SITE_URL` | `https://grainhousecoffee.com` | Your site URL for redirects |
+| `HELCIM_WEBHOOK_SECRET` | (optional) | For webhook signature verification |
 
-The Netlify Functions need the Stripe Node.js package. Create a `package.json` in the `netlify/functions` directory:
+5. Set **Scopes** to: Production, Deploy previews (as needed)
+
+### Via Netlify CLI
 
 ```bash
-cd netlify/functions
-npm init -y
-npm install stripe
+# Install Netlify CLI if you haven't
+npm install -g netlify-cli
+
+# Login to Netlify
+netlify login
+
+# Set environment variables
+netlify env:set HELCIM_API_TOKEN "your-api-token-here"
+netlify env:set SITE_URL "https://grainhousecoffee.com"
 ```
 
-Or add this to your root `package.json`:
+### For Local Development
 
-```json
-{
-  "dependencies": {
-    "stripe": "^14.0.0"
-  }
-}
+Create a `.env` file in your project root (this file should be in `.gitignore`):
+
+```env
+HELCIM_API_TOKEN=your-test-api-token
+SITE_URL=http://localhost:8888
 ```
+
+Then run `netlify dev` to test locally with environment variables.
+
+## Step 4: Verify the Implementation
+
+The Helcim integration consists of these key files:
+
+### Netlify Functions (Server-Side)
+
+- **`netlify/functions/helcim-create-session.js`** - Creates secure checkout sessions
+  - Validates cart items against server-side product catalog
+  - Calculates totals server-side (prevents price manipulation)
+  - Calls Helcim API to get checkout token
+  - Returns only client-safe data
+
+- **`netlify/functions/helcim-webhook.js`** - Handles Helcim payment events
+  - Receives payment success/failure/refund notifications
+  - Verifies webhook signatures (if configured)
+
+### Frontend Files
+
+- **`stumptown_static/checkout.html`** - Checkout page with HelcimPay.js integration
+- **`stumptown_static/checkout.js`** - Checkout logic and Helcim iframe handling
 
 ## Step 5: Test the Payment Gateway
 
 ### Test Mode
 
-Stripe provides test cards for testing:
+Helcim provides test credentials for testing:
 
-- **Success:** `4242 4242 4242 4242`
-- **Decline:** `4000 0000 0000 0002`
-- **Requires authentication:** `4000 0025 0000 3155`
+1. In your Helcim Dashboard, ensure you're in **Test Mode**
+2. Use these test card numbers:
+   - **Success:** `4242 4242 4242 4242`
+   - **Decline:** `4000 0000 0000 0002`
 
 Use any:
 - **Expiry date:** Future date (e.g., `12/34`)
-- **CVC:** Any 3 digits (e.g., `123`)
-- **ZIP:** Any 5 digits (e.g., `12345`)
+- **CVV:** Any 3 digits (e.g., `123`)
+- **ZIP:** Any valid postal code
 
 ### Testing Steps
 
-1. Make sure your site is deployed to Netlify
-2. Add items to cart
+1. Deploy your site to Netlify (or run `netlify dev` locally)
+2. Add items to cart on the website
 3. Go to checkout
-4. Enter test card details
-5. Complete the payment
-6. Check your Stripe Dashboard → **Payments** to see the test payment
+4. Fill in customer and shipping information
+5. Click "Complete Order" to load the HelcimPay.js modal
+6. Enter test card details in the secure Helcim form
+7. Complete the payment
+8. Verify redirect to success page
+9. Check your Helcim Dashboard → **Transactions** to see the test payment
+
+### Local Testing with Netlify CLI
+
+```bash
+# Start local development server with functions
+netlify dev
+
+# Your site will be available at http://localhost:8888
+# Functions are available at http://localhost:8888/.netlify/functions/
+```
 
 ## Step 6: Go Live
 
 When you're ready to accept real payments:
 
-1. In Stripe Dashboard, toggle from **Test mode** to **Live mode**
-2. Get your **Live** API keys (different from test keys)
-3. Update `config.js` with your live publishable key
-4. Update Netlify environment variable with your live secret key
-5. Redeploy your site
+1. In Helcim Dashboard, switch from **Test Mode** to **Live Mode**
+2. Create a new API Access Configuration for production (or use the same one)
+3. Update the `HELCIM_API_TOKEN` environment variable in Netlify with your live API token
+4. Verify `SITE_URL` points to your production domain
+5. Trigger a new deploy on Netlify
+6. Test with a small real transaction to verify everything works
 
 ## How It Works
 
 ### Payment Flow
 
-1. **Customer fills checkout form** → Enters shipping info
-2. **Selects payment method** → Credit card or PayPal
-3. **Clicks "Pay now"** → Frontend creates payment intent
-4. **Stripe Elements** → Securely collects card details (never touches your server)
-5. **Payment confirmation** → Stripe processes payment
-6. **Order creation** → Server confirms payment and creates order
-7. **Email sent** → Customer receives confirmation email
+1. **Customer fills checkout form** → Enters customer and shipping info
+2. **Clicks "Complete Order"** → Frontend sends cart data to Netlify Function
+3. **Server validates cart** → Calculates totals from authoritative product catalog
+4. **Server calls Helcim API** → Creates checkout session, gets checkout token
+5. **Token returned to browser** → Only client-safe data (no API secrets)
+6. **HelcimPay.js modal opens** → Customer enters card in secure Helcim iframe
+7. **Payment processed** → Helcim handles all PCI-sensitive operations
+8. **Success callback** → Customer redirected to success page
+9. **Webhook (optional)** → Helcim notifies server of payment completion
 
 ### Security Features
 
-- **PCI Compliance:** Stripe handles all card data, you never see it
-- **Fraud Detection:** Stripe's Radar automatically detects suspicious transactions
-- **3D Secure:** Supports additional authentication when required
-- **Encryption:** All data is encrypted in transit and at rest
+- **PCI Compliance:** All card data handled by Helcim's secure iframe
+- **Server-Side Pricing:** Product prices calculated from server catalog (prevents price manipulation)
+- **No Exposed Secrets:** API token only exists in Netlify Functions
+- **CSP Headers:** Content Security Policy allows only Helcim domains
+- **Webhook Verification:** Optional signature verification for webhooks
 
 ## Fees
 
-Stripe charges:
-- **2.9% + $0.30** per successful card charge
-- No monthly fees
-- No setup fees
-- No hidden fees
+Helcim uses interchange-plus pricing:
+- **Interchange-plus 0.3% + $0.08** for most cards
+- **Volume discounts** - rates decrease as you process more
+- No monthly fees, no setup fees, no hidden fees
 
-Example: A $50 order = $1.75 fee, you receive $48.25
+Example: A $50 order ≈ $0.23 fee (varies by card type)
+
+## Content Security Policy
+
+The `netlify.toml` includes CSP headers allowing Helcim domains:
+
+```toml
+Content-Security-Policy = "...
+  script-src 'self' https://secure.helcim.app ...;
+  connect-src 'self' https://api.helcim.com https://secure.helcim.app ...;
+  frame-src https://secure.helcim.app https://js.helcim.com;
+..."
+```
+
+**Note:** The HelcimPay.js script is loaded from `https://secure.helcim.app/helcim-pay/services/start.js`, which is covered by allowing `https://secure.helcim.app` in script-src.
 
 ## Support
 
-- **Stripe Documentation:** [https://stripe.com/docs](https://stripe.com/docs)
-- **Stripe Support:** Available in your dashboard
-- **Test Mode:** Use test cards to avoid real charges during development
+- **Helcim Developer Docs:** [https://devdocs.helcim.com](https://devdocs.helcim.com)
+- **HelcimPay.js Overview:** [https://devdocs.helcim.com/docs/overview-of-helcimpayjs](https://devdocs.helcim.com/docs/overview-of-helcimpayjs)
+- **Helcim API Reference:** [https://devdocs.helcim.com/reference](https://devdocs.helcim.com/reference)
+- **Netlify Functions Docs:** [https://docs.netlify.com/functions/overview](https://docs.netlify.com/functions/overview)
 
 ## Troubleshooting
 
-### Payment fails with "Payment intent not found"
-- Check that `STRIPE_SECRET_KEY` is set in Netlify environment variables
-- Verify the key is correct (starts with `sk_`)
+### "Payment system not configured" error
+- Check that `HELCIM_API_TOKEN` is set in Netlify environment variables
+- Verify the token is correct (no extra spaces)
+- Check Netlify Functions logs for detailed error messages
 
-### "Stripe is not defined" error
-- Check that Stripe.js is loading (check browser console)
-- Verify `stripePublishableKey` is set in `config.js`
+### "Failed to create checkout session" error
+- Verify your Helcim API token has correct permissions
+- Check if you're in Test vs Live mode
+- Review the Netlify Functions logs: Site Dashboard → Functions → helcim-create-session
+
+### HelcimPay.js modal doesn't appear
+- Check browser console for JavaScript errors
+- Verify CSP headers allow Helcim domains
+- Ensure the Helcim script URL is correct: `https://secure.helcim.app/helcim-pay/services/start.js`
 
 ### Payment succeeds but order not created
-- Check Netlify Functions logs
-- Verify `send-order-email` function is working
-- Check browser console for errors
+- Check Netlify Functions logs for errors
+- Verify webhook is configured in Helcim Dashboard (optional)
+- Check browser console for errors after payment
 
-## Next Steps
+### CORS errors
+- Ensure your site URL matches what's configured in Helcim
+- Verify the Netlify Function returns proper CORS headers
 
-- Set up webhooks for real-time payment notifications
-- Add order management system
-- Integrate with shipping providers
-- Set up refund handling
-- Add subscription support (for coffee subscriptions)
+## Webhook Setup (Optional)
+
+For real-time payment notifications:
+
+1. In Helcim Dashboard, go to **Integrations** → **Webhooks**
+2. Add a new webhook:
+   - **URL:** `https://your-site.netlify.app/.netlify/functions/helcim-webhook`
+   - **Events:** Select payment events you want to receive
+3. Copy the webhook secret and add to Netlify environment variables:
+   ```
+   HELCIM_WEBHOOK_SECRET=your-webhook-secret
+   ```
+
+## Files Reference
+
+| File | Purpose |
+|------|---------|
+| `netlify/functions/helcim-create-session.js` | Creates secure checkout sessions |
+| `netlify/functions/helcim-webhook.js` | Handles payment webhooks |
+| `stumptown_static/checkout.html` | Checkout page UI |
+| `stumptown_static/checkout.js` | Checkout logic |
+| `stumptown_static/success.html` | Payment success page |
+| `stumptown_static/cancel.html` | Payment cancelled page |
+| `netlify.toml` | Netlify config with CSP headers |
+| `.env.example` | Example environment variables |
 
 
 

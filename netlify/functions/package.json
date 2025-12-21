@@ -1,7 +1,7 @@
 {
   "name": "coffee-store-functions",
   "version": "1.0.0",
-  "description": "Netlify serverless functions for Coffee Store payment processing",
+  "description": "Netlify serverless functions for Coffee Store payment processing. Primary: Helcim API. Legacy: Stripe (deprecated).",
   "main": "index.js",
   "dependencies": {
     "stripe": "^14.0.0"
