@@ -21,12 +21,18 @@ function verifyChallenge(token, timestamp) {
 }
 
 export default async (request, context) => {
+  const url = new URL(request.url);
+  
+  // Bypass security check for Helcim webhook endpoint
+  // Helcim's servers send POST requests without custom security headers
+  if (url.pathname === '/.netlify/functions/helcim-webhook') {
+    return context.next();
+  }
+  
   // Only check POST requests to sensitive endpoints
   if (request.method !== 'POST') {
     return context.next();
   }
-  
-  const url = new URL(request.url);
   
   // Check form submissions and API calls
   if (url.pathname.includes('/functions/') || url.pathname.includes('/api/')) {
@@ -54,6 +60,7 @@ export default async (request, context) => {
 };
 
 export const config = {
-  path: ["/.netlify/functions/*", "/api/*"]
+  path: ["/.netlify/functions/*", "/api/*"],
+  excludedPath: ["/.netlify/functions/helcim-webhook"]
 };
 
