@@ -124,7 +124,7 @@
             .cart-sidebar {
                 position: fixed;
                 top: 0;
-                right: 0;
+                right: 0 !important;
                 width: 400px;
                 max-width: 100%;
                 height: 100%;
@@ -365,7 +365,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                z-index: 10001;
+                z-index: 10002;
                 opacity: 0;
                 visibility: hidden;
                 transition: all 0.3s ease;
@@ -843,7 +843,6 @@
         
         saveCart();
         showToast(`${itemData.name} added to cart`);
-        openCart();
     }
 
     // Update item quantity
@@ -1155,6 +1154,12 @@
             return;
         }
         
+        // Close cart sidebar first (without resetting overflow since we'll keep it hidden)
+        isCartOpen = false;
+        document.body.classList.remove('custom-cart-open');
+        document.getElementById('cart-overlay').classList.remove('active');
+        document.getElementById('cart-sidebar').classList.remove('active');
+        
         // Create modal if not exists
         createCheckoutModal();
         
@@ -1162,13 +1167,10 @@
         renderCheckoutItems();
         updateCheckoutTotals();
         
-        // Show modal
+        // Show modal (keep body overflow hidden for modal)
         checkoutModal.classList.add('active');
         isCheckoutOpen = true;
         document.body.style.overflow = 'hidden';
-        
-        // Close cart sidebar
-        closeCart();
     }
 
     // Close checkout modal
