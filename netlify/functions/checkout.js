@@ -437,10 +437,10 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
     });
   }
 
-  // Generate unique invoice number with cryptographically secure random component
-  // Add sandbox prefix when in sandbox mode for easy identification
-  const envPrefix = config.isSandbox ? 'TEST-' : '';
-  const invoiceNumber = `${envPrefix}GH-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+  // Generate unique invoice number using simple numeric format
+  // Helcim requires alphanumeric invoice numbers without special characters
+  // Using timestamp ensures uniqueness; random suffix adds extra collision protection
+  const invoiceNumber = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
   // Prepare HelcimPay.js initialization request
   // Reference: https://devdocs.helcim.com/reference/checkout-init
@@ -449,8 +449,8 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
     amount: totals.total,
     currency: 'USD',
     invoiceNumber,
-    // Customer information for pre-filling the payment form
-    customerCode: customer.email,
+    // Note: customerCode is omitted for guest checkout
+    // Helcim requires a valid customer code from their system, not an email
     // Billing address information
     billingAddress: {
       name: `${customer.firstName} ${customer.lastName}`,
