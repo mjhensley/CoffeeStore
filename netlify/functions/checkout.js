@@ -437,10 +437,11 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
     });
   }
 
-  // Generate unique invoice number using simple numeric format
-  // Helcim requires alphanumeric invoice numbers without special characters
+  // Generate unique invoice number using simple alphanumeric format
+  // Helcim requires alphanumeric invoice numbers without special characters like dashes
   // Using timestamp ensures uniqueness; random suffix adds extra collision protection
-  const invoiceNumber = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  const randomSuffix = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+  const invoiceNumber = `${Date.now()}${randomSuffix}`;
 
   // Prepare HelcimPay.js initialization request
   // Reference: https://devdocs.helcim.com/reference/checkout-init
