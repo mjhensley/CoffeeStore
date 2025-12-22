@@ -13,7 +13,13 @@
  * - Token-based authentication with Helcim API
  * - No sensitive credit card details logged
  * - CORS headers for cross-origin requests
+ * 
+ * Environment Configuration:
+ * - Automatically detects sandbox vs production based on HELCIM_ENVIRONMENT
+ * - Uses environment-based API credentials
  */
+
+const { getConfig, getApiHeaders, validateConfig, logConfigStatus } = require('./lib/helcim-config');
 
 // =============================================================================
 // PRODUCT CATALOG - Server-side source of truth for pricing
@@ -230,10 +236,19 @@ function calculateTotals(validatedCart, shippingMethod = 'standard') {
  * Create Helcim checkout session
  */
 async function createHelcimSession(validatedCart, customer, shipping, totals) {
-  const helcimApiToken = process.env.HELCIM_API_TOKEN;
+  // Get environment-based configuration
+  const config = getConfig();
   
-  if (!helcimApiToken) {
+  // Validate configuration
+  const validation = validateConfig();
+  if (!validation.valid) {
+    console.error('Helcim configuration invalid:', validation.errors);
     throw new Error('Payment gateway not configured');
+  }
+  
+  // Log configuration status (useful for debugging)
+  if (process.env.CONTEXT === 'dev' || process.env.DEBUG_CHECKOUT) {
+    logConfigStatus();
   }
 
   // Prepare line items for Helcim
@@ -265,7 +280,9 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
   }
 
   // Generate unique invoice number with cryptographically secure random component
-  const invoiceNumber = `GH-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+  // Add sandbox prefix when in sandbox mode for easy identification
+  const envPrefix = config.isSandbox ? 'TEST-' : '';
+  const invoiceNumber = `${envPrefix}GH-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
   // Prepare Helcim API request
   const helcimRequest = {
@@ -288,14 +305,18 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
     taxAmount: totals.tax,
   };
 
-  // Call Helcim API
-  const response = await fetch('https://api.helcim.com/v2/payment/purchase', {
+  // Call Helcim API using environment-based configuration
+  const apiUrl = `${config.apiBaseUrl}/payment/purchase`;
+  
+  console.log('Calling Helcim API:', {
+    url: apiUrl,
+    environment: config.environment,
+    invoiceNumber
+  });
+  
+  const response = await fetch(apiUrl, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${helcimApiToken}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
+    headers: getApiHeaders(),
     body: JSON.stringify(helcimRequest),
   });
 
@@ -305,6 +326,7 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
       status: response.status,
       statusText: response.statusText,
       error: errorData,
+      environment: config.environment
     });
     throw new Error('Payment gateway request failed');
   }
@@ -315,6 +337,7 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
     checkoutToken: helcimResponse.checkoutToken || helcimResponse.token,
     sessionId: helcimResponse.transactionId || helcimResponse.id,
     invoiceNumber,
+    environment: config.environment,
     helcimResponse,
   };
 }
@@ -441,6 +464,7 @@ exports.handler = async (event, context) => {
         checkoutToken: helcimSession.checkoutToken,
         sessionId: helcimSession.sessionId,
         invoiceNumber: helcimSession.invoiceNumber,
+        environment: helcimSession.environment,
         serverCalculatedTotals: totals,
       }),
     };
