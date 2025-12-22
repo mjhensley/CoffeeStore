@@ -34,14 +34,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     
-    <!-- Snipcart -->
-    <link rel="preconnect" href="https://app.snipcart.com">
-    <link rel="preconnect" href="https://cdn.snipcart.com">
-    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.css" />
-    
-    
-    <!-- Snipcart Overrides - Consolidated styles -->
-    <link rel="stylesheet" href="snipcart-overrides.css"></head>
+</head>
 <body>
     <!-- Skip Navigation -->
     <a href="#main-content" class="skip-nav">Skip to main content</a>
@@ -302,32 +295,10 @@
             </div>
         </div>
     </footer>
-
-    <!-- Snipcart -->
-    <div hidden id="snipcart" data-api-key="ODMwYTIxNjQtMjkxYy00YjNlLWI0NTAtYTkyNWFkNTdlNzNhNjM5MDE1ODA5OTIzMjEyMTUw" data-config-modal-style="side"></div>
-    <script async src="https://cdn.snipcart.com/themes/v3.2.0/default/snipcart.js"></script>
     
     <!-- SITE CONFIGURATION: Load FIRST - single source of truth -->
     <script src="site-config.js"></script>
     
-    <!-- Snipcart Checkout Customizations -->
-    <style>
-        .snipcart-cart-summary-side .snipcart-cart-summary-item { display: flex !important; align-items: flex-start !important; gap: 16px !important; padding: 16px 0 !important; border-bottom: 1px solid #eee !important; }
-        .snipcart-cart-summary-side .snipcart-cart-summary-item:last-child { border-bottom: none !important; }
-        .snipcart-cart-summary-side .snipcart-cart-summary-item__image { display: block !important; width: 72px !important; height: 72px !important; min-width: 72px !important; border-radius: 8px !important; object-fit: cover !important; background: #f8f6f3 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; }
-        .snipcart-cart-summary-side .snipcart-cart-summary-item__image img { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 8px !important; }
-        .snipcart-cart-summary-item .snipcart-item-line__media, .snipcart-cart-summary-item__image-container { display: block !important; flex-shrink: 0 !important; }
-        .snipcart-item-line .snipcart-item-line__image { display: block !important; width: 80px !important; height: 80px !important; border-radius: 8px !important; overflow: hidden !important; background: #f8f6f3 !important; }
-        .snipcart-item-line .snipcart-item-line__image img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
-        .snipcart-checkout .snipcart-item-line { display: flex !important; align-items: center !important; gap: 16px !important; padding: 16px 0 !important; }
-        .snipcart-checkout .snipcart-item-line__media { display: block !important; width: 64px !important; height: 64px !important; min-width: 64px !important; border-radius: 8px !important; overflow: hidden !important; background: #f8f6f3 !important; }
-        .snipcart-checkout .snipcart-item-line__media img { width: 100% !important; height: 100% !important; object-fit: cover !important; }
-        #snipcart .snipcart-cart-summary-fees__notice, #snipcart [class*="fees__notice"], .snipcart-modal [class*="fees__notice"], .snipcart-checkout [class*="fees__notice"] { margin-bottom: 24px !important; }
-        #snipcart .snipcart-cart-summary__total, #snipcart [class*="summary__total"], .snipcart-modal [class*="summary__total"], .snipcart-checkout [class*="summary__total"] { margin-top: 16px !important; padding-top: 16px !important; }
-        .snipcart-cart-summary-item__name { font-weight: 600 !important; color: #333 !important; font-size: 15px !important; margin-bottom: 4px !important; }
-        .snipcart-cart-summary-item__quantity { color: #888 !important; font-size: 14px !important; }
-        .snipcart-cart-summary-item__price { font-weight: 600 !important; color: #333 !important; }
-    </style>
     <!-- INSTANT LOAD: Ultra-fast page transitions -->
     <script src="instant-load.js"></script>
     
