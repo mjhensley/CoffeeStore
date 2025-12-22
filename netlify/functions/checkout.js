@@ -50,7 +50,6 @@ const PRODUCT_CATALOG = {
   'roasters-pick': { name: "Roaster's Pick", basePrice: 39.00 },
   
   // DECAF
-  'trapper-creek': { name: 'Trapper Creek Decaf', basePrice: 39.50 },
   'trapper-creek-decaf': { name: 'Trapper Creek Decaf', basePrice: 39.50 },
   
   // COLD BREW
