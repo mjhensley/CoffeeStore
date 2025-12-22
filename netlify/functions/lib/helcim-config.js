@@ -5,7 +5,7 @@
  * Automatically detects environment and returns appropriate API settings.
  * 
  * Environment Variables:
- * - HELCIM_ENVIRONMENT: 'sandbox' or 'production' (default: auto-detect based on HELCIM_API_TOKEN prefix)
+ * - HELCIM_ENVIRONMENT: 'sandbox' or 'production' (default: auto-detect based on Netlify context)
  * - HELCIM_API_TOKEN: Your Helcim API token (sandbox or production)
  * - HELCIM_WEBHOOK_SECRET: Webhook verification token from Helcim
  * - SITE_URL: Your site URL for payment redirects
@@ -15,6 +15,12 @@
 
 /**
  * Helcim API base URLs for different environments
+ * 
+ * Note: Helcim uses the same API endpoint for both sandbox and production.
+ * The differentiation is made through the API token used - sandbox tokens
+ * only work with test card numbers and don't process real payments.
+ * 
+ * Reference: https://devdocs.helcim.com/docs/developer-testing
  */
 const HELCIM_ENDPOINTS = {
   sandbox: 'https://api.helcim.com/v2',

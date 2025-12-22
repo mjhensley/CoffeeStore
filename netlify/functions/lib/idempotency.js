@@ -54,6 +54,14 @@ const STORE_NAME = 'webhook-idempotency';
 const DEFAULT_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 /**
+ * Maximum entries to keep in in-memory fallback store
+ * This limit prevents memory exhaustion during high-volume periods
+ * when Netlify Blobs is unavailable. 10,000 events covers approximately
+ * 24 hours of high-volume webhook traffic (assuming ~7 events/minute).
+ */
+const MAX_IN_MEMORY_ENTRIES = 10000;
+
+/**
  * Checks if a webhook event has already been processed
  * 
  * @param {string} eventId - The unique webhook event ID
@@ -124,8 +132,11 @@ async function markEventProcessed(eventId, metadata = {}) {
     try {
       const store = blobs.getStore(STORE_NAME);
       
-      // Store with metadata that includes TTL for manual cleanup reference
-      // Note: Netlify Blobs doesn't have native TTL, but we store expiry for manual cleanup
+      // Store with metadata that includes TTL for periodic cleanup
+      // Note: Netlify Blobs doesn't have native TTL support. The expiresAt field
+      // is stored for reference and can be used by a scheduled cleanup job.
+      // For automatic cleanup, consider using Netlify Scheduled Functions to
+      // periodically remove expired entries via the list() and delete() APIs.
       await store.setJSON(eventId, {
         ...eventData,
         expiresAt: new Date(Date.now() + DEFAULT_TTL_SECONDS * 1000).toISOString()
@@ -164,14 +175,13 @@ function cleanupInMemoryStore() {
     }
   }
   
-  // Also limit total entries to prevent unbounded growth
-  const maxEntries = 10000;
-  if (inMemoryStore.size > maxEntries) {
-    // Remove oldest entries
+  // Limit total entries to prevent unbounded memory growth
+  if (inMemoryStore.size > MAX_IN_MEMORY_ENTRIES) {
+    // Remove oldest entries to get back under the limit
     const entries = Array.from(inMemoryStore.entries())
       .sort((a, b) => new Date(a[1].processedAt) - new Date(b[1].processedAt));
     
-    const toRemove = entries.slice(0, inMemoryStore.size - maxEntries);
+    const toRemove = entries.slice(0, inMemoryStore.size - MAX_IN_MEMORY_ENTRIES);
     for (const [key] of toRemove) {
       inMemoryStore.delete(key);
     }
@@ -262,5 +272,6 @@ module.exports = {
   processWithIdempotency,
   getStoreStats,
   STORE_NAME,
-  DEFAULT_TTL_SECONDS
+  DEFAULT_TTL_SECONDS,
+  MAX_IN_MEMORY_ENTRIES
 };
