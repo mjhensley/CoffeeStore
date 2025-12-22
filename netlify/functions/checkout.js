@@ -57,6 +57,12 @@ const TAX_RATE = 0.07;
 // Maximum payload size (Netlify limit is 6MB, we'll use 1MB for safety)
 const MAX_PAYLOAD_SIZE = 1024 * 1024; // 1MB
 
+// Line item SKU constants for order items
+const LINE_ITEM_SKUS = {
+  SHIPPING: 'shipping',
+  TAX: 'tax',
+};
+
 // =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
@@ -279,7 +285,7 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
       quantity: 1,
       price: totals.shipping,
       total: totals.shipping,
-      sku: 'shipping',
+      sku: LINE_ITEM_SKUS.SHIPPING,
     });
   }
 
@@ -290,7 +296,7 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
       quantity: 1,
       price: totals.tax,
       total: totals.tax,
-      sku: 'tax',
+      sku: LINE_ITEM_SKUS.TAX,
     });
   }
 

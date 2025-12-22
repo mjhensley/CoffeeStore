@@ -2,6 +2,13 @@
 (function() {
     'use strict';
 
+    // Validation constants
+    const VALIDATION = {
+        EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        ZIP_REGEX: /^\d{5}(-\d{4})?$/,
+        MIN_ADDRESS_LENGTH: 5,
+    };
+
     // Cart state
     let cart = [];
     let isCartOpen = false;
@@ -1264,15 +1271,14 @@
         }
         
         // Email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!fields.email.value.trim() || !emailRegex.test(fields.email.value)) {
+        if (!fields.email.value.trim() || !VALIDATION.EMAIL_REGEX.test(fields.email.value)) {
             fields.email.classList.add('error');
             errors.push('Valid email is required');
             isValid = false;
         }
         
         // Address
-        if (!fields.address.value.trim() || fields.address.value.length < 5) {
+        if (!fields.address.value.trim() || fields.address.value.length < VALIDATION.MIN_ADDRESS_LENGTH) {
             fields.address.classList.add('error');
             errors.push('Valid address is required');
             isValid = false;
@@ -1293,8 +1299,7 @@
         }
         
         // ZIP code
-        const zipRegex = /^\d{5}(-\d{4})?$/;
-        if (!fields.zip.value.trim() || !zipRegex.test(fields.zip.value)) {
+        if (!fields.zip.value.trim() || !VALIDATION.ZIP_REGEX.test(fields.zip.value)) {
             fields.zip.classList.add('error');
             errors.push('Valid ZIP code is required (e.g., 97201)');
             isValid = false;
@@ -1452,8 +1457,23 @@
 
     // Handle Helcim postMessage events
     function handleHelcimMessage(event) {
-        // Verify origin is from Helcim
-        if (!event.origin.includes('helcim.app') && !event.origin.includes('helcim.com')) {
+        // Verify origin is from Helcim using strict URL parsing
+        // This prevents attacks where malicious sites embed helcim domain in their URLs
+        let originHostname;
+        try {
+            originHostname = new URL(event.origin).hostname;
+        } catch (e) {
+            return; // Invalid origin URL
+        }
+        
+        // Check if the hostname ends with helcim.app or helcim.com (allowing subdomains)
+        const isHelcimOrigin = originHostname === 'secure.helcim.app' ||
+                               originHostname === 'helcim.app' ||
+                               originHostname === 'helcim.com' ||
+                               originHostname.endsWith('.helcim.app') ||
+                               originHostname.endsWith('.helcim.com');
+        
+        if (!isHelcimOrigin) {
             return;
         }
         
