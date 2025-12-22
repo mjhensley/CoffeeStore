@@ -460,26 +460,80 @@ exports.handler = async (event, context) => {
             // Handle different webhook event types
             const eventType = payload.type || payload.event || '';
             
+            // Extract order details for processing
+            const orderDetails = {
+                transactionId: payload.transactionId || payload.id,
+                invoiceNumber: payload.invoiceNumber || payload.invoice,
+                amount: payload.amount,
+                currency: payload.currency || 'USD',
+                customerEmail: payload.customerCode || payload.email,
+                timestamp: new Date().toISOString(),
+            };
+            
             switch (eventType) {
                 case 'payment.success':
                 case 'transaction.approved':
-                    console.log('Payment successful - Transaction ID:', payload.transactionId || payload.id);
-                    // TODO: Update order status, send confirmation email, etc.
+                    console.log('Payment successful - Processing order:', orderDetails);
+                    
+                    // Order processing logic:
+                    // 1. Log the successful payment for order fulfillment
+                    console.log('ORDER_CONFIRMED:', JSON.stringify({
+                        type: 'order_confirmed',
+                        ...orderDetails,
+                        status: 'paid',
+                    }));
+                    
+                    // 2. TODO: Future enhancements - integrate with:
+                    //    - Email service (e.g., Resend API) to send confirmation email
+                    //    - Order database (e.g., Netlify Blobs, Supabase) to store order
+                    //    - Inventory management system
+                    //    - Shipping/fulfillment service
+                    
+                    // Example email integration (commented out for future implementation):
+                    // await sendOrderConfirmationEmail({
+                    //     to: orderDetails.customerEmail,
+                    //     orderNumber: orderDetails.invoiceNumber,
+                    //     amount: orderDetails.amount,
+                    // });
                     break;
 
                 case 'payment.failed':
                 case 'transaction.declined':
-                    console.log('Payment failed - Transaction ID:', payload.transactionId || payload.id);
-                    // TODO: Update order status, notify customer, etc.
+                    console.log('Payment failed - Transaction ID:', orderDetails.transactionId);
+                    
+                    // Log failed payment for monitoring
+                    console.log('PAYMENT_FAILED:', JSON.stringify({
+                        type: 'payment_failed',
+                        ...orderDetails,
+                        status: 'declined',
+                        reason: payload.declineReason || payload.message || 'Unknown',
+                    }));
+                    
+                    // TODO: Future enhancements:
+                    //    - Send payment failure notification to customer
+                    //    - Update order status in database
+                    //    - Alert admin for high-value failed transactions
                     break;
 
                 case 'payment.refunded':
-                    console.log('Payment refunded - Transaction ID:', payload.transactionId || payload.id);
-                    // TODO: Update order status, notify customer, etc.
+                    console.log('Payment refunded - Transaction ID:', orderDetails.transactionId);
+                    
+                    // Log refund for accounting
+                    console.log('PAYMENT_REFUNDED:', JSON.stringify({
+                        type: 'payment_refunded',
+                        ...orderDetails,
+                        status: 'refunded',
+                        refundAmount: payload.refundAmount || payload.amount,
+                    }));
+                    
+                    // TODO: Future enhancements:
+                    //    - Send refund confirmation email to customer
+                    //    - Update order status in database
+                    //    - Process inventory return if applicable
                     break;
 
                 default:
-                    console.log('Unknown webhook event type:', eventType);
+                    console.log('Unhandled webhook event type:', eventType, 'Payload:', JSON.stringify(payload));
             }
 
             // Mark event as processed after successful handling
