@@ -233,7 +233,9 @@ function calculateTotals(validatedCart, shippingMethod = 'standard') {
 }
 
 /**
- * Create Helcim checkout session
+ * Create Helcim checkout session using HelcimPay.js initialize endpoint
+ * This creates a checkout session that returns a checkoutToken for the frontend
+ * to use with the HelcimPay.js payment modal
  */
 async function createHelcimSession(validatedCart, customer, shipping, totals) {
   // Get environment-based configuration
@@ -251,8 +253,8 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
     logConfigStatus();
   }
 
-  // Prepare line items for Helcim
-  const lineItems = validatedCart.map((item, index) => {
+  // Prepare line items for Helcim in the format required by HelcimPay.js
+  const lineItems = validatedCart.map((item) => {
     const product = PRODUCT_CATALOG[item.id];
     const sizeMultiplier = SIZE_MULTIPLIERS[item.size] || 1.0;
     let itemPrice = product.basePrice * sizeMultiplier;
@@ -266,6 +268,7 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
       quantity: item.quantity,
       price: Math.round(itemPrice * 100) / 100,
       total: Math.round(itemPrice * item.quantity * 100) / 100,
+      sku: item.id,
     };
   });
 
@@ -276,6 +279,18 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
       quantity: 1,
       price: totals.shipping,
       total: totals.shipping,
+      sku: 'shipping',
+    });
+  }
+
+  // Add tax as line item for transparency
+  if (totals.tax > 0) {
+    lineItems.push({
+      description: 'Sales Tax',
+      quantity: 1,
+      price: totals.tax,
+      total: totals.tax,
+      sku: 'tax',
     });
   }
 
@@ -284,34 +299,55 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
   const envPrefix = config.isSandbox ? 'TEST-' : '';
   const invoiceNumber = `${envPrefix}GH-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
-  // Prepare Helcim API request
+  // Prepare HelcimPay.js initialization request
+  // Reference: https://devdocs.helcim.com/reference/checkout-init
   const helcimRequest = {
     paymentType: 'purchase',
     amount: totals.total,
     currency: 'USD',
     invoiceNumber,
+    // Customer information for pre-filling the payment form
     customerCode: customer.email,
-    billingContactName: `${customer.firstName} ${customer.lastName}`,
-    billingEmail: customer.email,
-    billingPhone: customer.phone || '',
+    // Billing address information
     billingAddress: {
-      street: shipping.address,
+      name: `${customer.firstName} ${customer.lastName}`,
+      street1: shipping.address,
       city: shipping.city,
       province: shipping.state,
       postalCode: shipping.zip,
       country: shipping.country,
+      phone: customer.phone || '',
+      email: customer.email,
     },
+    // Shipping address (same as billing for now)
+    shippingAddress: {
+      name: `${customer.firstName} ${customer.lastName}`,
+      street1: shipping.address,
+      city: shipping.city,
+      province: shipping.state,
+      postalCode: shipping.zip,
+      country: shipping.country,
+      phone: customer.phone || '',
+    },
+    // Line items for order summary display
     lineItems,
+    // Tax amount
     taxAmount: totals.tax,
+    // Payment method - allow credit card
+    paymentMethod: 'cc',
+    // Show confirmation screen after payment
+    confirmationScreen: true,
   };
 
-  // Call Helcim API using environment-based configuration
-  const apiUrl = `${config.apiBaseUrl}/payment/purchase`;
+  // Call HelcimPay.js initialize endpoint
+  // This creates a checkout session and returns a checkoutToken
+  const apiUrl = `${config.apiBaseUrl}/helcim-pay/initialize`;
   
-  console.log('Calling Helcim API:', {
+  console.log('Calling Helcim HelcimPay.js initialize API:', {
     url: apiUrl,
     environment: config.environment,
-    invoiceNumber
+    invoiceNumber,
+    amount: totals.total
   });
   
   const response = await fetch(apiUrl, {
@@ -328,17 +364,22 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
       error: errorData,
       environment: config.environment
     });
-    throw new Error('Payment gateway request failed');
+    throw new Error(errorData.message || 'Payment gateway request failed');
   }
 
   const helcimResponse = await response.json();
   
+  // HelcimPay.js initialize returns checkoutToken and secretToken
+  if (!helcimResponse.checkoutToken) {
+    console.error('Helcim response missing checkoutToken:', helcimResponse);
+    throw new Error('Invalid payment gateway response');
+  }
+  
   return {
-    checkoutToken: helcimResponse.checkoutToken || helcimResponse.token,
-    sessionId: helcimResponse.transactionId || helcimResponse.id,
+    checkoutToken: helcimResponse.checkoutToken,
+    secretToken: helcimResponse.secretToken,
     invoiceNumber,
     environment: config.environment,
-    helcimResponse,
   };
 }
 
@@ -364,11 +405,31 @@ function logRequest(request, validatedCart, totals) {
 // =============================================================================
 
 exports.handler = async (event, context) => {
+  // Determine allowed origin based on environment
+  // Allow localhost for development, restrict to production domain otherwise
+  const requestOrigin = event.headers.origin || event.headers.Origin || '';
+  const allowedOrigins = [
+    'https://grainhousecoffee.com',
+    'https://www.grainhousecoffee.com',
+    'http://localhost:8888',
+    'http://localhost:3000',
+    'http://127.0.0.1:8888',
+    'http://127.0.0.1:3000'
+  ];
+  
+  // Also allow Netlify deploy preview URLs
+  const isNetlifyPreview = requestOrigin.includes('.netlify.app') || requestOrigin.includes('.netlify.live');
+  const isAllowedOrigin = allowedOrigins.includes(requestOrigin) || isNetlifyPreview;
+  
+  // Set CORS origin to the request origin if allowed, otherwise use production domain
+  const corsOrigin = isAllowedOrigin ? requestOrigin : 'https://grainhousecoffee.com';
+  
   // CORS headers
   const headers = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': corsOrigin,
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true',
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache, no-store, must-revalidate',
   };
@@ -455,14 +516,14 @@ exports.handler = async (event, context) => {
       totals
     );
 
-    // Return success response with checkout token
+    // Return success response with checkout token for HelcimPay.js
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
         checkoutToken: helcimSession.checkoutToken,
-        sessionId: helcimSession.sessionId,
+        secretToken: helcimSession.secretToken,
         invoiceNumber: helcimSession.invoiceNumber,
         environment: helcimSession.environment,
         serverCalculatedTotals: totals,

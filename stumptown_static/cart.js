@@ -84,8 +84,8 @@
                     <span>Subtotal</span>
                     <span id="cart-subtotal">$0.00</span>
                 </div>
-                <p class="cart-shipping-note">View your items below</p>
-                <button type="button" class="cart-checkout-btn" id="cart-checkout-btn" disabled>Checkout coming soon</button>
+                <p class="cart-shipping-note">Shipping calculated at checkout</p>
+                <button type="button" class="cart-checkout-btn" id="cart-checkout-btn">Proceed to Checkout</button>
             </div>
         `;
         document.body.appendChild(sidebar);
@@ -481,6 +481,11 @@
                 border-color: #6b5344;
                 box-shadow: 0 0 0 3px rgba(107, 83, 68, 0.1);
             }
+            .checkout-form-group input.error,
+            .checkout-form-group select.error {
+                border-color: #c44 !important;
+                box-shadow: 0 0 0 3px rgba(204, 68, 68, 0.1) !important;
+            }
             .checkbox-label {
                 display: flex;
                 align-items: center;
@@ -875,27 +880,666 @@
     }
 
     // Show toast notification
-    function showToast(message) {
+    function showToast(message, isError = false) {
         // Remove existing toast
         const existingToast = document.querySelector('.cart-toast');
         if (existingToast) existingToast.remove();
 
         const toast = document.createElement('div');
         toast.className = 'cart-toast';
-        toast.innerHTML = `<span class="toast-icon">✓</span>${message}`;
+        if (isError) {
+            toast.style.background = '#c44';
+        }
+        toast.innerHTML = `<span class="toast-icon">${isError ? '✕' : '✓'}</span>${message}`;
         document.body.appendChild(toast);
 
         setTimeout(() => toast.classList.add('show'), 10);
         setTimeout(() => {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);
-        }, 2500);
+        }, isError ? 4000 : 2500);
     }
 
-    // Checkout functionality has been removed - coming soon
+    // Checkout state
+    let isCheckoutOpen = false;
+    let checkoutModal = null;
+    let helcimPayLoaded = false;
+
+    // US States for dropdown
+    const US_STATES = [
+        { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
+        { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
+        { code: 'CT', name: 'Connecticut' }, { code: 'DE', name: 'Delaware' }, { code: 'FL', name: 'Florida' },
+        { code: 'GA', name: 'Georgia' }, { code: 'HI', name: 'Hawaii' }, { code: 'ID', name: 'Idaho' },
+        { code: 'IL', name: 'Illinois' }, { code: 'IN', name: 'Indiana' }, { code: 'IA', name: 'Iowa' },
+        { code: 'KS', name: 'Kansas' }, { code: 'KY', name: 'Kentucky' }, { code: 'LA', name: 'Louisiana' },
+        { code: 'ME', name: 'Maine' }, { code: 'MD', name: 'Maryland' }, { code: 'MA', name: 'Massachusetts' },
+        { code: 'MI', name: 'Michigan' }, { code: 'MN', name: 'Minnesota' }, { code: 'MS', name: 'Mississippi' },
+        { code: 'MO', name: 'Missouri' }, { code: 'MT', name: 'Montana' }, { code: 'NE', name: 'Nebraska' },
+        { code: 'NV', name: 'Nevada' }, { code: 'NH', name: 'New Hampshire' }, { code: 'NJ', name: 'New Jersey' },
+        { code: 'NM', name: 'New Mexico' }, { code: 'NY', name: 'New York' }, { code: 'NC', name: 'North Carolina' },
+        { code: 'ND', name: 'North Dakota' }, { code: 'OH', name: 'Ohio' }, { code: 'OK', name: 'Oklahoma' },
+        { code: 'OR', name: 'Oregon' }, { code: 'PA', name: 'Pennsylvania' }, { code: 'RI', name: 'Rhode Island' },
+        { code: 'SC', name: 'South Carolina' }, { code: 'SD', name: 'South Dakota' }, { code: 'TN', name: 'Tennessee' },
+        { code: 'TX', name: 'Texas' }, { code: 'UT', name: 'Utah' }, { code: 'VT', name: 'Vermont' },
+        { code: 'VA', name: 'Virginia' }, { code: 'WA', name: 'Washington' }, { code: 'WV', name: 'West Virginia' },
+        { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }, { code: 'DC', name: 'District of Columbia' }
+    ];
+
+    // Create checkout modal HTML
+    function createCheckoutModal() {
+        if (checkoutModal) return;
+
+        checkoutModal = document.createElement('div');
+        checkoutModal.id = 'checkout-modal';
+        checkoutModal.className = 'checkout-modal';
+        
+        const stateOptions = US_STATES.map(s => `<option value="${s.code}">${s.name}</option>`).join('');
+        
+        checkoutModal.innerHTML = `
+            <div class="checkout-modal-content">
+                <button class="checkout-modal-close" id="checkout-close" aria-label="Close checkout">&times;</button>
+                <div class="checkout-layout">
+                    <!-- Left side: Customer & Shipping Form -->
+                    <div class="checkout-left">
+                        <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; margin-bottom: 8px;">Checkout</h2>
+                        <p style="color: #666; font-size: 14px; margin-bottom: 30px;">Complete your order details below</p>
+                        
+                        <form id="checkout-form">
+                            <h3 class="checkout-section-title">Contact Information</h3>
+                            <div class="checkout-form-row">
+                                <div class="checkout-form-group checkout-form-group-half">
+                                    <label for="checkout-firstName">First Name *</label>
+                                    <input type="text" id="checkout-firstName" name="firstName" required autocomplete="given-name" placeholder="John">
+                                </div>
+                                <div class="checkout-form-group checkout-form-group-half">
+                                    <label for="checkout-lastName">Last Name *</label>
+                                    <input type="text" id="checkout-lastName" name="lastName" required autocomplete="family-name" placeholder="Doe">
+                                </div>
+                            </div>
+                            <div class="checkout-form-group">
+                                <label for="checkout-email">Email Address *</label>
+                                <input type="email" id="checkout-email" name="email" required autocomplete="email" placeholder="john@example.com">
+                            </div>
+                            <div class="checkout-form-group">
+                                <label for="checkout-phone">Phone Number</label>
+                                <input type="tel" id="checkout-phone" name="phone" autocomplete="tel" placeholder="(555) 555-5555">
+                            </div>
+                            
+                            <h3 class="checkout-section-title">Shipping Address</h3>
+                            <div class="checkout-form-group">
+                                <label for="checkout-address">Street Address *</label>
+                                <input type="text" id="checkout-address" name="address" required autocomplete="street-address" placeholder="123 Main Street">
+                            </div>
+                            <div class="checkout-form-group">
+                                <label for="checkout-city">City *</label>
+                                <input type="text" id="checkout-city" name="city" required autocomplete="address-level2" placeholder="Portland">
+                            </div>
+                            <div class="checkout-form-row">
+                                <div class="checkout-form-group checkout-form-group-half">
+                                    <label for="checkout-state">State *</label>
+                                    <select id="checkout-state" name="state" required autocomplete="address-level1">
+                                        <option value="">Select State</option>
+                                        ${stateOptions}
+                                    </select>
+                                </div>
+                                <div class="checkout-form-group checkout-form-group-half">
+                                    <label for="checkout-zip">ZIP Code *</label>
+                                    <input type="text" id="checkout-zip" name="zip" required autocomplete="postal-code" placeholder="97201" pattern="[0-9]{5}(-[0-9]{4})?" maxlength="10">
+                                </div>
+                            </div>
+                            
+                            <h3 class="checkout-section-title">Shipping Method</h3>
+                            <div class="checkout-shipping-options">
+                                <label class="shipping-option selected">
+                                    <input type="radio" name="shippingMethod" value="standard" checked>
+                                    <div class="shipping-option-details">
+                                        <p class="shipping-option-name">Standard Shipping</p>
+                                        <p class="shipping-option-description">5-7 business days</p>
+                                    </div>
+                                    <span class="shipping-option-price">$5.99</span>
+                                </label>
+                                <label class="shipping-option">
+                                    <input type="radio" name="shippingMethod" value="express">
+                                    <div class="shipping-option-details">
+                                        <p class="shipping-option-name">Express Shipping</p>
+                                        <p class="shipping-option-description">2-3 business days</p>
+                                    </div>
+                                    <span class="shipping-option-price">$12.99</span>
+                                </label>
+                                <label class="shipping-option" id="free-shipping-option" style="display: none;">
+                                    <input type="radio" name="shippingMethod" value="free">
+                                    <div class="shipping-option-details">
+                                        <p class="shipping-option-name">Free Shipping</p>
+                                        <p class="shipping-option-description">5-7 business days • Orders $45+</p>
+                                    </div>
+                                    <span class="shipping-option-price">FREE</span>
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Right side: Order Summary -->
+                    <div class="checkout-right">
+                        <h3 class="checkout-summary-title">Order Summary</h3>
+                        <div class="checkout-items-list" id="checkout-items-list">
+                            <!-- Items populated dynamically -->
+                        </div>
+                        
+                        <div class="checkout-totals">
+                            <div class="checkout-total-row">
+                                <span>Subtotal</span>
+                                <span id="checkout-subtotal">$0.00</span>
+                            </div>
+                            <div class="checkout-total-row">
+                                <span>Shipping</span>
+                                <span id="checkout-shipping">$5.99</span>
+                            </div>
+                            <div class="checkout-total-row">
+                                <span>Tax (7%)</span>
+                                <span id="checkout-tax">$0.00</span>
+                            </div>
+                            <div class="checkout-total-row checkout-total-final">
+                                <span>Total</span>
+                                <span id="checkout-total">$0.00</span>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="checkout-submit-btn" id="checkout-submit-btn">
+                            <span class="btn-text">Continue to Payment</span>
+                            <span class="btn-loading" style="display: none;">
+                                <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+                                    <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+                                </svg>
+                                Processing...
+                            </span>
+                        </button>
+                        
+                        <p style="font-size: 12px; color: #888; text-align: center; margin-top: 16px;">
+                            🔒 Secure payment powered by Helcim
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(checkoutModal);
+        
+        // Bind checkout events
+        bindCheckoutEvents();
+    }
+
+    // Create success modal HTML
+    function createSuccessModal(orderNumber) {
+        const successModal = document.createElement('div');
+        successModal.id = 'success-modal';
+        successModal.className = 'checkout-modal active';
+        successModal.innerHTML = `
+            <div class="checkout-modal-content" style="max-width: 500px; padding: 60px 40px;">
+                <div class="success-content">
+                    <div class="success-icon">✓</div>
+                    <h2>Thank You for Your Order!</h2>
+                    <p class="success-message">
+                        Your payment was successful. We're preparing your freshly roasted coffee and will send you a confirmation email with tracking information shortly.
+                    </p>
+                    <div class="success-order-number">
+                        <span>Order Number</span>
+                        <strong>${orderNumber}</strong>
+                    </div>
+                    <button type="button" class="checkout-submit-btn" id="success-close-btn" style="margin-top: 0;">
+                        Continue Shopping
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(successModal);
+        
+        // Bind close event
+        document.getElementById('success-close-btn').addEventListener('click', function() {
+            successModal.classList.remove('active');
+            setTimeout(() => successModal.remove(), 300);
+            window.location.href = 'collections.html';
+        });
+        
+        return successModal;
+    }
+
+    // Bind checkout modal events
+    function bindCheckoutEvents() {
+        // Close button
+        document.getElementById('checkout-close').addEventListener('click', closeCheckout);
+        
+        // Click outside to close
+        checkoutModal.addEventListener('click', function(e) {
+            if (e.target === checkoutModal) {
+                closeCheckout();
+            }
+        });
+        
+        // Shipping option selection
+        const shippingOptions = checkoutModal.querySelectorAll('.shipping-option');
+        shippingOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                shippingOptions.forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                this.querySelector('input[type="radio"]').checked = true;
+                updateCheckoutTotals();
+            });
+        });
+        
+        // Submit button
+        document.getElementById('checkout-submit-btn').addEventListener('click', handleCheckoutSubmit);
+        
+        // Form validation on input
+        const form = document.getElementById('checkout-form');
+        form.querySelectorAll('input, select').forEach(field => {
+            field.addEventListener('input', function() {
+                this.classList.remove('error');
+            });
+        });
+    }
+
+    // Open checkout modal
     function openCheckout() {
-        // Checkout is disabled - coming soon
-        showToast('Checkout coming soon! We\'re building a new checkout experience.');
+        if (cart.length === 0) {
+            showToast('Your cart is empty', true);
+            return;
+        }
+        
+        // Create modal if not exists
+        createCheckoutModal();
+        
+        // Populate order summary
+        renderCheckoutItems();
+        updateCheckoutTotals();
+        
+        // Show modal
+        checkoutModal.classList.add('active');
+        isCheckoutOpen = true;
+        document.body.style.overflow = 'hidden';
+        
+        // Close cart sidebar
+        closeCart();
+    }
+
+    // Close checkout modal
+    function closeCheckout() {
+        if (checkoutModal) {
+            checkoutModal.classList.remove('active');
+        }
+        isCheckoutOpen = false;
+        document.body.style.overflow = '';
+    }
+
+    // Render checkout items
+    function renderCheckoutItems() {
+        const container = document.getElementById('checkout-items-list');
+        container.innerHTML = cart.map(item => `
+            <div class="checkout-item">
+                <img src="${item.image}" alt="${item.name}" class="checkout-item-image">
+                <div class="checkout-item-details">
+                    <p class="checkout-item-name">${item.name}</p>
+                    <p class="checkout-item-qty">Qty: ${item.quantity}</p>
+                    <p class="checkout-item-price">$${(item.price * item.quantity).toFixed(2)}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Update checkout totals
+    function updateCheckoutTotals() {
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        // Get selected shipping method
+        const selectedShipping = document.querySelector('input[name="shippingMethod"]:checked');
+        let shippingCost = 5.99;
+        if (selectedShipping) {
+            switch (selectedShipping.value) {
+                case 'express':
+                    shippingCost = 12.99;
+                    break;
+                case 'free':
+                    shippingCost = 0;
+                    break;
+                default:
+                    shippingCost = 5.99;
+            }
+        }
+        
+        // Show free shipping option if subtotal >= $45
+        const freeShippingOption = document.getElementById('free-shipping-option');
+        if (freeShippingOption) {
+            if (subtotal >= 45) {
+                freeShippingOption.style.display = 'flex';
+            } else {
+                freeShippingOption.style.display = 'none';
+                // Reset to standard if free was selected
+                if (selectedShipping && selectedShipping.value === 'free') {
+                    document.querySelector('input[name="shippingMethod"][value="standard"]').checked = true;
+                    document.querySelector('.shipping-option').classList.add('selected');
+                    shippingCost = 5.99;
+                }
+            }
+        }
+        
+        const tax = subtotal * 0.07;
+        const total = subtotal + shippingCost + tax;
+        
+        document.getElementById('checkout-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+        document.getElementById('checkout-shipping').textContent = shippingCost === 0 ? 'FREE' : `$${shippingCost.toFixed(2)}`;
+        document.getElementById('checkout-tax').textContent = `$${tax.toFixed(2)}`;
+        document.getElementById('checkout-total').textContent = `$${total.toFixed(2)}`;
+    }
+
+    // Validate checkout form
+    function validateCheckoutForm() {
+        const form = document.getElementById('checkout-form');
+        const fields = {
+            firstName: form.querySelector('#checkout-firstName'),
+            lastName: form.querySelector('#checkout-lastName'),
+            email: form.querySelector('#checkout-email'),
+            address: form.querySelector('#checkout-address'),
+            city: form.querySelector('#checkout-city'),
+            state: form.querySelector('#checkout-state'),
+            zip: form.querySelector('#checkout-zip'),
+        };
+        
+        let isValid = true;
+        const errors = [];
+        
+        // First name
+        if (!fields.firstName.value.trim()) {
+            fields.firstName.classList.add('error');
+            errors.push('First name is required');
+            isValid = false;
+        }
+        
+        // Last name
+        if (!fields.lastName.value.trim()) {
+            fields.lastName.classList.add('error');
+            errors.push('Last name is required');
+            isValid = false;
+        }
+        
+        // Email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!fields.email.value.trim() || !emailRegex.test(fields.email.value)) {
+            fields.email.classList.add('error');
+            errors.push('Valid email is required');
+            isValid = false;
+        }
+        
+        // Address
+        if (!fields.address.value.trim() || fields.address.value.length < 5) {
+            fields.address.classList.add('error');
+            errors.push('Valid address is required');
+            isValid = false;
+        }
+        
+        // City
+        if (!fields.city.value.trim()) {
+            fields.city.classList.add('error');
+            errors.push('City is required');
+            isValid = false;
+        }
+        
+        // State
+        if (!fields.state.value) {
+            fields.state.classList.add('error');
+            errors.push('State is required');
+            isValid = false;
+        }
+        
+        // ZIP code
+        const zipRegex = /^\d{5}(-\d{4})?$/;
+        if (!fields.zip.value.trim() || !zipRegex.test(fields.zip.value)) {
+            fields.zip.classList.add('error');
+            errors.push('Valid ZIP code is required (e.g., 97201)');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            showToast(errors[0], true);
+        }
+        
+        return isValid;
+    }
+
+    // Get form data
+    function getCheckoutFormData() {
+        const form = document.getElementById('checkout-form');
+        return {
+            customer: {
+                firstName: form.querySelector('#checkout-firstName').value.trim(),
+                lastName: form.querySelector('#checkout-lastName').value.trim(),
+                email: form.querySelector('#checkout-email').value.trim().toLowerCase(),
+                phone: form.querySelector('#checkout-phone').value.trim() || null,
+            },
+            shipping: {
+                address: form.querySelector('#checkout-address').value.trim(),
+                city: form.querySelector('#checkout-city').value.trim(),
+                state: form.querySelector('#checkout-state').value,
+                zip: form.querySelector('#checkout-zip').value.trim(),
+                country: 'US',
+            },
+            shippingMethod: form.querySelector('input[name="shippingMethod"]:checked').value,
+        };
+    }
+
+    // Load HelcimPay.js script
+    function loadHelcimPayScript() {
+        return new Promise((resolve, reject) => {
+            if (helcimPayLoaded) {
+                resolve();
+                return;
+            }
+            
+            // Check if already loaded
+            if (typeof appendHelcimPayIframe === 'function') {
+                helcimPayLoaded = true;
+                resolve();
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.src = 'https://secure.helcim.app/helcim-pay/services/start.js';
+            script.async = true;
+            script.onload = () => {
+                helcimPayLoaded = true;
+                resolve();
+            };
+            script.onerror = () => {
+                reject(new Error('Failed to load payment processor'));
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    // Handle checkout submit
+    async function handleCheckoutSubmit() {
+        // Validate form
+        if (!validateCheckoutForm()) {
+            return;
+        }
+        
+        const submitBtn = document.getElementById('checkout-submit-btn');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        btnText.style.display = 'none';
+        btnLoading.style.display = 'flex';
+        
+        try {
+            // Load HelcimPay.js script
+            await loadHelcimPayScript();
+            
+            // Get form data
+            const formData = getCheckoutFormData();
+            
+            // Prepare cart data for the backend
+            // The backend expects cart items with id, quantity, size, and isSubscription
+            const cartItems = cart.map(item => ({
+                id: item.id,
+                quantity: item.quantity,
+                size: item.size || '12oz',
+                isSubscription: item.isSubscription || false,
+            }));
+            
+            // Call checkout endpoint
+            const response = await fetch('/.netlify/functions/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    cart: cartItems,
+                    customer: formData.customer,
+                    shipping: formData.shipping,
+                    shippingMethod: formData.shippingMethod,
+                }),
+            });
+            
+            const result = await response.json();
+            
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || 'Checkout failed. Please try again.');
+            }
+            
+            // Store order info for success callback
+            sessionStorage.setItem('pendingOrder', JSON.stringify({
+                invoiceNumber: result.invoiceNumber,
+                total: result.serverCalculatedTotals.total,
+                email: formData.customer.email,
+            }));
+            
+            // Close checkout modal before opening Helcim
+            closeCheckout();
+            
+            // Open Helcim payment modal with the checkout token
+            // The appendHelcimPayIframe function is provided by HelcimPay.js
+            if (typeof appendHelcimPayIframe === 'function') {
+                appendHelcimPayIframe(result.checkoutToken);
+                
+                // Set up message listener for Helcim payment result
+                setupHelcimMessageListener();
+            } else {
+                throw new Error('Payment processor not available. Please refresh and try again.');
+            }
+            
+        } catch (error) {
+            console.error('Checkout error:', error);
+            showToast(error.message || 'An error occurred. Please try again.', true);
+            
+            // Reset button state
+            submitBtn.disabled = false;
+            btnText.style.display = 'inline';
+            btnLoading.style.display = 'none';
+        }
+    }
+
+    // Set up message listener for Helcim payment result
+    function setupHelcimMessageListener() {
+        // Remove existing listener if any
+        window.removeEventListener('message', handleHelcimMessage);
+        
+        // Add new listener
+        window.addEventListener('message', handleHelcimMessage);
+    }
+
+    // Handle Helcim postMessage events
+    function handleHelcimMessage(event) {
+        // Verify origin is from Helcim
+        if (!event.origin.includes('helcim.app') && !event.origin.includes('helcim.com')) {
+            return;
+        }
+        
+        try {
+            const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+            
+            // Check for payment success
+            if (data.type === 'helcim-pay-success' || data.eventName === 'payment-success' || data.status === 'approved') {
+                handlePaymentSuccess(data);
+            }
+            // Check for payment failure
+            else if (data.type === 'helcim-pay-failed' || data.eventName === 'payment-failed' || data.status === 'declined') {
+                handlePaymentFailure(data);
+            }
+            // Check for modal close
+            else if (data.type === 'helcim-pay-close' || data.eventName === 'close') {
+                // User closed the payment modal - reset checkout button state
+                const submitBtn = document.getElementById('checkout-submit-btn');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    const btnText = submitBtn.querySelector('.btn-text');
+                    const btnLoading = submitBtn.querySelector('.btn-loading');
+                    if (btnText) btnText.style.display = 'inline';
+                    if (btnLoading) btnLoading.style.display = 'none';
+                }
+            }
+        } catch (e) {
+            // Not a JSON message or not from Helcim
+        }
+    }
+
+    // Handle successful payment
+    function handlePaymentSuccess(data) {
+        // Remove listener
+        window.removeEventListener('message', handleHelcimMessage);
+        
+        // Get pending order info
+        const pendingOrderStr = sessionStorage.getItem('pendingOrder');
+        let orderNumber = 'Unknown';
+        if (pendingOrderStr) {
+            try {
+                const pendingOrder = JSON.parse(pendingOrderStr);
+                orderNumber = pendingOrder.invoiceNumber;
+            } catch (e) {}
+        }
+        
+        // Clear the cart
+        cart = [];
+        saveCart();
+        renderCart();
+        
+        // Clear pending order
+        sessionStorage.removeItem('pendingOrder');
+        
+        // Remove Helcim iframe if exists
+        const helcimIframe = document.querySelector('iframe[src*="helcim"]');
+        if (helcimIframe) {
+            helcimIframe.parentElement.remove();
+        }
+        
+        // Show success modal
+        createSuccessModal(orderNumber);
+    }
+
+    // Handle failed payment
+    function handlePaymentFailure(data) {
+        // Remove listener
+        window.removeEventListener('message', handleHelcimMessage);
+        
+        // Clear pending order
+        sessionStorage.removeItem('pendingOrder');
+        
+        // Show error message
+        const errorMessage = data.message || data.error || 'Payment was declined. Please try again.';
+        showToast(errorMessage, true);
+        
+        // Remove Helcim iframe if exists
+        const helcimIframe = document.querySelector('iframe[src*="helcim"]');
+        if (helcimIframe) {
+            helcimIframe.parentElement.remove();
+        }
+        
+        // Reopen checkout modal
+        setTimeout(() => {
+            openCheckout();
+        }, 100);
     }
 
 
@@ -949,12 +1593,11 @@
                 removeItem(index);
             }
 
-            // Checkout button - disabled, coming soon
+            // Checkout button - open checkout modal
             if (e.target.id === 'cart-checkout-btn' || e.target.closest('#cart-checkout-btn')) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                // Checkout is disabled - show message
                 if (cart.length > 0) {
                     openCheckout();
                 }
@@ -962,10 +1605,14 @@
             }
         });
 
-        // Close cart with Escape key
+        // Close cart or checkout with Escape key
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && isCartOpen) {
-                closeCart();
+            if (e.key === 'Escape') {
+                if (isCheckoutOpen) {
+                    closeCheckout();
+                } else if (isCartOpen) {
+                    closeCart();
+                }
             }
         });
     }
@@ -983,7 +1630,9 @@
         close: closeCart,
         add: addToCart,
         getItems: () => [...cart],
-        clear: () => { cart = []; saveCart(); renderCart(); }
+        clear: () => { cart = []; saveCart(); renderCart(); },
+        checkout: openCheckout,
+        closeCheckout: closeCheckout
     };
 })();
 
