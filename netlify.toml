@@ -1,7 +1,7 @@
 [build]
   publish = "stumptown_static"
   functions = "netlify/functions"
-  edge_functions = "netlify/edge-functions"
+  # edge_functions = "netlify/edge-functions"
 
 [functions]
   node_bundler = "esbuild"
@@ -9,14 +9,16 @@
 # ============================================
 # EDGE FUNCTIONS CONFIGURATION
 # ============================================
-[[edge_functions]]
-  path = "/*"
-  function = "bot-protection"
-  excludedPath = ["/.netlify/functions/*", "/webhooks/*"]
+# Note: Edge functions temporarily disabled for local development
+# Uncomment below for production use
+# [[edge_functions]]
+#   path = "/*"
+#   function = "bot-protection"
+#   excludedPath = ["/.netlify/functions/*", "/webhooks/*"]
 
-[[edge_functions]]
-  path = "/.netlify/functions/*"
-  function = "security-check"
+# [[edge_functions]]
+#   path = "/.netlify/functions/*"
+#   function = "security-check"
 
 # ============================================
 # PERFORMANCE HEADERS - AGGRESSIVE CACHING
@@ -172,8 +174,10 @@
 # ============================================
 # PLUGINS
 # ============================================
-[[plugins]]
-  package = "@netlify/plugin-lighthouse"
-
-  [plugins.inputs]
-    output_path = "reports/lighthouse.html"
+# Note: Lighthouse plugin disabled for local development
+# Uncomment below for production use
+# [[plugins]]
+#   package = "@netlify/plugin-lighthouse"
+#
+#   [plugins.inputs]
+#     output_path = "reports/lighthouse.html"

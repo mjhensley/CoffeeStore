@@ -184,8 +184,8 @@ http://grainhousecoffee.com/*       https://grainhousecoffee.com/:splat  301!
 # ============================================
 # API & FUNCTION ROUTES
 # ============================================
-# These are handled by Netlify Functions
-/.netlify/functions/*   /.netlify/functions/:splat   200
+# Note: Netlify automatically handles /.netlify/functions/* routes
+# No redirect needed - functions are served directly by Netlify
 
 # ============================================
 # STATIC ASSETS - 404 FALLBACKS
