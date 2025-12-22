@@ -876,12 +876,17 @@
         renderCart();
     }
 
-    // Close cart
-    function closeCart() {
+    // Close cart sidebar elements (shared logic)
+    function closeCartElements() {
         isCartOpen = false;
         document.body.classList.remove('custom-cart-open');
         document.getElementById('cart-overlay').classList.remove('active');
         document.getElementById('cart-sidebar').classList.remove('active');
+    }
+
+    // Close cart
+    function closeCart() {
+        closeCartElements();
         document.body.style.overflow = '';
     }
 
@@ -1154,11 +1159,8 @@
             return;
         }
         
-        // Close cart sidebar first (without resetting overflow since we'll keep it hidden)
-        isCartOpen = false;
-        document.body.classList.remove('custom-cart-open');
-        document.getElementById('cart-overlay').classList.remove('active');
-        document.getElementById('cart-sidebar').classList.remove('active');
+        // Close cart sidebar first (without resetting overflow since we'll keep it hidden for modal)
+        closeCartElements();
         
         // Create modal if not exists
         createCheckoutModal();
