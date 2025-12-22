@@ -70,6 +70,15 @@ export default async (request, context) => {
   return context.next();
 };
 
+// ============================================================
+// IMPORTANT: excludedPath entries explained:
+// - "/.netlify/functions/helcim-webhook": Direct webhook endpoint
+// - "/webhooks/*": Rewritten webhook paths (via netlify.toml)
+// Both must be excluded because Helcim's webhook servers send
+// POST requests without our custom security headers (fingerprint,
+// challenge token). The runtime early-exit guard above provides
+// primary protection; this config is a secondary defense layer.
+// ============================================================
 export const config = {
   path: ["/.netlify/functions/*", "/api/*"],
   excludedPath: ["/.netlify/functions/helcim-webhook", "/webhooks/*"]
