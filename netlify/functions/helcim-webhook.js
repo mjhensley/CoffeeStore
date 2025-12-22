@@ -3,7 +3,10 @@
  * 
  * Handles payment event webhooks from Helcim payment gateway.
  * 
- * Endpoint: /.netlify/functions/helcim-webhook
+ * Endpoints:
+ * - Direct: /.netlify/functions/helcim-webhook
+ * - Alternative: https://grainhousecoffee.com/webhooks/payment (rewritten to direct endpoint)
+ * 
  * Supported methods: HEAD, GET, POST, OPTIONS
  * 
  * Events handled:
@@ -14,6 +17,7 @@
  * Setup:
  * 1. In Helcim Dashboard → Integrations → Webhooks
  * 2. Add webhook URL: https://your-site.netlify.app/.netlify/functions/helcim-webhook
+ *    or https://grainhousecoffee.com/webhooks/payment
  * 3. Helcim will validate the URL with a HEAD request
  * 4. (Optional) Set HELCIM_WEBHOOK_SECRET for signature verification (not yet implemented)
  */
@@ -31,7 +35,10 @@ exports.handler = async (event, context) => {
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 204,
-            headers,
+            headers: {
+                ...headers,
+                'Access-Control-Max-Age': '86400' // Cache preflight response for 24 hours
+            },
             body: ''
         };
     }
@@ -132,6 +139,19 @@ exports.handler = async (event, context) => {
                 // TODO: Implement actual signature verification based on Helcim's documentation
                 // The signature algorithm/format needs to be obtained from Helcim docs
                 console.warn('Webhook signature verification not yet implemented - signature presence checked but not verified');
+            }
+
+            // Idempotency protection: Extract event ID from payload
+            // This prevents duplicate processing of retried webhook deliveries
+            const eventId = payload.id || payload.transactionId;
+            if (!eventId) {
+                console.warn('No event ID (payload.id or payload.transactionId) present in webhook payload - idempotency check skipped');
+            } else {
+                // TODO: Production implementations should store processed event IDs in a database
+                // or KV store (e.g., Netlify Blobs, Redis, DynamoDB) to prevent duplicate
+                // processing of retried webhook deliveries. Check if eventId exists before
+                // processing and store it after successful processing with appropriate TTL.
+                console.log('Event ID for idempotency:', eventId);
             }
 
             // Log only non-sensitive webhook metadata

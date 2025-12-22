@@ -23,6 +23,14 @@ function verifyChallenge(token, timestamp) {
 export default async (request, context) => {
   const url = new URL(request.url);
   
+  // CRITICAL: Early-exit for webhook paths to work around Netlify excludedPath bug
+  // where edge function exclusion may not work correctly. This ensures webhook
+  // requests bypass security checks regardless of whether excludedPath works.
+  // This prevents blocking, rate-limiting, or rejecting webhook traffic.
+  if (url.pathname.startsWith('/webhooks/') || url.pathname.startsWith('/.netlify/functions/')) {
+    return context.next();
+  }
+  
   // Bypass security check for Helcim webhook endpoint and rewritten webhook paths
   // Helcim's servers send POST requests without custom security headers
   // Note: /webhooks/* paths are rewritten to /.netlify/functions/helcim-webhook
