@@ -365,7 +365,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                z-index: 10001;
+                z-index: 10002;
                 opacity: 0;
                 visibility: hidden;
                 transition: all 0.3s ease;
@@ -843,7 +843,6 @@
         
         saveCart();
         showToast(`${itemData.name} added to cart`);
-        openCart();
     }
 
     // Update item quantity
