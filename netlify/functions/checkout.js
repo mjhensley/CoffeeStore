@@ -23,15 +23,78 @@ const { getConfig, getApiHeaders, validateConfig, logConfigStatus } = require('.
 
 // =============================================================================
 // PRODUCT CATALOG - Server-side source of truth for pricing
+// Synced with frontend product-pricing.js
 // =============================================================================
 const PRODUCT_CATALOG = {
+  // SIGNATURE BLENDS
   'hair-bender': { name: 'Hair Bender', basePrice: 37.00 },
   'holler-mountain': { name: 'Holler Mountain', basePrice: 38.75 },
   'french-roast': { name: 'French Roast', basePrice: 33.25 },
   'founders-blend': { name: "Founder's Blend", basePrice: 35.00 },
-  'trapper-creek': { name: 'Trapper Creek', basePrice: 39.00 },
+  'homestead': { name: 'Homestead', basePrice: 35.00 },
+  'hundred-mile': { name: 'Hundred Mile', basePrice: 35.00 },
+  'evergreen': { name: 'Evergreen', basePrice: 35.00 },
+  
+  // SINGLE ORIGINS
+  'ethiopia-mordecofe': { name: 'Ethiopia Mordecofe', basePrice: 44.75 },
   'ethiopia-duromina': { name: 'Ethiopia Duromina', basePrice: 42.00 },
-  // Add more products as needed
+  'ethiopia-suke-quto': { name: 'Ethiopia Suke Quto', basePrice: 44.00 },
+  'guatemala-injerto': { name: 'Guatemala El Injerto Bourbon', basePrice: 38.00 },
+  'guatemala-bella-vista': { name: 'Guatemala Bella Vista', basePrice: 41.00 },
+  'costa-rica-bella-vista': { name: 'Costa Rica Bella Vista', basePrice: 41.00 },
+  'colombia-el-jordan': { name: 'Colombia El Jordan', basePrice: 39.00 },
+  'colombia-cantillo': { name: 'Colombia Cantillo Family', basePrice: 41.00 },
+  'costa-rica-montes': { name: 'Costa Rica Montes de Oro', basePrice: 43.00 },
+  'indonesia-beis-penantan': { name: 'Indonesia Bies Penantan', basePrice: 40.00 },
+  'honduras-puente': { name: 'Honduras El Puente', basePrice: 39.00 },
+  'roasters-pick': { name: "Roaster's Pick", basePrice: 39.00 },
+  
+  // DECAF
+  'trapper-creek-decaf': { name: 'Trapper Creek Decaf', basePrice: 39.50 },
+  
+  // COLD BREW
+  'cold-brew-original': { name: 'Original Cold Brew', basePrice: 8.75 },
+  'cold-brew-nitro': { name: 'Hair Bender Nitro Cold Brew', basePrice: 9.75 },
+  'cold-brew-concentrate': { name: 'Cold Brew Concentrate', basePrice: 28.25 },
+  'cold-brew-oatly-original': { name: 'Cold Brew with Oatly (Original)', basePrice: 10.75 },
+  'cold-brew-oatly-chocolate': { name: 'Cold Brew with Oatly (Chocolate)', basePrice: 10.75 },
+  'cold-brew-decaf': { name: 'Cold Brew Decaf Concentrate', basePrice: 28.25 },
+  'ethiopia-cold-brew': { name: 'Ethiopia Cold Brew Concentrate', basePrice: 31.25 },
+  'french-roast-cold-brew': { name: 'French Roast Cold Brew Concentrate', basePrice: 29.25 },
+  'cold-brew-4pack': { name: 'Cold Brew 4-Pack', basePrice: 32.00 },
+  'cold-brew-nitro-4pack': { name: 'Cold Brew Nitro 4-Pack', basePrice: 36.00 },
+  'cold-brew-variety': { name: 'Cold Brew Variety Pack', basePrice: 38.00 },
+  'cold-brew-stubby': { name: 'Cold Brew Stubby', basePrice: 8.75 },
+  
+  // GEAR
+  'aeropress': { name: 'AeroPress Coffee Maker', basePrice: 39.95 },
+  'aeropress-original': { name: 'AeroPress Coffee Maker', basePrice: 39.95 },
+  'aeropress-filters': { name: 'AeroPress Filters (350 Pack)', basePrice: 8.95 },
+  'chemex-6cup': { name: 'Chemex 6-Cup Brewer', basePrice: 49.95 },
+  'hario-v60': { name: 'Hario V60 Ceramic Dripper', basePrice: 26.00 },
+  'hario-kettle': { name: 'Hario Buono Electric Kettle', basePrice: 95.00 },
+  'hario-buono-kettle': { name: 'Hario Buono Electric Kettle', basePrice: 95.00 },
+  'baratza-encore': { name: 'Baratza Encore Burr Grinder', basePrice: 169.00 },
+  'origami-dripper': { name: 'Origami Dripper', basePrice: 42.00 },
+  'oxo-9-cup-brewer': { name: 'OXO 9-Cup Brewer', basePrice: 199.95 },
+  'ratio-six-brewer': { name: 'Ratio Six Brewer', basePrice: 345.00 },
+  'pour-over-filters': { name: 'Pour Over Filters', basePrice: 9.95 },
+  'oxo-brewer-filters': { name: 'OXO Brewer Filters', basePrice: 12.95 },
+  'stubby-coozy': { name: 'Stubby Coozy', basePrice: 8.00 },
+  
+  // MERCH
+  'diner-mug': { name: 'Level Up Diner Mug', basePrice: 16.00 },
+  
+  // BUNDLES
+  'blend-trio': { name: 'Stumptown Blend Trio', basePrice: 99.50 },
+  
+  // SUBSCRIPTIONS
+  'single-bag-subscription': { name: 'Single Bag Subscription', basePrice: 35.00 },
+  'two-bag-subscription': { name: 'Two Bag Subscription', basePrice: 65.00 },
+  'family-pack-subscription': { name: 'Family Pack Subscription', basePrice: 95.00 },
+  '3-month-gift-subscription': { name: '3 Month Gift Subscription', basePrice: 105.00 },
+  '6-month-gift-subscription': { name: '6 Month Gift Subscription', basePrice: 195.00 },
+  '12-month-gift-subscription': { name: '12 Month Gift Subscription', basePrice: 360.00 },
 };
 
 // Size multipliers for calculating final price
@@ -68,6 +131,59 @@ const LINE_ITEM_SKUS = {
 // =============================================================================
 
 /**
+ * Size suffix patterns used in product IDs
+ * These are stripped from the product ID to get the base product ID
+ */
+const SIZE_SUFFIXES = ['-12oz', '-2lb', '-5lb'];
+
+/**
+ * Subscription suffix patterns used in product IDs
+ * These are stripped after size to identify subscription orders
+ */
+const SUBSCRIPTION_SUFFIX_PATTERN = /-subscription(-\w+)?$/;
+
+/**
+ * Extract base product ID and size from a product ID with embedded size suffix
+ * Examples:
+ *   'holler-mountain-12oz' -> { baseId: 'holler-mountain', size: '12oz' }
+ *   'hair-bender-2lb-subscription-2weeks' -> { baseId: 'hair-bender', size: '2lb', isSubscription: true }
+ *   'cold-brew-concentrate' -> { baseId: 'cold-brew-concentrate', size: null }
+ *   'single-bag-subscription' -> { baseId: 'single-bag-subscription', size: null, isSubscription: false } 
+ *      (this is a product ID in the catalog, not a dynamic subscription)
+ * 
+ * @param {string} productId - The product ID potentially containing size suffix
+ * @returns {Object} Object with baseId, size, and isSubscription flag
+ */
+function parseProductId(productId) {
+  // First, check if the full ID exists in the catalog - if so, use it directly
+  // This handles cases like 'single-bag-subscription' which is a catalog product, not a dynamic suffix
+  if (PRODUCT_CATALOG[productId]) {
+    return { baseId: productId, size: null, isSubscription: false };
+  }
+  
+  let workingId = productId;
+  let isSubscription = false;
+  
+  // Check for subscription suffix first (e.g., '-subscription-2weeks')
+  if (SUBSCRIPTION_SUFFIX_PATTERN.test(workingId)) {
+    isSubscription = true;
+    workingId = workingId.replace(SUBSCRIPTION_SUFFIX_PATTERN, '');
+  }
+  
+  // Check for size suffix
+  for (const suffix of SIZE_SUFFIXES) {
+    if (workingId.endsWith(suffix)) {
+      const size = suffix.replace('-', ''); // Remove leading dash
+      const baseId = workingId.slice(0, -suffix.length);
+      return { baseId, size, isSubscription };
+    }
+  }
+  
+  // No size suffix found - return working ID (with subscription suffix potentially removed)
+  return { baseId: workingId, size: null, isSubscription };
+}
+
+/**
  * Validate and sanitize cart items
  */
 function validateCart(cart) {
@@ -79,6 +195,11 @@ function validateCart(cart) {
     throw new Error('Cart cannot contain more than 100 items');
   }
 
+  // [DEBUG] Log incoming cart for troubleshooting
+  if (process.env.DEBUG_CHECKOUT) {
+    console.log('[DEBUG] validateCart - incoming cart:', JSON.stringify(cart, null, 2));
+  }
+
   return cart.map(item => {
     // Validate required fields
     if (!item.id || !item.quantity) {
@@ -88,8 +209,22 @@ function validateCart(cart) {
     // Sanitize product ID (alphanumeric and dashes only)
     const sanitizedId = String(item.id).replace(/[^a-z0-9-]/gi, '');
     
-    // Validate product exists in catalog
-    if (!PRODUCT_CATALOG[sanitizedId]) {
+    // Parse product ID to extract base ID and embedded size
+    const { baseId, size: embeddedSize, isSubscription: embeddedSubscription } = parseProductId(sanitizedId);
+    
+    // [DEBUG] Log parsed product ID
+    if (process.env.DEBUG_CHECKOUT) {
+      console.log('[DEBUG] validateCart - parsed product ID:', { 
+        original: sanitizedId, 
+        baseId, 
+        embeddedSize, 
+        embeddedSubscription 
+      });
+    }
+    
+    // Validate product exists in catalog using base ID
+    if (!PRODUCT_CATALOG[baseId]) {
+      console.error(`Invalid product: ${sanitizedId} (base ID: ${baseId}). Available products: ${Object.keys(PRODUCT_CATALOG).join(', ')}`);
       throw new Error(`Invalid product: ${sanitizedId}`);
     }
 
@@ -99,18 +234,20 @@ function validateCart(cart) {
       throw new Error('Invalid quantity: must be between 1 and 1000');
     }
 
-    // Validate size (optional)
-    const size = item.size || '12oz';
+    // Determine size: use embedded size from product ID, fall back to item.size, default to '12oz'
+    // For non-coffee products (gear, cold brew, etc.), size may not apply but we still validate
+    const size = embeddedSize || item.size || '12oz';
     if (!SIZE_MULTIPLIERS[size]) {
       throw new Error(`Invalid size: ${size}`);
     }
 
-    // Validate subscription flag
-    const isSubscription = item.isSubscription === true;
+    // Determine subscription status: use embedded flag or item's isSubscription field
+    const isSubscription = embeddedSubscription || item.isSubscription === true;
 
     return {
-      id: sanitizedId,
-      name: PRODUCT_CATALOG[sanitizedId].name,
+      id: baseId, // Use the base product ID for catalog lookup
+      originalId: sanitizedId, // Keep original ID for SKU purposes
+      name: PRODUCT_CATALOG[baseId].name,
       quantity,
       size,
       isSubscription,
@@ -274,7 +411,7 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
       quantity: item.quantity,
       price: Math.round(itemPrice * 100) / 100,
       total: Math.round(itemPrice * item.quantity * 100) / 100,
-      sku: item.id,
+      sku: item.originalId || item.id, // Use original ID with size suffix for SKU traceability
     };
   });
 
@@ -537,9 +674,10 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    // Log error (but not sensitive data)
+    // Log error with more details for debugging (but not sensitive data)
     console.error('Checkout error:', {
       message: error.message,
+      stack: error.stack,
       timestamp: new Date().toISOString(),
     });
 
