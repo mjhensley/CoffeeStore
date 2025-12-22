@@ -56,6 +56,8 @@
  */
 
 const crypto = require('crypto');
+const { isEventProcessed, markEventProcessed } = require('./lib/idempotency');
+const { getConfig, logConfigStatus } = require('./lib/helcim-config');
 
 /**
  * Maximum allowed age for webhook timestamps (in seconds).
@@ -409,47 +411,43 @@ exports.handler = async (event, context) => {
 
         try {
             // ============================================================
-            // IDEMPOTENCY PROTECTION
+            // IDEMPOTENCY PROTECTION WITH PERSISTENT STORAGE
             // ============================================================
             // Extract webhook event identifier for idempotency tracking.
             // The webhook-id header is the unique message identifier from Helcim.
+            // Uses Netlify Blobs for persistent storage to prevent duplicate
+            // processing even across function cold starts.
             // ============================================================
             const webhookIdHeader = event.headers['webhook-id'] || event.headers['Webhook-Id'];
             const webhookEventId = webhookIdHeader || payload.id || payload.transactionId || payload.eventId || null;
             
-            // Log the event ID for idempotency tracking
-            // TODO: For production systems, persist processed webhook IDs in a
-            // database (e.g., PostgreSQL, DynamoDB) or KV store (e.g., Netlify Blobs, Redis)
-            // to prevent duplicate event processing. Before processing, check if the
-            // webhook-id has already been processed. Implementation example:
-            //
-            // const alreadyProcessed = await db.webhookEvents.exists(webhookEventId);
-            // if (alreadyProcessed) {
-            //     console.log('Duplicate webhook detected, skipping:', webhookEventId);
-            //     return { statusCode: 200, headers, body: JSON.stringify({ received: true, duplicate: true }) };
-            // }
-            // await db.webhookEvents.insert({ id: webhookEventId, processedAt: new Date() });
-            //
             if (webhookEventId) {
-                console.log('Webhook event ID for idempotency tracking:', webhookEventId);
+                // Check if this event has already been processed
+                const idempotencyCheck = await isEventProcessed(webhookEventId);
+                
+                if (idempotencyCheck.processed) {
+                    console.log('Duplicate webhook detected, skipping:', webhookEventId, {
+                        originalProcessedAt: idempotencyCheck.processedAt,
+                        storageSource: idempotencyCheck.source
+                    });
+                    return {
+                        statusCode: 200,
+                        headers,
+                        body: JSON.stringify({
+                            received: true,
+                            duplicate: true,
+                            originalProcessedAt: idempotencyCheck.processedAt,
+                            timestamp: new Date().toISOString()
+                        })
+                    };
+                }
+                
+                console.log('Processing new webhook event:', webhookEventId);
             } else {
                 console.warn('Webhook received without identifiable event ID - unable to ensure idempotency', {
                     payloadKeys: Object.keys(payload),
                     timestamp: new Date().toISOString()
                 });
-            }
-
-            // Idempotency protection: Extract event ID from payload
-            // This prevents duplicate processing of retried webhook deliveries
-            const eventId = payload.id || payload.transactionId;
-            if (!eventId) {
-                console.warn('No event ID (payload.id or payload.transactionId) present in webhook payload - idempotency check skipped');
-            } else {
-                // TODO: Production implementations should store processed event IDs in a database
-                // or KV store (e.g., Netlify Blobs, Redis, DynamoDB) to prevent duplicate
-                // processing of retried webhook deliveries. Check if eventId exists before
-                // processing and store it after successful processing with appropriate TTL.
-                console.log('Event ID for idempotency:', eventId);
             }
 
             // Log only non-sensitive webhook metadata
@@ -482,6 +480,18 @@ exports.handler = async (event, context) => {
 
                 default:
                     console.log('Unknown webhook event type:', eventType);
+            }
+
+            // Mark event as processed after successful handling
+            if (webhookEventId) {
+                const markResult = await markEventProcessed(webhookEventId, {
+                    eventType: eventType,
+                    transactionId: payload.transactionId || payload.id
+                });
+                console.log('Event marked as processed:', webhookEventId, {
+                    storageSource: markResult.source,
+                    success: markResult.success
+                });
             }
 
             // Always return 200 OK to acknowledge receipt

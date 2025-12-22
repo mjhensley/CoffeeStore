@@ -2,21 +2,34 @@
 
 This directory contains serverless functions for processing payments with Helcim.
 
-## Helcim Payment Functions (Current)
+## Directory Structure
 
-### `checkout.js` ✨ NEW
+```
+netlify/functions/
+├── checkout.js              # Creates secure checkout sessions
+├── helcim-webhook.js        # Handles Helcim payment webhooks
+├── health.js                # Health check endpoint
+├── send-contact-email.js    # Contact form handler
+├── package.json             # Dependencies
+└── lib/                     # Shared utilities
+    ├── helcim-config.js     # Environment-based configuration
+    └── idempotency.js       # Persistent webhook idempotency
+```
 
-Production-ready checkout function that creates secure payment sessions with Helcim API.
+## Functions
+
+### `checkout.js`
+
+Creates secure checkout sessions with Helcim API.
 
 **Endpoint:** `POST /.netlify/functions/checkout`
 
 **Security Features:**
 - Server-side product catalog with price verification
 - Input validation and sanitization
-- Payload size limits (1MB max for safety)
-- Token-based authentication with Helcim API
+- Payload size limits (1MB max)
+- Environment-based API configuration (sandbox/production)
 - No sensitive credit card details logged
-- PCI-compliant payment processing
 
 **Request Body:**
 ```json
@@ -53,6 +66,7 @@ Production-ready checkout function that creates secure payment sessions with Hel
   "checkoutToken": "tok_abc123...",
   "sessionId": "sess_123",
   "invoiceNumber": "GH-1234567890",
+  "environment": "sandbox",
   "serverCalculatedTotals": {
     "subtotal": 74.00,
     "shipping": 5.99,
@@ -62,69 +76,18 @@ Production-ready checkout function that creates secure payment sessions with Hel
 }
 ```
 
-### `helcim-webhook.js` ✨ NEW
-
-Handles payment event webhooks from Helcim with signature verification and idempotency.
-
-**Endpoint:** `POST /.netlify/functions/helcim-webhook`
-
-**Events Handled:**
-- `payment.success` / `transaction.approved` - Payment completed
-- `payment.failed` / `transaction.declined` - Payment failed
-- `payment.refunded` - Payment refunded
-
-**Security Features:**
-- HMAC-SHA256 signature verification
-- Idempotency handling (prevents duplicate processing)
-- No sensitive payment data logged
-
-**Setup:**
-1. In Helcim Dashboard → Integrations → Webhooks
-2. Add webhook URL: `https://your-site.netlify.app/.netlify/functions/helcim-webhook`
-3. (Optional) Set `HELCIM_WEBHOOK_SECRET` environment variable for signature verification
-
-### `helcim-create-session.js` (Legacy)
-
-Creates a secure checkout session with the Helcim API.
-
-**Endpoint:** `POST /.netlify/functions/helcim-create-session`
-
-**Request Body:**
-```json
-{
-  "cart": [
-    { "id": "hair-bender", "name": "Hair Bender", "quantity": 2, "price": 37.00 }
-  ],
-  "customer": {
-    "email": "customer@example.com",
-    "firstName": "John",
-    "lastName": "Doe",
-    "phone": "555-1234"
-  },
-  "shipping": {
-    "address": "123 Main St",
-    "city": "Portland",
-    "state": "OR",
-    "zip": "97201",
-    "country": "US"
-  },
-  "shippingMethod": "standard"
-}
-```
-
-This directory contains serverless functions for the Coffee Store.
-
-## Current Functions
-
 ### `helcim-webhook.js`
 
-Handles payment event webhooks from Helcim payment gateway.
+Handles payment event webhooks from Helcim with signature verification and persistent idempotency.
 
-**Endpoint:** `/.netlify/functions/helcim-webhook`
+**Endpoints:**
+- Direct: `/.netlify/functions/helcim-webhook`
+- Friendly: `/webhooks/payment` (rewritten via netlify.toml)
 
-**Supported HTTP Methods:**
-- `HEAD` - Used by Helcim to validate the webhook URL during configuration
-- `GET` - Health check endpoint, returns operational status
+**HTTP Methods:**
+- `HEAD` - URL validation (Helcim uses this during webhook setup)
+- `GET` - Health check, returns operational status
+- `GET ?check=<value>` - Echo validation (returns the check value)
 - `POST` - Receives webhook events from Helcim
 - `OPTIONS` - CORS preflight support
 
@@ -133,28 +96,17 @@ Handles payment event webhooks from Helcim payment gateway.
 - `payment.failed` / `transaction.declined` - Payment failed
 - `payment.refunded` - Payment refunded
 
-**Setup:**
-1. In Helcim Dashboard → Integrations → Webhooks
-2. Add webhook URL: `https://your-site.netlify.app/.netlify/functions/helcim-webhook`
-3. Helcim will validate the URL with a HEAD request - the function returns 200 OK
-4. (Optional) Set `HELCIM_WEBHOOK_SECRET` environment variable for signature verification
-
-**Key Features:**
-- Responds to HEAD requests for Helcim's URL validation (fixes 400 error during setup)
-- Handles CORS for cross-origin requests
-- Logs all webhook events for debugging
-
-**Troubleshooting:**
-If you encounter a 400 error during webhook setup, see [WEBHOOK_TROUBLESHOOTING.md](../../WEBHOOK_TROUBLESHOOTING.md) for detailed guidance.
-- Returns 200 OK for all events to prevent retries
+**Security Features:**
+- HMAC-SHA256 signature verification
+- Timestamp validation (5-minute window) to prevent replay attacks
+- Persistent idempotency via Netlify Blobs
+- Graceful fallback to in-memory storage
 
 ### `health.js`
 
-Health check endpoint for monitoring deployment status.
+Health check endpoint for monitoring.
 
 **Endpoint:** `GET /.netlify/functions/health`
-
-Returns configuration status without exposing secrets.
 
 ### `send-contact-email.js`
 
@@ -162,14 +114,64 @@ Sends contact form emails using Resend API.
 
 **Endpoint:** `POST /.netlify/functions/send-contact-email`
 
+## Shared Utilities
+
+### `lib/helcim-config.js`
+
+Environment-based configuration for Helcim API.
+
+**Features:**
+- Automatic sandbox/production detection based on Netlify context
+- Centralized API configuration
+- Test card numbers for sandbox mode
+
+**Usage:**
+```javascript
+const { getConfig, getApiHeaders, validateConfig } = require('./lib/helcim-config');
+
+const config = getConfig();
+console.log(config.environment); // 'sandbox' or 'production'
+console.log(config.isSandbox);   // true/false
+
+const headers = getApiHeaders();
+// Returns configured API headers with token
+```
+
+### `lib/idempotency.js`
+
+Persistent idempotency storage using Netlify Blobs.
+
+**Features:**
+- Prevents duplicate webhook processing
+- 7-day TTL for processed events
+- Falls back to in-memory storage if Blobs unavailable
+
+**Usage:**
+```javascript
+const { isEventProcessed, markEventProcessed } = require('./lib/idempotency');
+
+// Check if event was already processed
+const result = await isEventProcessed('webhook-id-123');
+if (result.processed) {
+  console.log('Duplicate detected');
+  return;
+}
+
+// Mark event as processed
+await markEventProcessed('webhook-id-123', { eventType: 'payment.success' });
+```
+
 ## Environment Variables
 
-Required environment variables (set in Netlify Dashboard → Site settings → Environment variables):
+Set these in **Netlify Dashboard → Site Settings → Environment Variables**:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `HELCIM_WEBHOOK_SECRET` | (Optional) Webhook signature secret for verification | No |
+| `HELCIM_API_TOKEN` | Helcim API token | Yes |
+| `HELCIM_WEBHOOK_SECRET` | Webhook signature verification token | Recommended |
 | `SITE_URL` | Your site URL for redirects | Yes |
+| `HELCIM_ENVIRONMENT` | `sandbox` or `production` (auto-detected if not set) | No |
+| `DEBUG_CHECKOUT` | Enable debug logging | No |
 
 ## Local Development
 
@@ -184,13 +186,34 @@ netlify dev
 
 ## Testing
 
-Use Helcim test mode with test cards:
-- **Success:** `4242 4242 4242 4242`
-- **Decline:** `4000 0000 0000 0002`
-- Any future expiry date and any 3-digit CVV
+### Test Cards (Sandbox Only)
 
-## API Reference
+| Card Number | Result |
+|-------------|--------|
+| `4242 4242 4242 4242` | Success |
+| `4000 0000 0000 0002` | Decline |
+| `4000 0000 0000 9995` | Insufficient funds |
 
+Use any future expiry date and any 3-digit CVV.
+
+### Webhook Testing
+
+```bash
+# Test HEAD request (validation)
+curl -I http://localhost:8888/.netlify/functions/helcim-webhook
+
+# Test GET request (health check)
+curl http://localhost:8888/.netlify/functions/helcim-webhook
+
+# Test POST request (simulated webhook)
+curl -X POST http://localhost:8888/.netlify/functions/helcim-webhook \
+  -H "Content-Type: application/json" \
+  -d '{"type":"payment.success","transactionId":"test-123"}'
+```
+
+## Documentation
+
+- [Payment Setup Guide](../../PAYMENT_SETUP.md)
+- [Webhook Troubleshooting](../../WEBHOOK_TROUBLESHOOTING.md)
 - [Helcim API Docs](https://devdocs.helcim.com)
-- [HelcimPay.js Initialize](https://devdocs.helcim.com/docs/initialize-helcimpayjs)
-- [Netlify Functions](https://docs.netlify.com/functions/overview/)
+- [Netlify Functions Docs](https://docs.netlify.com/functions/overview/)
