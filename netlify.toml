@@ -136,6 +136,8 @@
 
 # Rewrite webhooks to Helcim webhook function
 # This MUST be placed before HTTPS redirects since Netlify processes rules in order
+# NOTE: netlify dev may not respect status 200 rewrites correctly.
+# Testing should be done against Netlify Deploy Preview URLs rather than localhost.
 #
 # IMPORTANT: netlify dev (local development) may not respect status=200 rewrites
 # correctly. Webhook testing MUST be performed against Netlify Deploy Preview

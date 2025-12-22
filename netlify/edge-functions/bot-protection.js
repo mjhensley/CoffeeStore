@@ -210,6 +210,9 @@ export default async (request, context) => {
   const url = new URL(request.url);
   const path = url.pathname;
   
+  // CRITICAL: Early-exit for webhook paths to work around Netlify excludedPath bug
+  // where edge function exclusion may not work correctly. This ensures webhook
+  // requests bypass bot protection regardless of whether excludedPath works.
   // ============================================================
   // CRITICAL: Early-exit for webhook paths
   // This explicit bypass is required because Netlify's excludedPath

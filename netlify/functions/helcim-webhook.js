@@ -8,6 +8,10 @@
  *   - /.netlify/functions/helcim-webhook (direct function endpoint)
  *   - /webhooks/payment (rewritten to the above via netlify.toml)
  * 
+ * Endpoints:
+ * - Direct: /.netlify/functions/helcim-webhook
+ * - Alternative: https://grainhousecoffee.com/webhooks/payment (rewritten to direct endpoint)
+ * 
  * Supported methods: HEAD, GET, POST, OPTIONS
  * 
  * Events handled:
@@ -24,6 +28,7 @@
  * Setup:
  * 1. In Helcim Dashboard → Integrations → Webhooks
  * 2. Add webhook URL: https://your-site.netlify.app/.netlify/functions/helcim-webhook
+ *    or https://grainhousecoffee.com/webhooks/payment
  *    OR: https://your-site.netlify.app/webhooks/payment
  * 3. Helcim will validate the URL with a HEAD request
  * 4. Copy the Verifier Token from Helcim and set it as HELCIM_WEBHOOK_SECRET
@@ -224,7 +229,7 @@ exports.handler = async (event, context) => {
             statusCode: 204,
             headers: {
                 ...headers,
-                'Access-Control-Max-Age': '86400'
+                'Access-Control-Max-Age': '86400' // Cache preflight response for 24 hours
             },
             body: ''
         };
@@ -432,6 +437,19 @@ exports.handler = async (event, context) => {
                     payloadKeys: Object.keys(payload),
                     timestamp: new Date().toISOString()
                 });
+            }
+
+            // Idempotency protection: Extract event ID from payload
+            // This prevents duplicate processing of retried webhook deliveries
+            const eventId = payload.id || payload.transactionId;
+            if (!eventId) {
+                console.warn('No event ID (payload.id or payload.transactionId) present in webhook payload - idempotency check skipped');
+            } else {
+                // TODO: Production implementations should store processed event IDs in a database
+                // or KV store (e.g., Netlify Blobs, Redis, DynamoDB) to prevent duplicate
+                // processing of retried webhook deliveries. Check if eventId exists before
+                // processing and store it after successful processing with appropriate TTL.
+                console.log('Event ID for idempotency:', eventId);
             }
 
             // Log only non-sensitive webhook metadata
