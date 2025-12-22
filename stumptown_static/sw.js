@@ -63,11 +63,10 @@ self.addEventListener('fetch', event => {
   // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Skip cross-origin requests (except fonts and CDN)
+  // Skip cross-origin requests (except fonts)
   if (!url.origin.includes(self.location.origin) && 
       !url.origin.includes('fonts.googleapis.com') &&
-      !url.origin.includes('fonts.gstatic.com') &&
-      !url.origin.includes('cdn.snipcart.com')) {
+      !url.origin.includes('fonts.gstatic.com')) {
     return;
   }
 

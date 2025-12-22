@@ -84,8 +84,6 @@
     const preconnects = [
       'https://fonts.googleapis.com',
       'https://fonts.gstatic.com',
-      'https://cdn.snipcart.com',
-      'https://app.snipcart.com',
     ];
 
     preconnects.forEach(url => {
@@ -100,7 +98,6 @@
 
     // DNS prefetch for faster resolution
     const dnsPrefetch = [
-      'https://api.snipcart.com',
       'https://api.resend.com',
     ];
 
@@ -199,18 +196,8 @@
   // DEFER NON-CRITICAL CSS
   // ============================================
   function deferNonCriticalCSS() {
-    // Find non-critical stylesheets and defer them
-    const stylesheets = document.querySelectorAll('link[rel="stylesheet"][href*="snipcart"]');
-    
-    stylesheets.forEach(stylesheet => {
-      // Convert to preload first, then swap to stylesheet
-      const href = stylesheet.href;
-      stylesheet.media = 'print';
-      stylesheet.onload = function() {
-        this.media = 'all';
-        this.onload = null;
-      };
-    });
+    // Non-critical CSS deferring logic has been removed since Snipcart is no longer used
+    // The custom cart implementation uses inline styles
   }
 
   // ============================================
@@ -432,12 +419,6 @@
   // OPTIMIZE THIRD-PARTY SCRIPTS
   // ============================================
   function optimizeThirdParty() {
-    // Delay loading Snipcart until user interaction
-    const snipcartScript = document.querySelector('script[src*="snipcart"]');
-    if (snipcartScript && !snipcartScript.async) {
-      snipcartScript.async = true;
-    }
-
     // Load analytics after main content
     if (window.gtag === undefined) {
       window.dataLayer = window.dataLayer || [];
