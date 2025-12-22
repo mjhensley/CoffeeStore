@@ -124,20 +124,20 @@
             .cart-sidebar {
                 position: fixed;
                 top: 0;
-                right: 0;
+                right: 0 !important;
                 width: 400px;
                 max-width: 100%;
                 height: 100%;
                 background: #fff;
                 box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
                 transform: translateX(100%);
-                transition: transform 0.3s ease;
+                transition: transform 0.3s ease !important;
                 z-index: 10001 !important;
                 display: flex;
                 flex-direction: column;
             }
             .cart-sidebar.active {
-                transform: translateX(0);
+                transform: translateX(0) !important;
             }
             .cart-header {
                 display: flex;
@@ -878,12 +878,15 @@
     }
 
     // Close cart
-    function closeCart() {
+    // skipOverflowReset: when transitioning to checkout, we don't want to reset overflow
+    function closeCart(skipOverflowReset) {
         isCartOpen = false;
         document.body.classList.remove('custom-cart-open');
         document.getElementById('cart-overlay').classList.remove('active');
         document.getElementById('cart-sidebar').classList.remove('active');
-        document.body.style.overflow = '';
+        if (!skipOverflowReset) {
+            document.body.style.overflow = '';
+        }
     }
 
     // Show toast notification
@@ -1155,6 +1158,9 @@
             return;
         }
         
+        // Close cart sidebar first (skip overflow reset since we're transitioning to checkout)
+        closeCart(true);
+        
         // Create modal if not exists
         createCheckoutModal();
         
@@ -1162,13 +1168,10 @@
         renderCheckoutItems();
         updateCheckoutTotals();
         
-        // Show modal
+        // Show modal and set overflow after cart is closed
         checkoutModal.classList.add('active');
         isCheckoutOpen = true;
         document.body.style.overflow = 'hidden';
-        
-        // Close cart sidebar
-        closeCart();
     }
 
     // Close checkout modal
