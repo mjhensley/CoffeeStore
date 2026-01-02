@@ -1,111 +1,98 @@
 {
   "version": 2,
-  "outputDirectory": "stumptown_static",
-  "functions": {
-    "api/*.js": {
-      "includeFiles": "api/lib/**"
-    }
-  },
-  "rewrites": [
-    { "source": "/.netlify/functions/checkout", "destination": "/api/checkout" },
-    { "source": "/.netlify/functions/helcim-webhook", "destination": "/api/helcim-webhook" },
-    { "source": "/.netlify/functions/send-contact-email", "destination": "/api/send-contact-email" },
-    { "source": "/.netlify/functions/health", "destination": "/api/health" },
-    { "source": "/webhooks/payment", "destination": "/api/helcim-webhook" },
-    { "source": "/webhooks/:path*", "destination": "/api/helcim-webhook" },
-    { "source": "/collections", "destination": "/collections.html" },
-    { "source": "/subscribe", "destination": "/subscribe.html" },
-    { "source": "/gear", "destination": "/gear.html" },
-    { "source": "/locations", "destination": "/locations.html" },
-    { "source": "/brew-guides", "destination": "/brew-guides.html" },
-    { "source": "/our-story", "destination": "/our-story.html" },
-    { "source": "/contact", "destination": "/contact.html" },
-    { "source": "/learn", "destination": "/learn.html" },
-    { "source": "/rewards", "destination": "/rewards.html" },
-    { "source": "/coffee-quiz", "destination": "/coffee-quiz.html" },
-    { "source": "/account", "destination": "/account.html" },
-    { "source": "/blog", "destination": "/blog.html" },
-    { "source": "/impact", "destination": "/impact.html" },
-    { "source": "/accessibility", "destination": "/accessibility.html" },
-    { "source": "/cold-brew", "destination": "/cold-brew.html" },
-    { "source": "/gift-guide", "destination": "/gift-guide.html" },
-    { "source": "/shop", "destination": "/collections.html" },
-    { "source": "/about", "destination": "/our-story.html" },
-    { "source": "/products/:product", "destination": "/collections.html" }
-  ],
-  "redirects": [
+  "builds": [
     {
-      "source": "/(.*)",
+      "src": "stumptown_static/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["api/lib/**"]
+      }
+    }
+  ],
+  "routes": [
+    { "src": "/.netlify/functions/checkout", "dest": "/api/checkout" },
+    { "src": "/.netlify/functions/helcim-webhook", "dest": "/api/helcim-webhook" },
+    { "src": "/.netlify/functions/send-contact-email", "dest": "/api/send-contact-email" },
+    { "src": "/.netlify/functions/health", "dest": "/api/health" },
+    { "src": "/webhooks/payment", "dest": "/api/helcim-webhook" },
+    { "src": "/webhooks/(.*)", "dest": "/api/helcim-webhook" },
+    { "src": "/collections", "dest": "/stumptown_static/collections.html" },
+    { "src": "/subscribe", "dest": "/stumptown_static/subscribe.html" },
+    { "src": "/gear", "dest": "/stumptown_static/gear.html" },
+    { "src": "/locations", "dest": "/stumptown_static/locations.html" },
+    { "src": "/brew-guides", "dest": "/stumptown_static/brew-guides.html" },
+    { "src": "/our-story", "dest": "/stumptown_static/our-story.html" },
+    { "src": "/contact", "dest": "/stumptown_static/contact.html" },
+    { "src": "/learn", "dest": "/stumptown_static/learn.html" },
+    { "src": "/rewards", "dest": "/stumptown_static/rewards.html" },
+    { "src": "/coffee-quiz", "dest": "/stumptown_static/coffee-quiz.html" },
+    { "src": "/account", "dest": "/stumptown_static/account.html" },
+    { "src": "/blog", "dest": "/stumptown_static/blog.html" },
+    { "src": "/impact", "dest": "/stumptown_static/impact.html" },
+    { "src": "/accessibility", "dest": "/stumptown_static/accessibility.html" },
+    { "src": "/cold-brew", "dest": "/stumptown_static/cold-brew.html" },
+    { "src": "/gift-guide", "dest": "/stumptown_static/gift-guide.html" },
+    { "src": "/shop", "dest": "/stumptown_static/collections.html" },
+    { "src": "/about", "dest": "/stumptown_static/our-story.html" },
+    { "src": "/products/(.*)", "dest": "/stumptown_static/collections.html" },
+    { 
+      "src": "/images/(.*)", 
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable" },
+      "dest": "/stumptown_static/images/$1",
+      "continue": true
+    },
+    { 
+      "src": "/(.*\\.css)", 
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable" },
+      "continue": true
+    },
+    { 
+      "src": "/(.*\\.js)", 
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable" },
+      "continue": true
+    },
+    { 
+      "src": "/site-config\\.js", 
+      "headers": { "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" },
+      "continue": true
+    },
+    { 
+      "src": "/(.*\\.(woff|woff2))", 
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable", "Access-Control-Allow-Origin": "*" },
+      "continue": true
+    },
+    { 
+      "src": "/(.*\\.svg)", 
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable", "Content-Type": "image/svg+xml" },
+      "continue": true
+    },
+    { 
+      "src": "/(.*\\.html)", 
+      "headers": { "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" },
+      "continue": true
+    },
+    {
+      "src": "/(.*)",
+      "headers": { 
+        "X-Frame-Options": "SAMEORIGIN", 
+        "X-Content-Type-Options": "nosniff", 
+        "Referrer-Policy": "strict-origin-when-cross-origin", 
+        "Permissions-Policy": "geolocation=(), microphone=(), camera=(), payment=(self 'https://secure.helcim.app')", 
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://maps.googleapis.com https://secure.helcim.app https://*.helcim.com https://*.helcim.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://api.resend.com https://maps.googleapis.com https://*.helcim.com https://*.helcim.app; frame-src https://secure.helcim.app https://*.helcim.com https://*.helcim.app; object-src 'none'; base-uri 'self';"
+      },
+      "continue": true
+    },
+    {
+      "src": "/(.*)",
       "has": [{ "type": "host", "value": "www.grainhousecoffee.com" }],
-      "destination": "https://grainhousecoffee.com/$1",
-      "permanent": true
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=(), payment=(self 'https://secure.helcim.app')" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://maps.googleapis.com https://secure.helcim.app https://*.helcim.com https://*.helcim.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://api.resend.com https://maps.googleapis.com https://*.helcim.com https://*.helcim.app; frame-src https://secure.helcim.app https://*.helcim.com https://*.helcim.app; object-src 'none'; base-uri 'self';" }
-      ]
+      "status": 308,
+      "headers": { "Location": "https://grainhousecoffee.com/$1" }
     },
-    {
-      "source": "/images/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.css",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.js",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
-      ]
-    },
-    {
-      "source": "/site-config.js",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.html",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.woff2",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.woff",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.svg",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
-        { "key": "Content-Type", "value": "image/svg+xml" }
-      ]
-    }
+    { "src": "/(.*)", "dest": "/stumptown_static/$1" }
   ]
 }
