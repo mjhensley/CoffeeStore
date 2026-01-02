@@ -112,16 +112,65 @@ curl -I https://grainhousecoffee.com/.netlify/functions/health
 
 The site uses **apex domain as canonical**: `https://grainhousecoffee.com`
 
-All requests to `www.grainhousecoffee.com` are 301 redirected to the apex domain.
+All requests to `www.grainhousecoffee.com` are 301/308 redirected to the apex domain.
 
-### Vercel Domain Setup
+### ⚠️ CRITICAL: Vercel Dashboard Domain Setup
 
-1. In Vercel Dashboard → Project → Settings → Domains
-2. Add `grainhousecoffee.com` as primary domain
-3. Add `www.grainhousecoffee.com` as alias (redirect to apex)
-4. Ensure DNS is properly configured:
-   - `A` record for apex → Vercel IP
-   - `CNAME` for www → `cname.vercel-dns.com`
+**IMPORTANT**: Domain-level redirects (apex vs www) are controlled by the **Vercel Dashboard**, NOT vercel.json. The vercel.json redirects only work AFTER the domain-level routing is resolved.
+
+#### Step-by-Step Domain Configuration
+
+1. **Go to Vercel Dashboard → Project → Settings → Domains**
+
+2. **If `www.grainhousecoffee.com` is listed as Primary** (this causes apex→www redirect):
+   - Click the three-dot menu (⋯) next to `grainhousecoffee.com`
+   - Select **"Set as Primary"**
+   - This makes apex the canonical domain
+
+3. **Configure www as a Redirect** (not an alias):
+   - Click on `www.grainhousecoffee.com` in the domains list
+   - Under "Redirects to", ensure it says `grainhousecoffee.com`
+   - The redirect type should be **308 Permanent Redirect**
+
+4. **Verify the configuration shows**:
+   ```
+   grainhousecoffee.com         [Primary] [✓ Valid]
+   www.grainhousecoffee.com     Redirects to grainhousecoffee.com [✓ Valid]
+   ```
+
+5. **DNS Configuration**:
+   - **Apex domain (`grainhousecoffee.com`)**:
+     - A record → `76.76.21.21` (Vercel's IP)
+     - OR ALIAS/ANAME → `cname.vercel-dns.com` (if your DNS supports it)
+   - **WWW subdomain (`www.grainhousecoffee.com`)**:
+     - CNAME → `cname.vercel-dns.com`
+
+#### Why This Matters for Webhooks
+
+When `www` is set as Primary in Vercel:
+- `https://grainhousecoffee.com/webhooks/payment` → 307 redirect to `https://www.grainhousecoffee.com/webhooks/payment`
+- Helcim webhook follows redirect, lands on www
+- The webhook rewrite at www may not work correctly, resulting in 404
+
+When `apex` is set as Primary:
+- `https://grainhousecoffee.com/webhooks/payment` → 200 OK (direct hit)
+- `https://www.grainhousecoffee.com/webhooks/payment` → 308 redirect to apex → 200 OK
+- Webhooks work correctly without redirect chains
+
+#### Verification After Domain Change
+
+After making domain changes in Vercel Dashboard, verify with:
+
+```bash
+# Test apex webhook (should return 200, no redirect)
+curl -I https://grainhousecoffee.com/webhooks/payment
+
+# Test www webhook (should redirect to apex with 308, then 200)
+curl -I -L https://www.grainhousecoffee.com/webhooks/payment
+
+# Test apex API endpoint (should return 200, no redirect)  
+curl -I https://grainhousecoffee.com/api/helcim-webhook
+```
 
 ## Idempotency Storage
 
@@ -241,6 +290,24 @@ curl -I https://grainhousecoffee.com/.netlify/functions/health
 4. If validation fails, check Vercel function logs
 
 ## Troubleshooting
+
+### 307 Redirect from Apex to WWW (Domain Configuration Issue)
+
+**Symptom**: 
+```bash
+curl -I https://grainhousecoffee.com/webhooks/payment
+# Returns: HTTP/2 307, Location: https://www.grainhousecoffee.com/webhooks/payment
+```
+
+**Cause**: In Vercel Dashboard, `www.grainhousecoffee.com` is set as the Primary Domain, causing Vercel to redirect all apex traffic to www before processing any routes.
+
+**Solution**: 
+1. Go to **Vercel Dashboard → Project → Settings → Domains**
+2. Click the three-dot menu (⋯) next to `grainhousecoffee.com`
+3. Select **"Set as Primary"**
+4. Verify that `www.grainhousecoffee.com` shows "Redirects to grainhousecoffee.com"
+
+**Note**: This is a dashboard-only fix - vercel.json redirects cannot override Vercel's domain-level Primary Domain routing.
 
 ### Checkout Not Working
 
