@@ -409,12 +409,14 @@ async function createHelcimSession(validatedCart, customer, shipping, totals) {
 
   const apiUrl = `${config.apiBaseUrl}/helcim-pay/initialize`;
   
-  console.log('Calling Helcim HelcimPay.js initialize API:', {
-    url: apiUrl,
-    environment: config.environment,
-    invoiceNumber,
-    amount: totals.total
-  });
+  // Only log in non-production or when debugging is enabled
+  if (process.env.VERCEL_ENV !== 'production' || process.env.DEBUG_CHECKOUT) {
+    console.log('Calling Helcim HelcimPay.js initialize API:', {
+      url: apiUrl,
+      environment: config.environment,
+      invoiceNumber: invoiceNumber.slice(0, 4) + '****', // Partial invoice number for debugging
+    });
+  }
   
   const response = await fetch(apiUrl, {
     method: 'POST',

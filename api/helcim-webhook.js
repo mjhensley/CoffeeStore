@@ -372,7 +372,11 @@ module.exports = async function handler(req, res) {
           break;
 
         default:
-          console.log('Unhandled webhook event type:', eventType, 'Payload:', JSON.stringify(payload));
+          // Log only event type and ID for unhandled events (avoid logging full payload with potentially sensitive data)
+          console.log('Unhandled webhook event type:', eventType, {
+            transactionId: payload.transactionId || payload.id,
+            payloadKeys: Object.keys(payload)
+          });
       }
 
       // Mark event as processed
