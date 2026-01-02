@@ -1,131 +1,166 @@
-# Webhook 400 Error Fix - Summary
+# Webhook Domain Routing Fix - Summary
 
 ## Issue
-The Helcim webhook integration was delivering **400 Bad Request errors** when attempting to configure the webhook URL in the Helcim Dashboard. This prevented users from setting up webhook notifications for payment events.
+The Helcim webhook integration was returning **307 Temporary Redirect** responses when calling:
+- `curl -I https://grainhousecoffee.com/webhooks/payment` → 307 redirect to `www.grainhousecoffee.com`
+- `curl -I https://grainhousecoffee.com/api/helcim-webhook` → 307 redirect to `www.grainhousecoffee.com`
 
-## Root Cause
-The `netlify/functions/helcim-webhook.js` file contained **two complete handler implementations** that were concatenated together (lines 1-179 and lines 179-510). This caused:
+Following the redirect chain resulted in **404 Not Found** on the www domain.
 
-1. **JavaScript Errors**: The duplicate `exports.handler` definition created syntax/runtime errors
-2. **Missing HEAD Support**: The second implementation didn't properly handle HEAD requests
-3. **Helcim Validation Failure**: Helcim validates webhook URLs by sending a HEAD request before saving the configuration. Without proper HEAD support, validation fails with a 400 error.
+## Root Cause Analysis
+
+### Primary Cause: Vercel Dashboard Domain Configuration
+The `www.grainhousecoffee.com` domain was configured as the **Primary Domain** in Vercel Dashboard. When a domain is marked as Primary:
+
+1. **Vercel performs domain-level routing BEFORE processing vercel.json**
+2. All requests to non-Primary domains (apex) get 307 redirected to the Primary domain (www)
+3. This redirect happens at the edge, before any rewrites or API routes are evaluated
+4. The vercel.json redirect from www→apex cannot override this because it runs AFTER the domain-level redirect
+
+### Secondary Finding: Code and Configuration Already Complete
+Upon investigation, the repository already contained:
+- ✅ `api/helcim-webhook.js` - Production-ready webhook handler
+- ✅ `api/lib/idempotency.js` - Vercel KV integration with 7-day TTL
+- ✅ `vercel.json` - Correct rewrites for `/webhooks/payment` → `/api/helcim-webhook`
+- ✅ `vercel.json` - www→apex redirect (but ineffective due to dashboard config)
 
 ## Solution
-### Code Changes
-1. **Removed 330 lines** of duplicate/conflicting code from `helcim-webhook.js`
-2. **Kept the correct implementation** (lines 1-179) that properly handles:
-   - `HEAD` requests - Critical for Helcim URL validation ✅
-   - `GET` requests - Health check endpoint ✅
-   - `POST` requests - Actual webhook event processing ✅
-   - `OPTIONS` requests - CORS preflight support ✅
 
-### Documentation Added
-1. **WEBHOOK_TROUBLESHOOTING.md** (248 lines)
-   - Comprehensive troubleshooting guide
-   - Root cause explanation
-   - Testing procedures with curl commands
-   - Step-by-step configuration instructions
-   - Security considerations and warnings
-   - Common errors and solutions
-
-2. **test-webhook.sh** (88 lines)
-   - Automated testing script
-   - Tests all HTTP methods
-   - Color-coded output
-   - Proper error handling with `set -o pipefail`
-   - Robust status code checking
-
-3. **Updated README.md**
-   - Added reference to troubleshooting guide
-   - Clear pointer for users experiencing issues
-
-## Testing Results
-All test cases passed successfully:
-
-```
-✅ HEAD request (webhook validation) - Returns 200
-✅ GET request (health check) - Returns operational status  
-✅ OPTIONS request (CORS preflight) - Returns 204
-✅ POST request with valid payload - Processes webhook
-✅ POST request with invalid JSON - Handles gracefully
-✅ PUT request (not allowed) - Returns 405
+### 1. Added Missing Dependency
+```json
+// package.json
+{
+  "dependencies": {
+    "@vercel/kv": "^2.0.0"  // NEW - Required for durable idempotency
+  }
+}
 ```
 
-## How Helcim Webhook Validation Works
-When you configure a webhook URL in Helcim:
+### 2. Updated Documentation with Critical Dashboard Steps
 
-1. Helcim sends a **HEAD request** to validate the URL exists
-2. The endpoint must return **200 OK** for validation to succeed
-3. If validation fails (400/404/500), Helcim rejects the webhook URL
-4. After validation succeeds, Helcim can send POST requests with actual webhook events
+**VERCEL_MIGRATION.md** - Added critical domain configuration section:
+- Step-by-step Vercel Dashboard instructions to set apex as Primary
+- DNS configuration guidance
+- Webhook-specific troubleshooting
 
-## Usage Instructions
-For users experiencing webhook 400 errors:
+**WEBHOOK_TROUBLESHOOTING.md** - Comprehensive rewrite for Vercel:
+- 307 redirect issue and fix (dashboard action required)
+- All test commands for Vercel
+- Correct webhook URLs
+- Idempotency and signature verification documentation
 
-### 1. Deploy the Fix
-Merge this PR and deploy to your Netlify site.
+### 3. Vercel Dashboard Action Required (CRITICAL)
 
-### 2. Test the Endpoint
+**This fix REQUIRES a Vercel Dashboard change:**
+
+1. Go to **Vercel Dashboard → Project → Settings → Domains**
+2. Click the three-dot menu (⋯) next to `grainhousecoffee.com`
+3. Select **"Set as Primary"**
+4. Verify configuration shows:
+   ```
+   grainhousecoffee.com          [Primary] ✓ Valid
+   www.grainhousecoffee.com      Redirects to grainhousecoffee.com ✓ Valid
+   ```
+
+## Summary: What Was Changed
+
+### Files Modified
+
+| File | Change | Purpose |
+|------|--------|---------|
+| `package.json` | Added `@vercel/kv` | Enable durable idempotency storage |
+| `VERCEL_MIGRATION.md` | Major update | Added domain configuration steps |
+| `WEBHOOK_TROUBLESHOOTING.md` | Major rewrite | Vercel-specific troubleshooting |
+
+### Configuration Already Present (No Changes Needed)
+
+| Component | Location | Status |
+|-----------|----------|--------|
+| Webhook Handler | `api/helcim-webhook.js` | ✅ Complete |
+| Idempotency Module | `api/lib/idempotency.js` | ✅ Complete |
+| Webhook Rewrites | `vercel.json` | ✅ Complete |
+| www→apex Redirect | `vercel.json` | ✅ Complete |
+
+## Deployment Verification Commands
+
+### PowerShell (Windows)
+```powershell
+# Test apex webhook HEAD (should be 200, no redirect)
+curl.exe -I "https://grainhousecoffee.com/webhooks/payment"
+
+# Test direct API endpoint (should be 200)
+curl.exe -I "https://grainhousecoffee.com/api/helcim-webhook"
+
+# Test www redirect to apex (should be 308, then 200)
+curl.exe -I -L "https://www.grainhousecoffee.com/webhooks/payment"
+
+# Test webhook GET health check
+curl.exe "https://grainhousecoffee.com/webhooks/payment"
+```
+
+### Bash (Linux/Mac)
 ```bash
-./test-webhook.sh https://your-site.netlify.app/.netlify/functions/helcim-webhook
+# Test apex webhook HEAD (should be 200, no redirect)
+curl -I https://grainhousecoffee.com/webhooks/payment
+
+# Test direct API endpoint (should be 200)
+curl -I https://grainhousecoffee.com/api/helcim-webhook
+
+# Test www redirect to apex (should be 308, then 200)
+curl -I -L https://www.grainhousecoffee.com/webhooks/payment
+
+# Test webhook GET health check
+curl https://grainhousecoffee.com/webhooks/payment
 ```
 
-### 3. Configure in Helcim Dashboard
-1. Go to Helcim Dashboard → Integrations → Webhooks
-2. Add webhook URL: `https://your-site.netlify.app/.netlify/functions/helcim-webhook`
-3. Select events (payment.success, payment.failed, payment.refunded)
-4. Save - Helcim will validate with a HEAD request (should now succeed!)
+### POST Test (Development Only)
+To test POST without a valid signature (will return 401, proving function is running):
+```bash
+curl -X POST https://grainhousecoffee.com/webhooks/payment \
+  -H "Content-Type: application/json" \
+  -d '{"type":"payment.success","transactionId":"test123"}'
+```
 
-### 4. Verify It Works
-- Check that Helcim shows the webhook as "Active"
-- Test with a payment transaction
-- Check Netlify function logs to see webhook events being received
+**Note**: In production, you cannot simulate webhook POSTs without the valid `HELCIM_WEBHOOK_SECRET` because signature verification is enforced.
 
-## Security Considerations
-⚠️ **Important**: The current implementation provides basic protection but does not fully verify webhook signatures. For production use:
+## Are There Additional Suggestions or Missing Pieces?
 
-1. Implement full HMAC-SHA256 signature verification per Helcim's documentation
-2. Use IP allowlisting to restrict access to Helcim's IP addresses
-3. Monitor webhook logs for suspicious activity
-4. Don't execute critical business logic based solely on webhook data without validation
+**Yes - One Critical Dashboard Action Required:**
 
-See WEBHOOK_TROUBLESHOOTING.md for detailed security recommendations.
+The code and configuration changes in this PR are complete, but the 307 redirect will persist until the Vercel Dashboard domain configuration is updated:
 
-## Files Changed
-- `netlify/functions/helcim-webhook.js` (-330 lines) - Removed duplicate handler code
-- `netlify/functions/README.md` (+3 lines) - Added troubleshooting reference
-- `WEBHOOK_TROUBLESHOOTING.md` (+248 lines) - New comprehensive guide
-- `test-webhook.sh` (+88 lines) - New testing script
+| Action | Location | Who | Required |
+|--------|----------|-----|----------|
+| Set apex as Primary | Vercel Dashboard → Domains | **Dashboard Admin** | **YES - CRITICAL** |
+| Redeploy after PR merge | Vercel | Automatic | Automatic |
+| Link Vercel KV storage | Vercel Dashboard → Storage | Dashboard Admin | Recommended |
 
-**Total**: +339 insertions, -330 deletions (net +9 lines, significant quality improvement)
+### Why Can't This Be Fixed in Code?
 
-## Before vs After
+Vercel's domain-level Primary Domain routing operates at the CDN edge layer, which is:
+1. Configured exclusively through the Dashboard API/UI
+2. Evaluated BEFORE vercel.json rewrites/redirects
+3. Not overridable by any project configuration file
 
-### Before
-- 510 lines with duplicate handlers
-- JavaScript errors due to duplicate `exports.handler`
-- HEAD requests not properly handled
-- 400 errors during Helcim webhook configuration
-- No troubleshooting documentation
+The vercel.json redirect `www → apex` only applies AFTER the request reaches the origin, which never happens when apex is redirected to www at the edge.
 
-### After
-- 179 lines, single clean handler
-- Valid JavaScript, passes all syntax checks
-- HEAD/GET/POST/OPTIONS all properly supported
-- Webhook configuration succeeds in Helcim Dashboard
-- Comprehensive troubleshooting guide with test script
+## Done Criteria Checklist
 
-## Impact
-✅ **Resolves the webhook integration issue completely**
-✅ **Enables users to successfully configure Helcim webhooks**
-✅ **Provides clear troubleshooting guidance for future issues**
-✅ **Improves code quality and maintainability**
+After deploying this PR and making the Dashboard change:
 
-## Next Steps for Production
-While this fix resolves the 400 error and allows webhook configuration, for production deployments consider:
+- [ ] `curl -I https://grainhousecoffee.com/webhooks/payment` returns **200 OK** (not 307)
+- [ ] `curl -I https://grainhousecoffee.com/api/helcim-webhook` returns **200 OK**
+- [ ] `curl -I https://www.grainhousecoffee.com/webhooks/payment` returns **308** redirect to apex
+- [ ] Helcim webhook URL validation succeeds
+- [ ] Vercel KV is linked (optional but recommended for durable idempotency)
+- [ ] Test payment webhook delivery works end-to-end
 
-1. Implementing full signature verification
-2. Setting up IP allowlisting
-3. Adding database integration for order processing
-4. Setting up email notifications for webhook events
-5. Implementing proper error handling and retry logic
+## Security Summary
+
+No security vulnerabilities were introduced or discovered in this change:
+
+- **Signature Verification**: Already implemented using HMAC-SHA256 with timing-safe comparison
+- **Replay Attack Prevention**: 5-minute timestamp window validation
+- **Idempotency**: Vercel KV with 7-day TTL prevents duplicate processing
+- **No Secrets Exposed**: No credentials committed to repository
+- **Dependency Security**: `@vercel/kv@2.0.0` checked - no known vulnerabilities

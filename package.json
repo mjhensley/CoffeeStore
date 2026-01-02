@@ -6,6 +6,7 @@
     "dev": "python serve.py"
   },
   "dependencies": {
+    "@vercel/kv": "^2.0.0",
     "stripe": "^14.0.0"
   },
   "engines": {

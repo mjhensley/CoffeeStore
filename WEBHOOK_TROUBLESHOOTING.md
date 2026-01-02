@@ -1,7 +1,46 @@
 # Helcim Webhook Integration - Troubleshooting Guide
 
 ## Overview
-This guide helps troubleshoot common issues with the Helcim webhook integration, particularly the **400 Error** that occurs during webhook URL validation.
+This guide helps troubleshoot common issues with the Helcim webhook integration on **Vercel** hosting.
+
+## Webhook URLs
+
+The following URLs are valid webhook endpoints (all route to the same handler):
+
+| URL | Purpose |
+|-----|---------|
+| `https://grainhousecoffee.com/webhooks/payment` | **Primary** - Use this in Helcim Dashboard |
+| `https://grainhousecoffee.com/api/helcim-webhook` | Direct API route |
+| `https://grainhousecoffee.com/.netlify/functions/helcim-webhook` | Legacy Netlify compatibility |
+
+## Common Issue: 307 Redirect Breaking Webhooks
+
+### Problem
+When configuring a webhook URL in the Helcim Dashboard, the webhook validation or delivery fails because:
+- `curl -I https://grainhousecoffee.com/webhooks/payment` returns **307 redirect** to www
+- Following the redirect leads to **404 Not Found**
+
+### Root Cause
+In Vercel Dashboard, `www.grainhousecoffee.com` is configured as the **Primary Domain**. This causes:
+1. All requests to apex (`grainhousecoffee.com`) are redirected to www
+2. The redirect is a 307 (temporary), not following POST body
+3. Webhooks end up at www domain which may not have the route configured
+
+### Solution: Configure Apex as Primary Domain
+
+**This requires Vercel Dashboard access (cannot be fixed via code alone):**
+
+1. Go to **Vercel Dashboard → Project → Settings → Domains**
+2. Find `grainhousecoffee.com` in the domain list
+3. Click the three-dot menu (⋯) next to it
+4. Select **"Set as Primary"**
+5. Verify configuration shows:
+   ```
+   grainhousecoffee.com          [Primary] ✓ Valid
+   www.grainhousecoffee.com      Redirects to grainhousecoffee.com ✓ Valid
+   ```
+6. Wait 1-2 minutes for DNS propagation
+7. Test: `curl -I https://grainhousecoffee.com/webhooks/payment` should return **200 OK**
 
 ## Common Issue: 400 Error During Webhook Setup
 
@@ -72,9 +111,13 @@ exports.handler = async (event, context) => {
 
 ## Testing Your Webhook Endpoint
 
-### 1. Test HEAD Request (Validation)
+### 1. Test HEAD Request (Helcim URL Validation)
 ```bash
-curl -I https://your-site.netlify.app/.netlify/functions/helcim-webhook
+# On Windows PowerShell:
+curl.exe -I "https://grainhousecoffee.com/webhooks/payment"
+
+# On Linux/Mac:
+curl -I https://grainhousecoffee.com/webhooks/payment
 ```
 
 Expected response:
@@ -85,9 +128,11 @@ access-control-allow-methods: GET, POST, HEAD, OPTIONS
 content-type: application/json
 ```
 
+**If you see 307 redirect instead**, the apex domain is not set as Primary. See "307 Redirect Breaking Webhooks" section above.
+
 ### 2. Test GET Request (Health Check)
 ```bash
-curl https://your-site.netlify.app/.netlify/functions/helcim-webhook
+curl https://grainhousecoffee.com/webhooks/payment
 ```
 
 Expected response:
@@ -99,70 +144,92 @@ Expected response:
 }
 ```
 
-### 3. Test POST Request (Webhook Event)
+### 3. Test Check Parameter (Helcim Echo Validation)
 ```bash
-curl -X POST https://your-site.netlify.app/.netlify/functions/helcim-webhook \
+curl "https://grainhousecoffee.com/api/helcim-webhook?check=test123"
+```
+
+Expected response:
+```
+test123
+```
+
+### 4. Test POST Request (Simulated Webhook - Expects 401 without valid signature)
+```bash
+curl -X POST https://grainhousecoffee.com/webhooks/payment \
   -H "Content-Type: application/json" \
   -d '{"type":"payment.success","transactionId":"test123"}'
 ```
 
-Expected response:
+Expected response (when HELCIM_WEBHOOK_SECRET is configured):
 ```json
 {
-  "received": true,
-  "timestamp": "2025-12-21T20:00:00.000Z"
+  "error": "Missing required signature headers",
+  "timestamp": "..."
 }
+```
+HTTP Status: **401** - This proves the function is running and signature verification is active.
+
+### 5. Test OPTIONS Request (CORS Preflight)
+```bash
+curl -X OPTIONS https://grainhousecoffee.com/api/helcim-webhook \
+  -H "Origin: https://secure.helcim.app" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: Content-Type,webhook-signature,webhook-timestamp,webhook-id" -I
+```
+
+Expected response:
+```
+HTTP/2 204
+access-control-allow-origin: *
+access-control-allow-methods: GET, POST, HEAD, OPTIONS
+access-control-max-age: 86400
 ```
 
 ## Webhook Configuration Steps
 
-1. **Deploy the Fixed Code**
-   - Ensure the updated `helcim-webhook.js` is deployed to your Netlify site
-   - Wait for the deployment to complete
+1. **Ensure Apex Domain is Primary in Vercel**
+   - Go to Vercel Dashboard → Project → Settings → Domains
+   - Set `grainhousecoffee.com` as Primary (not www)
+   - This prevents 307 redirects that break webhooks
 
 2. **Test the Endpoint**
    - Use the HEAD request test above to verify it responds with 200 OK
-   - Use the GET request test to verify the health check works
+   - If you get 307, fix the domain configuration first
 
 3. **Configure in Helcim Dashboard**
    - Go to Helcim Dashboard → Integrations → Webhooks
-   - Add webhook URL: `https://your-site.netlify.app/.netlify/functions/helcim-webhook`
+   - Add webhook URL: `https://grainhousecoffee.com/webhooks/payment`
    - Select the events you want to receive (payment.success, payment.failed, etc.)
-   - Save the configuration
+   - Copy the **Verifier Token** from Helcim
 
-4. **Verify Webhook is Active**
+4. **Set Webhook Secret in Vercel**
+   - Go to Vercel Dashboard → Project → Settings → Environment Variables
+   - Add `HELCIM_WEBHOOK_SECRET` with the Verifier Token value
+   - Redeploy the project after adding the variable
+
+5. **Validate in Helcim**
+   - Click "Validate URL" in Helcim webhook settings
+   - Should succeed with 200 OK
+   - If validation fails, check Vercel function logs
+
+6. **Verify Webhook is Active**
    - Check that Helcim shows the webhook as "Active"
-   - Test with a payment transaction to verify events are received
+   - Test with a sandbox payment transaction to verify events are received
 
 ## Edge Function Configuration
 
-The webhook endpoint should **bypass bot protection** edge functions to ensure Helcim's requests aren't blocked.
+**Note**: This project has been migrated to Vercel. Edge functions are not currently used for webhook protection on Vercel.
 
-Check your `netlify.toml` configuration:
-
-```toml
-[[edge_functions]]
-  path = "/.netlify/functions/*"
-  function = "security-check"
-```
-
-The bot protection edge function (in `netlify/edge-functions/bot-protection.js`) should exclude webhook endpoints to prevent blocking Helcim's requests:
-
-```javascript
-// Skip for all Netlify functions
-if (path.startsWith('/.netlify/')) {
-  return context.next();
-}
-```
-
-This configuration is already in place in the repository.
+The webhook endpoint automatically bypasses any edge function processing and routes directly to the Vercel API handler at `/api/helcim-webhook.js`.
 
 ## Monitoring Webhook Events
 
-### Check Netlify Function Logs
-1. Go to Netlify Dashboard → Functions
-2. Select `helcim-webhook`
-3. View recent invocations and logs
+### Check Vercel Function Logs
+1. Go to Vercel Dashboard → Project → Deployments
+2. Click on the latest deployment
+3. Click "Functions" tab
+4. Select `api/helcim-webhook` to view logs
 
 ### Webhook Event Logging
 The handler logs all webhook events (without sensitive data):
@@ -177,92 +244,99 @@ console.log('Helcim webhook received:', {
 
 ## Security Considerations
 
-### Webhook Signature Verification (Optional)
-To verify webhooks are genuinely from Helcim, you can set up signature verification:
+### Webhook Signature Verification (Required for Production)
 
-1. Get your webhook secret from Helcim Dashboard
-2. Set environment variable: `HELCIM_WEBHOOK_SECRET=your_secret_here`
-3. The handler will require the `X-Helcim-Signature` header to be present
+The webhook handler implements **full HMAC-SHA256 signature verification** per Helcim's documentation:
 
-**Important Note**: The current implementation provides **basic protection** by requiring the signature header to be present when `HELCIM_WEBHOOK_SECRET` is configured, but it does not cryptographically verify the signature value itself. This means:
-- If no secret is set, all webhooks are accepted (development mode)
-- If a secret is set, requests must include the `X-Helcim-Signature` header (basic filtering)
-- Full HMAC-SHA256 signature verification should be implemented for production use
+1. **Get your webhook secret from Helcim Dashboard**:
+   - Go to Integrations → Webhooks
+   - Create/edit webhook and copy the **Verifier Token**
+   
+2. **Set environment variable in Vercel**:
+   - `HELCIM_WEBHOOK_SECRET` = the Verifier Token (base64 encoded)
 
-**Implementation Note**: Most webhook providers (including Stripe, GitHub, etc.) use HMAC-SHA256 for signature verification. While the exact header format and payload construction method for Helcim signatures should be verified in their official documentation, a typical implementation would look like:
+3. **How signature verification works**:
+   - Helcim sends three headers: `webhook-id`, `webhook-timestamp`, `webhook-signature`
+   - The handler computes: `HMAC-SHA256(base64_decode(secret), "${webhook-id}.${webhook-timestamp}.${body}")`
+   - Signature is compared using timing-safe comparison to prevent timing attacks
+   - Timestamp is validated to be within 5 minutes to prevent replay attacks
 
-```javascript
-const crypto = require('crypto');
+4. **If verification fails**, the handler returns:
+   - **401 Unauthorized** - Missing or invalid signature headers
+   - **401 Unauthorized** - Timestamp expired (replay attack prevention)
+   - **401 Unauthorized** - Signature mismatch
 
-function verifyHelcimSignature(payload, signature, secret) {
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
-  
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
-}
-```
+**⚠️ Important**: If `HELCIM_WEBHOOK_SECRET` is not configured, signature verification is skipped with a warning logged. This is acceptable for development but **MUST be configured for production**.
 
-Consult Helcim's developer documentation for the exact signature format, payload encoding, and header name they use.
+## Idempotency Protection
 
-⚠️ **Security Warning**: Without full signature verification, malicious actors who know your webhook URL could potentially send fake webhook events. For production use, you should:
-1. Implement full HMAC-SHA256 signature verification based on Helcim's documentation
-2. Use IP allowlisting to restrict access to Helcim's IP addresses only
-3. Monitor webhook logs for suspicious activity
-4. Never expose sensitive business logic based solely on webhook data without additional validation
+The webhook handler implements **idempotency protection** using Vercel KV (Upstash Redis):
 
-### CORS Configuration
-The webhook handler allows cross-origin requests from any origin (`*`). This is acceptable for webhooks because:
-- POST requests from Helcim's servers don't originate from browsers (no CORS preflight needed)
-- The endpoint only accepts POST requests for actual webhook processing
-- GET requests only return non-sensitive health check data
-- HEAD requests are used for URL validation only
+- **Event ID**: Uses `webhook-id` header, or falls back to `payload.id` / `payload.transactionId`
+- **Storage**: Vercel KV with 7-day TTL
+- **Fallback**: In-memory storage if Vercel KV is not configured (not durable)
+- **Duplicate handling**: Returns `200 OK` with `duplicate: true` for already-processed events
 
-However, note that without full signature verification, the endpoint is vulnerable to unauthorized POST requests from any source.
+To enable durable idempotency:
+1. Go to Vercel Dashboard → Storage → Create Database → KV
+2. Link the KV database to your project
+3. Redeploy - environment variables are auto-configured
 
 ## Troubleshooting Checklist
 
-- [ ] Webhook endpoint deployed and accessible
-- [ ] HEAD request returns 200 OK
-- [ ] GET request returns health check JSON
-- [ ] Edge functions not blocking webhook endpoint
-- [ ] Correct webhook URL configured in Helcim
-- [ ] Function logs show webhook invocations
-- [ ] No syntax errors in helcim-webhook.js
+- [ ] **Apex domain is Primary** in Vercel Dashboard (prevents 307 redirects)
+- [ ] Webhook endpoint returns **200 OK** for HEAD requests
+- [ ] `HELCIM_WEBHOOK_SECRET` is set in Vercel environment variables
+- [ ] Webhook URL in Helcim is `https://grainhousecoffee.com/webhooks/payment`
+- [ ] Helcim webhook validation succeeds
+- [ ] Vercel KV is linked for durable idempotency
 
 ## Common Errors and Solutions
 
-### Error: "Method not allowed"
-**Symptom**: 405 error when testing webhook
-**Solution**: Ensure you're using POST for webhook events, HEAD/GET for validation
+### Error: 307 Redirect (apex to www)
+**Symptom**: `curl -I https://grainhousecoffee.com/webhooks/payment` shows 307 redirect
+**Solution**: Set apex domain as Primary in Vercel Dashboard → Domains
 
-### Error: "Invalid JSON payload"
-**Symptom**: Webhook receives but can't parse payload
-**Solution**: Check that Helcim is sending valid JSON (view function logs)
+### Error: 404 Not Found
+**Symptom**: Webhook URL returns 404 after redirect
+**Solution**: 
+1. Fix domain configuration (apex as Primary)
+2. Verify `api/helcim-webhook.js` exists
+3. Check Vercel deployment logs for function bundling errors
 
-### Error: "Signature verification required"
-**Symptom**: 401 error on webhook delivery
-**Solution**: Either remove HELCIM_WEBHOOK_SECRET environment variable or ensure Helcim is sending X-Helcim-Signature header
+### Error: 401 Unauthorized - Missing headers
+**Symptom**: Webhook delivery fails with "Missing required signature headers"
+**Solution**: Ensure Helcim is sending `webhook-id`, `webhook-timestamp`, `webhook-signature` headers
 
-### Error: 403 Forbidden
-**Symptom**: Webhook blocked before reaching function
-**Solution**: Check edge function bot protection isn't blocking Helcim's requests
+### Error: 401 Unauthorized - Signature mismatch
+**Symptom**: Webhook delivery fails with "Signature verification failed"
+**Solution**: 
+1. Verify `HELCIM_WEBHOOK_SECRET` matches Helcim's Verifier Token exactly
+2. The secret should be base64 encoded
+3. Check for whitespace in environment variable
+4. Regenerate the webhook in Helcim and update the secret
+
+### Error: 405 Method Not Allowed
+**Symptom**: Error when testing webhook
+**Solution**: Use the correct HTTP method - POST for webhook events, HEAD/GET for validation
+
+### Error: Timestamp expired
+**Symptom**: 401 error with "Timestamp expired" message
+**Solution**: Check server clock synchronization. Webhooks must be processed within 5 minutes of being sent.
 
 ## Additional Resources
 
 - [Helcim API Documentation](https://devdocs.helcim.com)
 - [Helcim Webhooks Guide](https://devdocs.helcim.com/docs/webhooks)
-- [Netlify Functions Documentation](https://docs.netlify.com/functions/overview/)
+- [Vercel Serverless Functions](https://vercel.com/docs/functions)
+- [Vercel KV Storage](https://vercel.com/docs/storage/vercel-kv)
 - [HTTP Status Codes Reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
 
 ## Support
 
 If you continue to experience issues:
-1. Check Netlify function logs for errors
+1. Check Vercel function logs for errors
 2. Test the endpoint using the curl commands above
-3. Verify the deployment is complete
-4. Contact Helcim support if issues persist with their validation process
+3. Verify the domain configuration in Vercel Dashboard
+4. Ensure environment variables are set correctly
+5. Contact Helcim support if issues persist with their validation process
