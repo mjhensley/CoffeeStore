@@ -40,9 +40,52 @@
     { "src": "/shop", "dest": "/stumptown_static/collections.html" },
     { "src": "/about", "dest": "/stumptown_static/our-story.html" },
     { "src": "/products/(.*)", "dest": "/stumptown_static/collections.html" },
+    { 
+      "src": "/images/(.*)", 
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable" },
+      "dest": "/stumptown_static/images/$1",
+      "continue": true
+    },
+    { 
+      "src": "/(.*\\.css)", 
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable" },
+      "continue": true
+    },
+    { 
+      "src": "/(.*\\.js)", 
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable" },
+      "continue": true
+    },
+    { 
+      "src": "/site-config\\.js", 
+      "headers": { "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" },
+      "continue": true
+    },
+    { 
+      "src": "/(.*\\.(woff|woff2))", 
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable", "Access-Control-Allow-Origin": "*" },
+      "continue": true
+    },
+    { 
+      "src": "/(.*\\.svg)", 
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable", "Content-Type": "image/svg+xml" },
+      "continue": true
+    },
+    { 
+      "src": "/(.*\\.html)", 
+      "headers": { "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" },
+      "continue": true
+    },
     {
       "src": "/(.*)",
-      "headers": { "X-Frame-Options": "SAMEORIGIN", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "strict-origin-when-cross-origin", "Permissions-Policy": "geolocation=(), microphone=(), camera=(), payment=(self 'https://secure.helcim.app')", "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload" },
+      "headers": { 
+        "X-Frame-Options": "SAMEORIGIN", 
+        "X-Content-Type-Options": "nosniff", 
+        "Referrer-Policy": "strict-origin-when-cross-origin", 
+        "Permissions-Policy": "geolocation=(), microphone=(), camera=(), payment=(self 'https://secure.helcim.app')", 
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://maps.googleapis.com https://secure.helcim.app https://*.helcim.com https://*.helcim.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://api.resend.com https://maps.googleapis.com https://*.helcim.com https://*.helcim.app; frame-src https://secure.helcim.app https://*.helcim.com https://*.helcim.app; object-src 'none'; base-uri 'self';"
+      },
       "continue": true
     },
     {
