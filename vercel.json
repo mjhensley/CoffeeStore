@@ -14,7 +14,6 @@
     }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/.netlify/functions/checkout", "dest": "/api/checkout" },
     { "src": "/.netlify/functions/helcim-webhook", "dest": "/api/helcim-webhook" },
     { "src": "/.netlify/functions/send-contact-email", "dest": "/api/send-contact-email" },
