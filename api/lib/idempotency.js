@@ -1,101 +1,44 @@
 /**
  * Idempotency Storage Utility for Webhook Processing (Vercel-compatible)
  * 
- * Uses in-memory storage with notes for Vercel KV (Upstash) upgrade.
- * This provides basic idempotency protection for webhook processing.
- * 
- * ⚠️ PRODUCTION WARNING ⚠️
- * The current in-memory implementation is NOT suitable for production use.
- * In-memory storage resets on serverless function cold starts, which means
- * duplicate webhooks may be processed after deployments or scale events.
- * 
- * For production, upgrade to Vercel KV (Upstash Redis) - see instructions below.
+ * Provides durable idempotency protection for webhook processing using
+ * Vercel KV (Upstash Redis) with automatic fallback to in-memory storage.
  * 
  * Features:
- * - In-memory storage (resets on cold starts - suitable for development/testing only)
- * - TTL-based automatic cleanup
- * - Easy upgrade path to Vercel KV
+ * - Automatic Vercel KV detection and usage when configured
+ * - Graceful fallback to in-memory storage when KV is unavailable
+ * - 7-day TTL for automatic cleanup
+ * - Thread-safe operations
  * 
  * ============================================================
- * VERCEL KV SETUP INSTRUCTIONS
+ * VERCEL KV SETUP INSTRUCTIONS (REQUIRED FOR PRODUCTION)
  * ============================================================
  * 
  * 1. Enable Vercel KV in your project:
  *    - Go to Vercel Dashboard → Your Project → Storage → Create Database
  *    - Select "KV" (powered by Upstash Redis)
- *    - Link to your project (this sets environment variables automatically)
+ *    - Link to your project (this auto-sets environment variables)
  * 
- * 2. Install the @vercel/kv package:
- *    npm install @vercel/kv
+ * 2. Required Environment Variables (auto-set by Vercel KV linking):
+ *    - KV_REST_API_URL (Upstash Redis REST API URL)
+ *    - KV_REST_API_TOKEN (Upstash Redis REST API token)
  * 
- * 3. Uncomment the Vercel KV implementation below and comment out
- *    the in-memory implementation.
+ * 3. Redeploy your project after linking KV storage.
  * 
- * 4. Redeploy your project.
- * 
- * Required Environment Variables (auto-set by Vercel KV):
- *    - KV_URL (or KV_REST_API_URL)
- *    - KV_REST_API_TOKEN
+ * Note: The @vercel/kv package is dynamically imported and optional.
+ * If not available, the module falls back to in-memory storage with
+ * a warning logged on each invocation.
  * 
  * @module idempotency
  */
 
-// ============================================================
-// VERCEL KV IMPLEMENTATION (Uncomment when KV is configured)
-// ============================================================
-// const { kv } = require('@vercel/kv');
-// 
-// const STORE_PREFIX = 'webhook:';
-// const DEFAULT_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
-// 
-// async function isEventProcessed(eventId) {
-//   if (!eventId) {
-//     return { processed: false, processedAt: null, source: 'invalid-id' };
-//   }
-//   
-//   try {
-//     const data = await kv.get(`${STORE_PREFIX}${eventId}`);
-//     if (data) {
-//       return { 
-//         processed: true, 
-//         processedAt: data.processedAt,
-//         source: 'vercel-kv'
-//       };
-//     }
-//     return { processed: false, processedAt: null, source: 'vercel-kv' };
-//   } catch (error) {
-//     console.error('Error checking event in Vercel KV:', error.message);
-//     return { processed: false, processedAt: null, source: 'vercel-kv-error' };
-//   }
-// }
-// 
-// async function markEventProcessed(eventId, metadata = {}) {
-//   if (!eventId) {
-//     return { success: false, source: 'invalid', error: 'Event ID is required' };
-//   }
-//   
-//   const processedAt = new Date().toISOString();
-//   const eventData = { eventId, processedAt, ...metadata };
-//   
-//   try {
-//     await kv.set(`${STORE_PREFIX}${eventId}`, eventData, { ex: DEFAULT_TTL_SECONDS });
-//     return { success: true, source: 'vercel-kv', error: null };
-//   } catch (error) {
-//     console.error('Error storing event in Vercel KV:', error.message);
-//     return { success: false, source: 'vercel-kv', error: error.message };
-//   }
-// }
-// ============================================================
-
 /**
- * In-memory fallback for local development or when KV isn't available
- * WARNING: This will reset on serverless function cold starts
- * Use Vercel KV for production environments
+ * Prefix for all webhook idempotency keys in KV storage
  */
-const inMemoryStore = new Map();
+const STORE_PREFIX = 'webhook:';
 
 /**
- * Store name for webhook idempotency data
+ * Store name for webhook idempotency data (used in logging)
  */
 const STORE_NAME = 'webhook-idempotency';
 
@@ -111,6 +54,52 @@ const DEFAULT_TTL_SECONDS = 7 * 24 * 60 * 60;
 const MAX_IN_MEMORY_ENTRIES = 10000;
 
 /**
+ * In-memory fallback store for when Vercel KV is not available
+ * WARNING: This will reset on serverless function cold starts
+ */
+const inMemoryStore = new Map();
+
+/**
+ * Cached KV module reference (null = unavailable or not checked, object = available)
+ * kvChecked tracks whether we've attempted to load KV
+ */
+let kvModule = null;
+let kvChecked = false;
+
+/**
+ * Attempts to load and initialize the Vercel KV module
+ * @returns {Promise<Object|null>} The kv object or null if unavailable
+ */
+async function getKV() {
+  if (kvChecked) {
+    return kvModule;
+  }
+  
+  kvChecked = true;
+  
+  // Check if KV environment variables are configured
+  const hasKVConfig = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+  
+  if (!hasKVConfig) {
+    console.warn('Vercel KV not configured (missing KV_REST_API_URL or KV_REST_API_TOKEN). Using in-memory fallback.');
+    kvModule = null;
+    return null;
+  }
+  
+  try {
+    // Dynamic import of @vercel/kv
+    const { kv } = await import('@vercel/kv');
+    kvModule = kv;
+    console.log('Vercel KV initialized successfully for idempotency storage');
+    return kv;
+  } catch (error) {
+    console.warn('Failed to load @vercel/kv module, using in-memory fallback:', error.message);
+    kvModule = null;
+    return null;
+  }
+}
+
+/**
  * Checks if a webhook event has already been processed
  * 
  * @param {string} eventId - The unique webhook event ID
@@ -121,7 +110,27 @@ async function isEventProcessed(eventId) {
     return { processed: false, processedAt: null, source: 'invalid-id' };
   }
   
-  // In-memory check
+  const kv = await getKV();
+  
+  // Try Vercel KV first if available
+  if (kv) {
+    try {
+      const data = await kv.get(`${STORE_PREFIX}${eventId}`);
+      if (data) {
+        return { 
+          processed: true, 
+          processedAt: data.processedAt,
+          source: 'vercel-kv'
+        };
+      }
+      return { processed: false, processedAt: null, source: 'vercel-kv' };
+    } catch (error) {
+      console.error('Error checking event in Vercel KV:', error.message);
+      // Fall through to in-memory check
+    }
+  }
+  
+  // Fallback to in-memory check
   const inMemoryData = inMemoryStore.get(eventId);
   if (inMemoryData) {
     return {
@@ -153,7 +162,21 @@ async function markEventProcessed(eventId, metadata = {}) {
     ...metadata
   };
   
-  // Store in memory
+  const kv = await getKV();
+  
+  // Try Vercel KV first if available
+  if (kv) {
+    try {
+      await kv.set(`${STORE_PREFIX}${eventId}`, eventData, { ex: DEFAULT_TTL_SECONDS });
+      console.log('Event marked as processed in Vercel KV:', eventId);
+      return { success: true, source: 'vercel-kv', error: null };
+    } catch (error) {
+      console.error('Error storing event in Vercel KV:', error.message);
+      // Fall through to in-memory storage
+    }
+  }
+  
+  // Fallback to in-memory storage
   inMemoryStore.set(eventId, eventData);
   
   // Clean up old entries to prevent memory leaks
@@ -256,14 +279,18 @@ async function processWithIdempotency(eventId, processor, metadata = {}) {
  * @returns {Promise<Object>} Store statistics
  */
 async function getStoreStats() {
+  const kv = await getKV();
+  const hasKV = !!kv;
+  
   return {
     inMemoryEntries: inMemoryStore.size,
     storeName: STORE_NAME,
     ttlSeconds: DEFAULT_TTL_SECONDS,
-    storageType: 'in-memory',
-    durable: false,
-    warning: 'In-memory storage is NOT durable - resets on cold starts. For production, enable Vercel KV.',
-    upgradeInstructions: 'See api/lib/idempotency.js header for Vercel KV setup instructions'
+    storageType: hasKV ? 'vercel-kv' : 'in-memory',
+    durable: hasKV,
+    kvConfigured: !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN),
+    warning: hasKV ? null : 'In-memory storage is NOT durable - resets on cold starts. For production, enable Vercel KV.',
+    upgradeInstructions: hasKV ? null : 'See api/lib/idempotency.js header for Vercel KV setup instructions'
   };
 }
 

@@ -145,21 +145,40 @@ function validateTimestamp(timestamp) {
 }
 
 /**
- * Get raw body from request for signature verification
+ * Get raw body from request for signature verification.
+ * When bodyParser is disabled in Vercel config, req.body is undefined
+ * and we need to read from the request stream.
+ * 
+ * @param {Object} req - The HTTP request object
+ * @returns {Promise<string>} The raw request body as a string
  */
 async function getRawBody(req) {
-  // If body is already a string, return it
+  // If body is already a string (shouldn't happen with bodyParser: false, but handle it)
   if (typeof req.body === 'string') {
     return req.body;
   }
   
-  // If body is an object (parsed JSON), stringify it
-  // Note: This may not be exact match - for production, configure Vercel to not parse JSON
+  // If body is an object (pre-parsed), stringify it
+  // This is a fallback and may not produce exact original body
   if (typeof req.body === 'object' && req.body !== null) {
     return JSON.stringify(req.body);
   }
   
-  return '';
+  // Read raw body from request stream (when bodyParser is disabled)
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', (chunk) => {
+      chunks.push(chunk);
+    });
+    req.on('end', () => {
+      // Concatenate chunks and convert to UTF-8 string
+      const buffer = Buffer.concat(chunks);
+      resolve(buffer.toString('utf8'));
+    });
+    req.on('error', (err) => {
+      reject(err);
+    });
+  });
 }
 
 // =============================================================================
@@ -216,6 +235,19 @@ module.exports = async function handler(req, res) {
     const contentType = req.headers['content-type'] || 'not provided';
     console.log('Webhook POST received - Content-Type:', contentType);
     
+    // Read raw body first (since bodyParser is disabled)
+    // This is needed for both signature verification and payload parsing
+    let rawBody;
+    try {
+      rawBody = await getRawBody(req);
+    } catch (bodyError) {
+      console.error('Failed to read request body:', bodyError.message);
+      return res.status(400).json({
+        error: 'Failed to read request body',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
     // Signature verification
     const webhookSecret = process.env.HELCIM_WEBHOOK_SECRET;
     
@@ -252,7 +284,6 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      const rawBody = await getRawBody(req);
       const signatureValidation = verifyHelcimSignature(
         webhookId,
         timestamp,
@@ -278,10 +309,10 @@ module.exports = async function handler(req, res) {
       console.warn('HELCIM_WEBHOOK_SECRET not configured - skipping signature verification');
     }
 
-    // Parse payload
+    // Parse payload from raw body
     let payload;
     try {
-      payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
+      payload = rawBody ? JSON.parse(rawBody) : {};
     } catch (parseError) {
       console.error('Invalid JSON in webhook payload');
       return res.status(200).json({
@@ -414,11 +445,10 @@ module.exports = async function handler(req, res) {
   });
 };
 
-// Vercel config to get raw body for signature verification
+// Vercel config: disable body parsing to get raw body for signature verification
+// This is critical for HMAC signature verification to work correctly
 module.exports.config = {
   api: {
-    bodyParser: {
-      sizeLimit: '1mb',
-    },
+    bodyParser: false,
   },
 };
