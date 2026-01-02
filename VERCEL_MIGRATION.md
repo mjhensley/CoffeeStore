@@ -165,6 +165,81 @@ All security headers from `netlify.toml` have been migrated to `vercel.json`:
 | Fonts (`*.woff`, `*.woff2`) | `public, max-age=31536000, immutable` (1 year) |
 | SVG files (`*.svg`) | `public, max-age=31536000, immutable` (1 year) |
 
+## Deployment Checklist
+
+### Step-by-Step Deployment
+
+1. **Commit and Push Changes**
+   ```bash
+   git add .
+   git commit -m "Migrate Netlify functions to Vercel API routes"
+   git push origin main
+   ```
+
+2. **Set Environment Variables in Vercel**
+   - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+   - Add each variable for **All Environments** (Production, Preview, Development):
+     - `HELCIM_API_TOKEN` - Your Helcim API token
+     - `HELCIM_WEBHOOK_SECRET` - Base64 encoded Verifier Token from Helcim
+     - `RESEND_API_KEY` - Your Resend API key
+     - `SITE_URL` - `https://grainhousecoffee.com`
+
+3. **Trigger Redeploy**
+   - After adding env vars, redeploy via Vercel Dashboard
+   - Or push a new commit to trigger automatic deployment
+
+4. **Verify Deployment**
+   - Run the validation commands below
+   - Check Vercel function logs for any errors
+
+### Post-Deployment Verification
+
+```bash
+# 1. Check webhook HEAD returns 200 (Helcim validation)
+curl -I https://grainhousecoffee.com/webhooks/payment
+# Expected: HTTP/2 200
+
+# 2. Verify www redirects to apex
+curl -I https://www.grainhousecoffee.com/ 2>&1 | grep -i location
+# Expected: Location: https://grainhousecoffee.com/
+
+# 3. Test health endpoint
+curl https://grainhousecoffee.com/api/health
+# Expected: JSON with status: healthy
+
+# 4. Test webhook GET
+curl https://grainhousecoffee.com/api/helcim-webhook
+# Expected: JSON with status: ready
+
+# 5. Test webhook with check parameter (echo test)
+curl "https://grainhousecoffee.com/api/helcim-webhook?check=test123"
+# Expected: test123
+
+# 6. Test webhook POST (simulated - will fail signature but proves route works)
+curl -X POST https://grainhousecoffee.com/api/helcim-webhook \
+  -H "Content-Type: application/json" \
+  -d '{"test": true}' -v
+# Expected: 401 (signature verification) proves function is running
+
+# 7. Test checkout CORS preflight
+curl -X OPTIONS https://grainhousecoffee.com/api/checkout \
+  -H "Origin: https://grainhousecoffee.com" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: Content-Type" -I
+# Expected: HTTP/2 204 with Access-Control-Allow-Origin header
+
+# 8. Test legacy Netlify endpoint rewrites
+curl -I https://grainhousecoffee.com/.netlify/functions/health
+# Expected: HTTP/2 200 (rewritten to /api/health)
+```
+
+### Verify in Helcim Dashboard
+
+1. Go to Helcim Dashboard → Integrations → Webhooks
+2. Edit your webhook and set URL to: `https://grainhousecoffee.com/webhooks/payment`
+3. Click "Validate URL" - should return success
+4. If validation fails, check Vercel function logs
+
 ## Troubleshooting
 
 ### Checkout Not Working
@@ -173,11 +248,19 @@ All security headers from `netlify.toml` have been migrated to `vercel.json`:
 2. Verify `HELCIM_API_TOKEN` is set in Vercel environment variables
 3. Check Vercel function logs for errors
 
-### Webhooks Not Validating
+### Webhooks Not Validating (404 Error)
 
-1. Verify `HELCIM_WEBHOOK_SECRET` is set
-2. Test HEAD request: `curl -I https://grainhousecoffee.com/api/helcim-webhook`
-3. Check webhook URL in Helcim dashboard matches `/api/helcim-webhook` or `/webhooks/payment`
+1. Verify the API route files exist in `/api/` directory
+2. Check that `vercel.json` has the correct rewrites
+3. Test HEAD request: `curl -I https://grainhousecoffee.com/api/helcim-webhook`
+4. Check Vercel deployment logs for function bundling errors
+5. Ensure the `functions` config in `vercel.json` includes `api/lib/**` files
+
+### Webhooks Signature Verification Failing
+
+1. Verify `HELCIM_WEBHOOK_SECRET` is set correctly (base64 encoded)
+2. Check that the webhook secret matches the Verifier Token from Helcim
+3. Ensure no whitespace in the environment variable value
 
 ### Contact Form Not Sending
 
@@ -190,3 +273,12 @@ All security headers from `netlify.toml` have been migrated to `vercel.json`:
 1. Check browser console for specific CORS error
 2. Verify origin is in allowed list (production domains + Vercel previews)
 3. Test preflight with OPTIONS request
+
+### 404 on /webhooks/payment
+
+If you're getting 404 on webhook routes:
+
+1. Check Vercel deployment includes the `api/` folder
+2. Verify `vercel.json` has the `functions` configuration
+3. Ensure rewrites are properly ordered (most specific first)
+4. Check Vercel function logs for bundling errors
