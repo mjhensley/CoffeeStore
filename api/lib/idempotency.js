@@ -4,19 +4,38 @@
  * Uses in-memory storage with notes for Vercel KV (Upstash) upgrade.
  * This provides basic idempotency protection for webhook processing.
  * 
- * PRODUCTION NOTE: For production use, upgrade to Vercel KV (Upstash Redis)
- * to ensure idempotency persists across serverless function invocations.
+ * ⚠️ PRODUCTION WARNING ⚠️
+ * The current in-memory implementation is NOT suitable for production use.
+ * In-memory storage resets on serverless function cold starts, which means
+ * duplicate webhooks may be processed after deployments or scale events.
+ * 
+ * For production, upgrade to Vercel KV (Upstash Redis) - see instructions below.
  * 
  * Features:
- * - In-memory storage (resets on cold starts - suitable for development/testing)
+ * - In-memory storage (resets on cold starts - suitable for development/testing only)
  * - TTL-based automatic cleanup
  * - Easy upgrade path to Vercel KV
  * 
- * To upgrade to Vercel KV:
- * 1. Enable Vercel KV in your project dashboard
- * 2. Install @vercel/kv: npm install @vercel/kv
- * 3. Uncomment the Vercel KV implementation below
- * 4. Remove in-memory fallback for production
+ * ============================================================
+ * VERCEL KV SETUP INSTRUCTIONS
+ * ============================================================
+ * 
+ * 1. Enable Vercel KV in your project:
+ *    - Go to Vercel Dashboard → Your Project → Storage → Create Database
+ *    - Select "KV" (powered by Upstash Redis)
+ *    - Link to your project (this sets environment variables automatically)
+ * 
+ * 2. Install the @vercel/kv package:
+ *    npm install @vercel/kv
+ * 
+ * 3. Uncomment the Vercel KV implementation below and comment out
+ *    the in-memory implementation.
+ * 
+ * 4. Redeploy your project.
+ * 
+ * Required Environment Variables (auto-set by Vercel KV):
+ *    - KV_URL (or KV_REST_API_URL)
+ *    - KV_REST_API_TOKEN
  * 
  * @module idempotency
  */
@@ -242,7 +261,9 @@ async function getStoreStats() {
     storeName: STORE_NAME,
     ttlSeconds: DEFAULT_TTL_SECONDS,
     storageType: 'in-memory',
-    note: 'Upgrade to Vercel KV for persistent storage across function invocations'
+    durable: false,
+    warning: 'In-memory storage is NOT durable - resets on cold starts. For production, enable Vercel KV.',
+    upgradeInstructions: 'See api/lib/idempotency.js header for Vercel KV setup instructions'
   };
 }
 

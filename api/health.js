@@ -7,6 +7,8 @@
  * Endpoint: GET /api/health
  */
 
+const { getStoreStats } = require('./lib/idempotency');
+
 module.exports = async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,9 +33,18 @@ module.exports = async function handler(req, res) {
     const webhookSecretConfigured = !!process.env.HELCIM_WEBHOOK_SECRET;
     const resendConfigured = !!process.env.RESEND_API_KEY;
     const siteUrl = process.env.SITE_URL || 'not-set';
+    const kvConfigured = !!(process.env.KV_URL || process.env.KV_REST_API_URL);
     
     // Check if we're in development or production
     const env = process.env.VERCEL_ENV || process.env.NODE_ENV || 'unknown';
+    
+    // Get idempotency storage stats
+    let idempotencyStats;
+    try {
+      idempotencyStats = await getStoreStats();
+    } catch (e) {
+      idempotencyStats = { error: 'Unable to get stats' };
+    }
     
     const status = {
       status: 'healthy',
@@ -44,17 +55,21 @@ module.exports = async function handler(req, res) {
         helcimApiToken: helcimConfigured ? 'configured' : 'missing',
         helcimWebhookSecret: webhookSecretConfigured ? 'configured' : 'missing',
         resendApiKey: resendConfigured ? 'configured' : 'missing',
-        siteUrl: siteUrl !== 'not-set' ? 'configured' : 'not-set'
+        siteUrl: siteUrl !== 'not-set' ? 'configured' : 'not-set',
+        vercelKv: kvConfigured ? 'configured' : 'not-configured (using in-memory fallback)'
       },
       services: {
         api: 'operational',
         checkout: helcimConfigured ? 'ready' : 'not-configured',
         webhooks: webhookSecretConfigured ? 'ready' : 'signature-verification-disabled',
-        contactForm: resendConfigured ? 'ready' : 'not-configured'
+        contactForm: resendConfigured ? 'ready' : 'not-configured',
+        idempotency: idempotencyStats.durable === false ? 'in-memory (non-durable)' : 'ready'
       },
+      idempotencyStorage: idempotencyStats,
       endpoints: {
         checkout: '/api/checkout',
         webhook: '/api/helcim-webhook',
+        webhookAlias: '/webhooks/payment',
         contactEmail: '/api/send-contact-email',
         health: '/api/health'
       },

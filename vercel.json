@@ -1,11 +1,17 @@
 {
   "version": 2,
   "outputDirectory": "stumptown_static",
+  "functions": {
+    "api/*.js": {
+      "includeFiles": "api/lib/**"
+    }
+  },
   "rewrites": [
     { "source": "/.netlify/functions/checkout", "destination": "/api/checkout" },
     { "source": "/.netlify/functions/helcim-webhook", "destination": "/api/helcim-webhook" },
     { "source": "/.netlify/functions/send-contact-email", "destination": "/api/send-contact-email" },
     { "source": "/.netlify/functions/health", "destination": "/api/health" },
+    { "source": "/webhooks/payment", "destination": "/api/helcim-webhook" },
     { "source": "/webhooks/:path*", "destination": "/api/helcim-webhook" },
     { "source": "/collections", "destination": "/collections.html" },
     { "source": "/subscribe", "destination": "/subscribe.html" },
