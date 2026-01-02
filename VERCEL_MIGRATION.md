@@ -1,0 +1,192 @@
+# Vercel Migration Guide
+
+This document describes the migration from Netlify to Vercel for the Grainhouse Coffee e-commerce site.
+
+## Current Likely Breakages (Before Migration)
+
+When deploying a Netlify-based project to Vercel without migration, the following would be broken:
+
+1. **Netlify Functions Not Available** - `/.netlify/functions/*` endpoints return 404
+2. **Webhooks Broken** - `/webhooks/*` routes not working
+3. **Contact Form Broken** - Email sending via Netlify function unavailable
+4. **Checkout Broken** - Helcim payment integration unavailable
+5. **netlify.toml Headers/Redirects Ignored** - Security headers and redirects not applied
+6. **Netlify Blobs Unavailable** - Idempotency storage for webhooks broken
+
+## Migration Summary
+
+### What Was Done
+
+1. Created `vercel.json` with:
+   - Rewrites for legacy Netlify endpoints → `/api/*`
+   - Redirect www → apex (canonical domain)
+   - Security headers matching netlify.toml
+   - Cache control headers
+
+2. Created Vercel API routes:
+   - `/api/checkout.js` - Helcim payment integration
+   - `/api/helcim-webhook.js` - Webhook handler with signature verification
+   - `/api/send-contact-email.js` - Contact form email via Resend
+   - `/api/health.js` - Health check endpoint
+   - `/api/lib/helcim-config.js` - Shared Helcim configuration
+   - `/api/lib/idempotency.js` - In-memory idempotency (with Vercel KV upgrade path)
+
+## Environment Variables
+
+Configure these in Vercel Project Settings → Environment Variables:
+
+| Variable | Required | Example | Where Used |
+|----------|----------|---------|------------|
+| `HELCIM_API_TOKEN` | **Yes** | `helcim_api_xxxxx` | Checkout API for payment processing |
+| `HELCIM_WEBHOOK_SECRET` | Recommended | `base64_encoded_secret` | Webhook signature verification |
+| `RESEND_API_KEY` | **Yes** | `re_xxxxx` | Contact form email sending |
+| `SITE_URL` | **Yes** | `https://grainhousecoffee.com` | Payment redirects and canonical URL |
+| `HELCIM_ENVIRONMENT` | No | `sandbox` or `production` | Auto-detected from VERCEL_ENV |
+
+### Getting Environment Variable Values
+
+1. **HELCIM_API_TOKEN**: 
+   - Log into [Helcim Dashboard](https://secure.myhelcim.com)
+   - Navigate to: Integrations → API Access Configurations → New API Access
+   - Copy the API token
+
+2. **HELCIM_WEBHOOK_SECRET**:
+   - In Helcim Dashboard → Integrations → Webhooks
+   - Create or edit webhook pointing to `https://grainhousecoffee.com/api/helcim-webhook`
+   - Copy the Verifier Token (this is the secret, already base64 encoded)
+
+3. **RESEND_API_KEY**:
+   - Log into [Resend Dashboard](https://resend.com)
+   - Navigate to: API Keys → Create API Key
+   - Copy the key
+
+## Endpoint Mapping
+
+| Original Netlify Endpoint | New Vercel Endpoint | Rewrite Configured |
+|--------------------------|--------------------|--------------------|
+| `/.netlify/functions/checkout` | `/api/checkout` | ✅ Yes |
+| `/.netlify/functions/helcim-webhook` | `/api/helcim-webhook` | ✅ Yes |
+| `/.netlify/functions/send-contact-email` | `/api/send-contact-email` | ✅ Yes |
+| `/.netlify/functions/health` | `/api/health` | ✅ Yes |
+| `/webhooks/*` | `/api/helcim-webhook` | ✅ Yes |
+
+## Validation Checklist
+
+### Test Commands
+
+```bash
+# 1. Check site availability
+curl -I https://www.grainhousecoffee.com/
+
+# 2. Verify www to apex redirect
+curl -I https://www.grainhousecoffee.com/ 2>&1 | grep -i location
+
+# 3. Health check endpoint
+curl https://grainhousecoffee.com/api/health
+
+# 4. Webhook HEAD validation (Helcim URL verification)
+curl -I https://grainhousecoffee.com/webhooks/payment
+curl -I https://grainhousecoffee.com/api/helcim-webhook
+
+# 5. Webhook GET validation (with check parameter)
+curl "https://grainhousecoffee.com/api/helcim-webhook?check=test123"
+
+# 6. CORS preflight test
+curl -X OPTIONS https://grainhousecoffee.com/api/checkout \
+  -H "Origin: https://grainhousecoffee.com" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: Content-Type" -I
+
+# 7. Legacy Netlify endpoint rewrite test
+curl -I https://grainhousecoffee.com/.netlify/functions/health
+```
+
+### Manual Tests
+
+1. **Static Pages**: Browse to https://grainhousecoffee.com/ and verify all pages load
+2. **Checkout Flow**: Add items to cart and proceed to checkout form
+3. **Contact Form**: Submit a test message on the contact page
+4. **Webhook**: Check Helcim dashboard for webhook status
+
+## Domain Configuration
+
+The site uses **apex domain as canonical**: `https://grainhousecoffee.com`
+
+All requests to `www.grainhousecoffee.com` are 301 redirected to the apex domain.
+
+### Vercel Domain Setup
+
+1. In Vercel Dashboard → Project → Settings → Domains
+2. Add `grainhousecoffee.com` as primary domain
+3. Add `www.grainhousecoffee.com` as alias (redirect to apex)
+4. Ensure DNS is properly configured:
+   - `A` record for apex → Vercel IP
+   - `CNAME` for www → `cname.vercel-dns.com`
+
+## Idempotency Storage
+
+### Current Implementation (In-Memory)
+
+The webhook handler uses in-memory storage for idempotency. This works but resets on:
+- Cold starts
+- Deployments
+- Function restarts
+
+### Production Upgrade: Vercel KV (Upstash)
+
+For production-grade idempotency:
+
+1. Enable Vercel KV in project dashboard
+2. Install dependency: `npm install @vercel/kv`
+3. Uncomment the Vercel KV implementation in `/api/lib/idempotency.js`
+
+This ensures idempotency persists across all function invocations.
+
+## Security Headers
+
+All security headers from `netlify.toml` have been migrated to `vercel.json`:
+
+- `X-Frame-Options: SAMEORIGIN`
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(self 'https://secure.helcim.app')`
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`
+- `Content-Security-Policy`: Allows Helcim payment processor, Google Fonts, Google Maps, Resend API
+
+## Caching Strategy
+
+| Resource Type | Cache Policy |
+|--------------|--------------|
+| Images (`/images/*`) | `public, max-age=31536000, immutable` (1 year) |
+| CSS files (`*.css`) | `public, max-age=31536000, immutable` (1 year) |
+| JS files (`*.js`) | `public, max-age=31536000, immutable` (1 year) |
+| `site-config.js` | `public, max-age=3600, stale-while-revalidate=86400` (1 hour) |
+| HTML files (`*.html`) | `public, max-age=3600, stale-while-revalidate=86400` (1 hour) |
+| Fonts (`*.woff`, `*.woff2`) | `public, max-age=31536000, immutable` (1 year) |
+| SVG files (`*.svg`) | `public, max-age=31536000, immutable` (1 year) |
+
+## Troubleshooting
+
+### Checkout Not Working
+
+1. Check health endpoint: `curl https://grainhousecoffee.com/api/health`
+2. Verify `HELCIM_API_TOKEN` is set in Vercel environment variables
+3. Check Vercel function logs for errors
+
+### Webhooks Not Validating
+
+1. Verify `HELCIM_WEBHOOK_SECRET` is set
+2. Test HEAD request: `curl -I https://grainhousecoffee.com/api/helcim-webhook`
+3. Check webhook URL in Helcim dashboard matches `/api/helcim-webhook` or `/webhooks/payment`
+
+### Contact Form Not Sending
+
+1. Verify `RESEND_API_KEY` is set
+2. Check Resend dashboard for sending limits/errors
+3. Verify domain is verified in Resend for sending from `support@grainhousecoffee.com`
+
+### CORS Errors
+
+1. Check browser console for specific CORS error
+2. Verify origin is in allowed list (production domains + Vercel previews)
+3. Test preflight with OPTIONS request

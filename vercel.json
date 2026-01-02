@@ -1,0 +1,106 @@
+{
+  "version": 2,
+  "outputDirectory": "stumptown_static",
+  "rewrites": [
+    { "source": "/.netlify/functions/checkout", "destination": "/api/checkout" },
+    { "source": "/.netlify/functions/helcim-webhook", "destination": "/api/helcim-webhook" },
+    { "source": "/.netlify/functions/send-contact-email", "destination": "/api/send-contact-email" },
+    { "source": "/.netlify/functions/health", "destination": "/api/health" },
+    { "source": "/webhooks/:path*", "destination": "/api/helcim-webhook" },
+    { "source": "/collections", "destination": "/collections.html" },
+    { "source": "/subscribe", "destination": "/subscribe.html" },
+    { "source": "/gear", "destination": "/gear.html" },
+    { "source": "/locations", "destination": "/locations.html" },
+    { "source": "/brew-guides", "destination": "/brew-guides.html" },
+    { "source": "/our-story", "destination": "/our-story.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/learn", "destination": "/learn.html" },
+    { "source": "/rewards", "destination": "/rewards.html" },
+    { "source": "/coffee-quiz", "destination": "/coffee-quiz.html" },
+    { "source": "/account", "destination": "/account.html" },
+    { "source": "/blog", "destination": "/blog.html" },
+    { "source": "/impact", "destination": "/impact.html" },
+    { "source": "/accessibility", "destination": "/accessibility.html" },
+    { "source": "/cold-brew", "destination": "/cold-brew.html" },
+    { "source": "/gift-guide", "destination": "/gift-guide.html" },
+    { "source": "/shop", "destination": "/collections.html" },
+    { "source": "/about", "destination": "/our-story.html" },
+    { "source": "/products/:product", "destination": "/collections.html" }
+  ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.grainhousecoffee.com" }],
+      "destination": "https://grainhousecoffee.com/$1",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=(), payment=(self 'https://secure.helcim.app')" },
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://maps.googleapis.com https://secure.helcim.app https://*.helcim.com https://*.helcim.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://api.resend.com https://maps.googleapis.com https://*.helcim.com https://*.helcim.app; frame-src https://secure.helcim.app https://*.helcim.com https://*.helcim.app; object-src 'none'; base-uri 'self';" }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.css",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/site-config.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.woff2",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.woff",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.svg",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Content-Type", "value": "image/svg+xml" }
+      ]
+    }
+  ]
+}
